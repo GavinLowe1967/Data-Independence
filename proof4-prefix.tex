@@ -1,0 +1,440 @@
+
+\paragraph{Prefixing.}  Consider $e_c ~ f_1 \ldots f_n \then P$, where $e_c$
+is an expression that should evaluate to a possibly incomplete event (i.e.~a
+channel name with zero or more fields supplied), $n \ge 0$, and each~$f_i$ is
+a field of one of the following forms:
+  %
+  \begin{itemize}
+  \item $? pat$, where $pat$ is a pattern; this offers an external choice
+    between all values matching $pat$ and consistent with the channel type. 
+
+  \item $?pat : E$, where $pat$ is a pattern, and $E$ should evaluate to a
+    set; this is like the previous case, but restricts values to elements
+    of~$E$. 
+
+  \item $!e$, where $e$ is an expression; this matches only the value of~$e$. 
+
+  \item $\$ pat$; this performs an internal choice between all values matching
+    $pat$ and consistent with the channel type.
+ 
+  \item $\$ pat : E$; this is like the previous case, but restricts values to
+    elements of~$E$.
+  \end{itemize}
+  %
+  The semantics of pattern matching by fields depends upon the field's
+  location: a variable pattern (e.g.~$?x$) matches a \emph{single} complete
+  value, \emph{except} in the final field where it matches the whole of the
+  rest of the event.  For example, the prefix construct $c?x?y$ matches the
+  event $c.1.2.3$, binding $x$ to~$1$, and $y$ to~$2.3$.
+
+  If there are one or more \$-fields, then the process has initial
+  $\tau$-transitions to resolve the internal choices; each such field is
+  replaced by a field $!x$, where $x$ is a fresh variable bound in the
+  environment to the value chosen; also the environment is updated
+  corresponding to any other variables bound in the field.  The definition of
+  \CSPm\ requires that every \$-field precedes every !- or ?-field.
+
+  Recall that we assume that distinct variables have distinct names.  In
+  particular, this means that the initial expression~$e_c$ will use no
+  variables bound by a \$-field; this is required, since we will
+  evaluate~$e_c$ \emph{after} the \$-fields. 
+
+  We perform a case analysis on whether or not the prefixing construct
+  contains any \$-fields.
+
+  %%%%%%%%%%
+
+\subparagraph{Case of no \$-fields.} 
+
+Consider first a prefixing construct of the form ${e_c~{\it fields} \then P}$
+that contains no $\$$-fields.  We define the semantics of prefixing using a
+function
+\[
+  \evalField :: 
+    \begin{align}
+    Env \fun Bool \fun Value \fun Field \fun  \power (Value \cross Env).
+    \end{align}
+\]
+If $c.v$ is an incomplete event on channel~$c$, and $field$ is a field, then
+for a correct usage, $\evalField \rho~last~(c.v)~field$ gives a set of
+$(w,\rho')$ pairs; for each such pair, $c.v.w$ is an extension of~$c.v$
+compatible with~$c$, corresponding to adding this field, and $\rho'$ is the
+updated environment caused by binding any variables in patterns in~$field$.
+Compatibility will mean that if $\rho(c) = \channel S$ then $v.w$ is a prefix
+of some element of~$S$; we denote this $v.w \le \rho(c)$.  However, an error
+will occur if a $!e$ or $?pat:E$~field gives a value not compatible with the
+channel.  The argument~$last$ of $\evalField$ indicates whether this is the
+last field in the prefixing construct, which affects the semantics of pattern
+matching, as explained above.
+
+%% Recall that we assumed that the script is error-free.  This implies 
+
+We prove the following
+\begin{equation}\label{eqn:evalField}
+f (\evalField \rho~last~(c.v)~field)  = 
+    \evalField (f\after\rho)~last~(c.f(v))~field .
+\end{equation}
+%
+We perform a case analysis on~$field$.
+%
+\begin{itemize}
+\item Case $!e$. 
+  \begin{calc}
+  &  f (\evalField \rho~last~(c.v)~(!e)) \\
+  = & f(\Let w = \eval \rho~e \In 
+        \If v.w \le \rho(c) \Then \set{(w, \rho)} \Else error) \\
+  = & \com{Corollary \ref{cor:channel-types}} \\
+  & \begin{align}
+    \Let w = \eval \rho~e \In \\
+    \If f(v).f(w) \le f(\rho(c)) \Then \set{(f(w), f\after\rho)} \Else f(error)
+    \end{align} \\
+  = & \com{letting $w' = f(w)$} \\
+  & \begin{align}
+    \Let w' = f(\eval \rho~e) \In \\
+    \If f(v).w' \le (f\after\rho)(c) \Then \set{w', f\after\rho)} \Else (error)
+    \end{align} \\
+  = & \com{inductive hypothesis applied to~$e$} \\
+  & \begin{align}
+    \Let w' = \eval (f\after\rho)~e \In \\
+    \If f(v).w' \le (f\after\rho)(c) \Then \set{w', f\after\rho)} \Else (error)
+    \end{align} \\
+  = & \evalField (f\after\rho)~last~(c.f(v))~(!e).
+%  = & \set{(f(\eval \rho~ e), f \after \rho)})  \\
+  %% = & \com{inductive hypothesis applied to~$e$} \\
+  %%   & \set{(\eval (f\after\rho)~ e, f \after \rho)})  \\
+  %% = & \evalField (f\after\rho)~last~(c.f(v))~(!e).
+  \end{calc}
+
+\item Case $?pat$.  We write $arity(pat)$ for the number of fields matched by
+  $pat$ in the case that this is not the final field.  Similarly, we write
+  $arity(w)$ for the number of complete values within~$w$.  Below, $W$ is the
+  set of candidate values that $pat$ could be matched against: it contains all
+  values $w$, with the appropriate arity, that can be appended to~$v$ to give
+  a prefix of an element of~$\rho(c)$.
+%
+  \begin{calc}
+  & f (\evalField \rho~last~(c.v)~(?pat)) \\
+  = & f(
+    \begin{align}
+    \Let W = 
+      \begin{align}
+      \If last \Then \set{w \mid v.w \in \rho(c)} \\
+      \Else \set{w \mid v.w.u \in \rho(c), arity(pat) = arity(w)} 
+      \end{align} \\
+    \In 
+    \set{(w, \bind \rho~pat~w) \mid w \in W, \matches \rho~pat~w})
+    \end{align} \\
+  = & 
+    \begin{align}
+    \Let W = 
+      \begin{align}
+      \If last \Then \set{w \mid v.w \in \rho(c)} \\
+      \Else \set{w \mid v.w.u \in \rho(c), arity(pat) = arity(w)} 
+      \end{align} \\
+    \In 
+    \set{(f(w), f \after \bind \rho~pat~w) \mid
+       w \in W, \matches \rho~pat~w}
+    \end{align} \\
+  = & \com{parts \ref{item:matches} and \ref{item:bind};
+        letting $w' = f(w)$,\, $W' = f(W)$; Corollary \ref{cor:channel-types}} \\
+  %% & \begin{align}
+  %%   \Let W = 
+  %%     \begin{align}
+  %%     \If last \Then \set{w \mid v.w \in \rho(c)} \\
+  %%     \Else \set{w \mid v.w.u \in \rho(c), arity(pat) = arity(w)} 
+  %%     \end{align} \\
+  %%   \In 
+  %%   \set{(c.f(v).f(w), \bind (f\after\rho)~pat~(f(w))) \mid \\
+  %%   \quad\qquad   w \in W, \matches (f\after\rho)~pat~(f(w))}
+  %%   \end{align} 
+  %% \\
+  %% = & \com{letting $w' = f(w)$,\, $W' = f(W)$} \\
+  %% & \begin{align}
+  %%   \Let W' = 
+  %%     \begin{align}
+  %%     \If last \Then \set{f(w) \mid v.w \in \rho(c)} \\
+  %%     \Else \set{f(w) \mid 
+  %%        \begin{align}
+  %%        v.w.u \in \rho(c), 
+  %%        arity(pat) = arity(w)} 
+  %%        \end{align}
+  %%     \end{align} \\
+  %%   \In 
+  %%   \set{(w', \bind (f\after\rho)~pat~w') \mid 
+  %%      w' \in W', \matches (f\after\rho)~pat~w'}
+  %%   \end{align} 
+  %% \\
+  %% = & \com{Lemma \ref{lem:channel-types}} \\
+  & \begin{align}
+    \Let W' = 
+      \begin{align}
+      \If last \Then \set{f(w) \mid f(v).f(w) \in (f\after\rho)(c)} \\
+      \Else \set{f(w) \mid 
+         \begin{align}
+         f(v).f(w).f(u) \in (f\after\rho)(c), \\
+         arity(pat) = arity(w)} 
+         \end{align}
+      \end{align} \\
+    \In 
+    \set{(w', \bind (f\after\rho)~pat~w') \mid 
+      w' \in W', \matches (f\after\rho)~pat~w'}
+    \end{align} 
+  \\
+  = & \com{letting $w' = f(w)$,\, $u' = f(u)$; % \\
+          $arity(w) = arity(f(w))$} \\
+  & \begin{align}
+    \Let W' = 
+      \begin{align}
+      \If last \Then \set{w' \mid f(v).w' \in (f\after\rho)(c)} \\
+      \Else \set{w' \mid 
+         \begin{align}
+         f(v).w'.u' \in (f\after\rho)(c), \\
+         arity(pat) = arity(w')} 
+         \end{align}
+      \end{align} \\
+    \In 
+    \set{(w', \bind (f\after\rho)~pat~w') \mid 
+       w' \in W', \matches (f\after\rho)~pat~w'}
+    \end{align} 
+  \\
+  = & \evalField (f\after\rho)~last~(c.f(v))~(?pat) .
+  \end{calc}
+
+%% *** Need that $\rho(c)$ is symmetric: if $v \in \rho(c)$ and $f(v) = f(v')$
+%% then $v' \in \rho(c)$.  
+
+\item Case $?pat:E$.  This is very similar to the previous case.
+  Note that $f(\eval \rho~ E) = \eval(f\after\rho)~ E$, by the inductive
+  hypothesis.  
+%
+  An error arises if any element of $\set{v.w \| w \in \eval \rho~ E}$ is not
+  a prefix of a member of $\rho(c)$; in which case, an element of $\set{v.w'
+    \| w' \in \eval (f\after\rho)~ E}$ is not a prefix of a member of
+  $(f\after\rho)(c)$, and vice versa, by Corollary~\ref{cor:channel-types}; both
+  sides then evaluate to $error$.
+%
+  Otherwise, in the main set comprehensions, $w$ ranges over $W \inter \eval
+  \rho~ E$.  Then $w'$ ranges over $W' \inter f(\eval \rho~ E) = W' \inter
+  \eval(f\after\rho)~ E$.
+\end{itemize} %% End of case analysis on field
+
+%%%%%%%%%% evalFields
+
+We now define a function that accumulate over the fields to get the
+resulting events and environments (but handling errors appropriately).
+\[
+\begin{align}
+\evalFields :: 
+  \begin{align}
+  Env \fun  Value \fun Field^* \fun \\
+  \qquad (\power (Value \cross Env) \union \set{error})
+  \end{align} \\
+\evalFields \rho~(c.v)~\seq{} = \set{(c.v,\rho)} \\
+% \evalFields \rho~(c.v)~\seq{f}  =  \evalField \rho~true~(c.v)~f \\
+\evalFields \rho~(c.v)~(\seq{field} \cat fs)  = \\
+\qquad
+  \begin{align}
+  \Let S = \evalField \rho~(fs=\seq{})~(c.v)~field \In \\
+  \If S = \error \Then \error \\
+  \Else \Union \set{ \evalFields \rho'~(c.w)~fs \mid  (c.w, \rho') \in S }.
+  \end{align}
+\end{align}
+\]
+(The term $fs=\seq{}$ tests whether $f$ is the last field.)
+We can then show 
+\begin{eqnarray*}%\label{eqn:evalFields}
+f(\evalFields \rho~(c.v)~fs) & = & 
+  \evalFields (f\after\rho)~(c.f(v))~fs ,
+\end{eqnarray*}
+%
+by an induction on $fs$ (identical to the corresponding proof
+in~\cite{symmetry-reduction}). 
+
+%%%%%%%%%%
+
+We now consider the process $e_c~ fs \then P$.  
+Let $c.v = \eval \rho~e_c$.  Then
+$\eval (f\after\rho)~e_c = c.f(v)$, by the inductive hypothesis. 
+Let
+%
+\begin{eqnarray*}
+L & = & \eval \rho~ (e_c~ fs \then P), \\
+S & = & \evalFields \rho~(c.v)~fs, \\
+L' & = &  \eval (f\after\rho)~ (e_c~fs \then P), \\
+S' & = & \evalFields (f\after\rho)~(c.f(v))~fs.
+\end{eqnarray*}%
+%
+The above result shows $f(S) = S'$.  We need to show $f(L) = L'$.
+
+If $S = error$ then $L = error$ and $f(L) = error$.  But then $S' = error$,
+so $L' = error$, as required. 
+
+Otherwise, $L$ is an LTS as follows.
+%
+\begin{itemize}
+\item The initial state is $(e_c~ fs \then P, \rho)$.
+
+\item For each $(a, \rho') \in S$, there is a transition labelled with $a$
+  from the initial state.  %  to $(P, \rho')$.
+
+\item For each $(a, \rho') \in S$, the sub-LTS following the transition of
+  the previous item equals $\eval \rho'~ P$.
+\end{itemize}
+%
+Then $f(L)$ is an  LTS as follows.
+%
+\begin{itemize}
+\item The initial state is $(e_c~fs \then P, f\after\rho)$.
+  This is the same as the initial state of~$L'$.
+
+\item For each $(a, \rho') \in S$, there is a transition labelled with $f(a)$
+  from the initial state.  Letting $a' = f(a)$ and $\rho'' = f\after\rho'$,
+  this is equivalent to saying that for every $(a',\rho'') \in f(S) = S'$,
+  there is a transition labelled with~$a'$ from the initial state.  This is
+  the same as the initial transitions of~$L'$.
+
+\item For each $(a, \rho') \in S$, the sub-LTS after the transition of the
+  previous item equals $f(\eval \rho'~ P)$.  But this equals $\eval
+  (f\after\rho')~P$, by the inductive hypothesis.  Letting $a' = f(a)$ and
+  $\rho'' = f\after\rho'$, this is equivalent to saying that for every
+  $(a',\rho'') \in f(S) = S'$, the sub-LTS after this transition equals $\eval
+  \rho''~P$.  This is the same as for~$L'$.
+\end{itemize} 
+%
+Hence $f(L) = L'$, as required. 
+
+%%%%%%%%%%
+
+\subparagraph{Case of at least one \$-field.}
+
+Now suppose that the prefixing construct contains at least one $\$$-field.
+We define the semantics using a function 
+\[
+\evalDollarField ::
+  Env \fun Bool \fun Value \fun Field \fun  \power (Value \cross Env).
+\]
+If $c.v$ is an incomplete event on channel~$c$, and $field$ is a $\$$-field,
+then, for a correct usage, $\evalDollarField \rho~last~(c.v)~field$ gives a
+set of $(w,\rho')$ pairs; each~$w$ is a value that could be communicated in
+the place of~$field$, compatible with~$c.v$, and $\rho'$ is the updated
+environment caused by binding any variables in patterns in~$field$.
+Compatibility again means that if $\rho(c) = \channel S$ then $v.w$ is a
+prefix of some element of~$S$, denoted $v.w \le \rho(c)$.  The argument~$last$
+of $\evalField$ again indicates whether this is the final field in the
+prefixing construct.
+
+We can prove the following, for $field$ a \$-field:
+\[ % begin{equation}\label{eqn:evalDollarField}
+  f (\evalDollarField \rho~last~(c.v)~field)  = 
+    \evalDollarField (f\after\rho)~last~(c.f(v))~field .
+\] % end{equation}
+The proof is almost identical to the cases for ?-fields in the proof of
+equation~(\ref{eqn:evalField}), and so is omitted. 
+
+We now define a function that, given an environment~$\rho$, an incomplete
+event~$c.v$, and a list of fields~$fs$, gives a set of pairs $(fs', \rho')$
+such that $fs'$ is the result of substituting each \$-field of $fs$ with a
+field $!x$ where $x$ is a fresh variable, and $\rho'$ is the environment
+resulting from binding~$x$ to a value~$w$ that could instantiate this field,
+and also binding any variables in the \$-fields with the corresponding values.
+The definition makes use of the fact that every \$-field must precede every !-
+or ?-field.
+\[
+\begin{align}
+\evalDollarFields :: 
+  Env \fun  Value \fun Field^* \fun  \power (Field^* \cross Env) ,
+\\
+\evalDollarFields \rho~(c.v)~\seq{} = \set{(\seq{},\rho)} ,
+\\
+\evalDollarFields \rho~(c.v)~(\seq{field} \cat fs)  = \\
+\quad
+  \begin{align}
+  \If \mbox{$field$ is a \$-field} \\
+  \Then 
+    \begin{align}
+    \set{ (\seq{!x} \cat fs', \rho'') \mid 
+    (w,\rho') \in \evalDollarField \rho~(fs=\seq{})~(c.v)~field, \\
+    \qquad\quad (fs', \rho'') \in
+       \evalDollarFields (\rho' \union \set{x \mapsto w})~ (c.v.w)~fs } \\
+    \mbox{where $x$ is  fresh}
+    \end{align} \\
+  \Else \set{ (\seq{field} \cat fs, \rho) } .
+  \end{align}
+\end{align}
+\]
+
+We can then  show
+\begin{eqnarray*} % \label{eqn:evalDollarFields}
+f (\evalDollarFields \rho~(c.v)~fs) & = & 
+  \evalDollarFields (f\after\rho)~(c.f(v))~fs ,
+\end{eqnarray*}
+%
+by an induction on $fs$ (again, identical to the corresponding proof
+in~\cite{symmetry-reduction}).
+
+We now consider the process $e_c~ fs \then P$; recall we are assuming there is
+at least one \$-field.  Let $c.v = \eval \rho~e_c$.  So $\eval
+(f\after\rho)~e_c = f (\eval \rho~e_c) = c.f(v)$, using the inductive
+hypothesis.  So let
+\begin{eqnarray*}
+L & = & \eval \rho ~ (e_c~fs \then P), \\
+S & = & \evalDollarFields \rho ~(c.v)~ fs, \\
+L' & = & \eval (f\after\rho)~ (e_c~fs \then P), \\
+S' & = & \evalDollarFields (f\after\rho) ~(c.f(v)) ~fs .
+\end{eqnarray*}%
+%
+The above result shows
+$f(S) =  S'$.
+We need to show $f(L) = L'$.
+
+If $S = \set{}$ then $L = error$ and $f(L) = error$.  But then $S' =
+\set{}$, so $L' = error$, as required. 
+
+Otherwise, $L$ is an augmented LTS as follows.
+\begin{itemize}
+\item The initial state is $(e_c~fs \then P, \rho)$.
+
+\item From the initial state, for each $(fs',\rho') \in S$, there is a
+  $\tau$-transition to $(e_c~fs' \then P, \rho')$.
+
+\item For each $(fs',\rho') \in S$, the sub-LTS rooted at
+  $(e_c~fs' \then P, \rho')$ equals $\eval~\rho'~(e_c~fs' \then P)$.
+\end{itemize}
+
+%
+Then $f(L)$ is an augmented LTS as follows.
+\begin{itemize}
+\item The initial state is
+  $(e_c~fs \then P, f\after\rho)$.  This is the
+  same as the initial state of~$L'$.
+
+\item From this initial state, for each $(fs',\rho') \in S$, there is a
+  $\tau$-transition to
+  \(
+  (e_c~fs' \then P, f\after\rho'). 
+  \)
+  %since the only constants from~$\T$ must appear in~$fs'$ and~$v$.  
+  Letting $\rho'' = f\after\rho'$, this is equivalent to
+  saying that for each $(fs',\rho'') \in f(S) = S'$, there is a
+  $\tau$-transition to $(e_c~fs' \then P,\linebreak[1] \rho'')$.
+  This is the same as the initial transitions of~$L'$.
+
+\item For each $(fs',\rho') \in S$, the sub-LTS rooted at
+  $(e_c~fs' \then  P,\linebreak[2]
+    {f\after\rho'})$ is 
+  equal to 
+  \( f(\eval~\rho'~(e_c~fs' \then P)) . \)
+  But this equals $\eval~{(f\after\rho')} ~ (e_c~fs' \then P)$
+  using the result for the case that there are no \$-fields.
+  % (equation~(\ref{eqn:prefix-no-dollar})).  
+  Letting 
+  $\rho'' = f\after\rho'$, this is equivalent to saying that for each
+  $(fs',\rho'') \in f(S) = S'$, the sub-LTS rooted at
+  $(e_c~fs' \then P, \linebreak[2] \rho'')$ is equal to
+  $\eval~\rho''~(e_c~fs' \then P)$.  This is the same as for~$L'$.
+\end{itemize}
+%
+Hence $f(L) = L'$, as required.
+
+
+

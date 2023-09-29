@@ -1,0 +1,339 @@
+
+This note seeks an alternative characterisation of data independence.
+
+We consider a \CSPm\ script that is data independent in a type~$t$, including
+no equality tests on values of type~$t$.  We make these requirements more
+precise below.
+
+Let $P[t]$ be a family of processes parameterised by the type~$t$.  We
+consider instantiating the type parameter by two concrete types~$T_1$ and
+$T_2$; we write the resulting processes as $P[T_1]$ and $P[T_2]$.  Let $f: T_1
+\fun T_2$ be a surjection.  Lift $f$ to events by pointwise application; and
+then lift $f$ to traces by pointwise application.  We will prove the following
+results.\footnote{The notation $f\inverse \banana{X}$ represents the
+  relational inverse image of~$X$ under~$f$, i.e.~$\set{y \| f(y) \in X}$.}
+%
+\begin{eqnarray}
+\traces(P[T_2]) & = & \set{f(tr) \| tr \in \traces(P[T_1])},
+  \label{eqn:traces} \\
+\failures(P[T_2]) & = &
+  \set{(f(tr), X) \| (tr, f\inverse \banana{X}) \in \failures(P[T_1])},
+  \label{eqn:failures} \\
+\divergences(P[T_2]) & = & \set{f(tr) \| tr \in \divergences(P[T_1])}.
+\end{eqnarray}
+
+%%%%%
+
+We now discuss the restrictions we need to place on the usage of~$t$, and of
+elements of~$t$, in order to obtain these results.  First, what can we do with
+the type $t$ itself?  Figure~\ref{fig:t-allowed} gives some examples.  (We use
+these definitions in examples below.)
+\framebox{\ldots} 
+
+\begin{definition}
+We say that a set or type is \emph{built from~$t$} if
+%
+\begin{itemize}
+\item It is $t$ itself;
+
+\item It is declared as a \CSPM{datatype}, and one of the branches uses a set
+  built from $t$;
+
+\item It is defined using a set comprehension, and one of the generators is
+  over a set built from~$t$;
+
+\item It is defined as all events over channels that are built from~$t$.
+\end{itemize}
+%
+A channel is \emph{built from~$t$} if its type uses a type built from~$t$.
+\end{definition}
+ 
+%%%%%
+
+\begin{figure}[ht]
+\begin{cspm}
+datatype Option = Some.t | None
+channel in : t
+channel c1 : t . Z -- Z some other set, independent of t
+channel c2 : t . t
+channel c2o : t . Option
+Y = {| in |}
+T1 = { x.z | x <- t, z <- Z } -- Z some other set
+\end{cspm}
+\caption{Allowable uses of the data independent type $t$. \label{fig:t-allowed}}
+\end{figure}
+
+%%%%%
+
+What can we do with a value~$v$ built from~$t$?  A process can: receive a
+value over a channel and store it; nondeterministically choose a value and
+store it; build a new value (possibly using stored values) and store it; or
+send a stored value.  However, no operation can be performed on the value~$v$
+that restricts the type of~$t$: in effect, $t$~is a free polymorphic type.
+
+We do not allow the script to contain any constant from~$t$, other than within
+the definition of the instantiation of~$t$.  \framebox{**} I
+think it would be ok to allow constants as long as all instantiations contain
+those constants, and we restrict to functions that are the identity on each
+constant. 
+
+Also not functions like \CSPM{seq} \framebox{\ldots}
+
+We also do not allow any equality or inequality tests over values of type~$t$.
+Consider the process
+\[
+c?x \then c?y \then \If x = y \Then a \then STOP \Else b \then STOP
+\]
+%
+This does not satisfy equation~\ref{eqn:traces}.  Let $v$ and~$v'$ be distinct
+elements of~$T_1$; then $tr = \trace{c.v, c.v', b} \in traces(P[T_1])$.  But
+consider $f: T_1 \fun T_2$ such that $f(v) = f(v') = w$; then the
+corresponding trace $f(tr) = \trace{c.w, c.w, b}$ is not a trace of
+$P[T_2]$.  If remapping by~$f$ unifies two values, equality tests can affect
+the path followed by a process. 
+
+We allow external choices and nondeterministic choices to be indexed over a
+set built from~$t$, for example~$\Intchoice x \in t \spot P(x)$.  However, we
+do not allow other operators, such as parallel operators, to be indexed over a
+set built from~$t$.  We allow arbitrary indexing over sets that are
+independent of~$t$. 
+
+When two processes synchronise on a channel built from~$t$, we require that,
+for each field from~$t$ in the corresponding events, at least one of the
+processes is willing to accept an arbitrary value whenever it is willing to
+accept any value.  For example, we allow
+\[
+c!x \then STOP \parallel[\eset{c}] c?y \then STOP.
+\]
+However, we do not allow 
+\[
+c!x \then STOP \parallel[\eset{c}] c!y \then STOP,
+\]
+for that corresponds to an equality test between~$x$ and~$y$. 
+
+%% Consider the following, in addition to the
+%% declarations in Figure~\ref{fig:t-allowed}.
+%% %
+%% \begin{cspm}
+%% datatype Pair = Two.t.t
+%% channel two : { Two.x.x | x <- t }
+%% P = c?x -> c?y -> two.Two.x.y -> STOP
+%% \end{cspm}
+%% %
+%% The processes $P$ do not satisfy equation~\ref{eqn:failures}, in general.  For
+%% suppose $f(A) = f(B) = C$.  Then $P[T_2]$ does not have the failure
+%% \[
+%% (\trace{c.C, c.C}, \set{two.Two.x.x \| x \in T_2}),
+%% \]
+%% even though $P[T_1]$ has a corresponding failure
+%% \[
+%% (\trace{c.A, c.B}, \set{two.Two.x.x \| x \in T_1}).
+%% \]
+
+%% \begin{cspm}
+%% datatype Triple = Three.t.t.t
+%% S3 = union({Three.x.x.y | x <- t, y <- t}, {Three.x.y.x | x <- t, y <- t})
+%% channel three: S3
+%% P = in?x -> in?y -> three.Three.x.y?z -> STOP
+%% \end{cspm}
+%% %
+%% The processes $P$ do not satisfy equation~\ref{eqn:failures}, in general.
+%% Suppose 
+%% \[
+%% T_1 = \set{A,B,C}, \quad T_2 = \set{C,D}, \quad 
+%% f(A) = f(B) = D, \quad f(C) = C.
+%% \]
+%% Then $P[T_2]$ does not have the failure
+%% \[
+%% (\trace{\M{in}.D, \M{in}.D},\; \set{\M{three.Three}.D.D.C}),
+%% \]
+%% since, after that trace, the ``|?z|'' ranges over all values in~$T_1$,
+%% including~$C$.  However,  $P[T_1]$ does have a corresponding failure
+%% \[
+%% (\trace{\M{in}.A, \M{in}.B},\; 
+%%   \set{\M{three.Three}.x.y.C \| x \in \set{A,B}, y \in \set{A,B}}),
+%% \]
+%% because, after that trace, the ``|?z|'' ranges over $\set{A}$.  In effect, the
+%% declaration of the type of~|three| has introduced an equality test.
+%% ** Simplified below
+
+\paragraph{Restricting sets}
+
+We need to place various restrictions upon how sets based on~$t$ are defined.
+In particular, we will have to place restrictions on the use of set
+comprehensions. 
+
+We need restrictions on the types of channels.  Consider the following (in
+addition to the declarations in Figure~\ref{fig:t-allowed}).\footnote{The use
+  of the {\cspmfont PairB} type and {\cspmfont Two} type constructor is
+  necessary to meet FDR's requirements that the alphabet of each channel is
+  rectangular, i.e.~the cartesian product of sets of complete values; they
+  aren't otherwise important for this example.}
+\begin{cspm}
+datatype PairB = Two.t.t.Bool
+channel two : union({Two.x.x.true | x <- t}, {Two.x.y.false | x <- t, y <- t})
+P = in?x -> in?y -> two.Two.x.y?b -> STOP
+\end{cspm}
+%
+The $P$ processes do not satisfy equation~(\ref{eqn:failures}), in general.
+Suppose 
+\[
+T_1 = \set{A,B}, \quad T_2 = \set{C}, \quad f(A) = f(B) =  C.
+\]
+Then $P[T_1]$ has a failure
+\[
+(\trace{\M{in}.A, \M{in}.B},\; 
+  \set{\M{two.Two}.x.y.\M{true} \| x \in \set{A,B}, y \in \set{A,B}}),
+\]
+because, after that trace, the ``|?b|'' ranges over $\set{\M{false}}$.  
+However,  $P[T_2]$ does not have the corresponding failure
+\[
+(\trace{\M{in}.C, \M{in}.C},\; \set{\M{two.Two}.C.C.\M{true}}),
+\]
+because, after that trace, the ``|?b|'' ranges over $\set{\M{true,false}}$.
+In effect, the declaration of the type of~|two| has introduced an equality
+test: the ``|?b|'' is equivalent to 
+``\CSPM{?b:(if x==y then \{true,false\} else \{false\})}'', which is not
+allowed because of the equality test. 
+
+To avoid situations like this, we will require that in each set
+comprehension $\{ e \| stmts\}$ each  identifier $x$ that appears in $e$ and
+that depends on~$t$ occurs at most once in~$e$.   This would ban the
+expression \CSPM{\{Two.x.x.true \| x <- t\}} that caused problems above,
+because~|x| appears twice in the term.
+
+We need a similar restriction for other sets.  Consider the following process,
+using hiding. 
+\begin{cspm}
+P = (in?x -> in?y -> c2.x.y -> STOP) \ {c2.x.x | x <- t}
+\end{cspm}
+Let $T_1$, $T_2$ and~$f$ be as above.  Then $P[T_2]$ has trace $\seq{in.A,
+in.B, c2.A.B}$, but $P[T_1]$ doesn't have the corresponding trace $\seq{in.C,
+in.C, c2.C.C}$, contrary to equation~(\ref{eqn:traces}).  We avoid situations
+like this in the same way as above.
+
+A similar example shows that we need likewise to restrict the sets used for
+alphabets or synchronisation sets in parallel compositions.
+
+
+
+%% For simplicity, we do not allow any set expressions using~$t$, other than
+%% expressions of the form $\eset{c_1, \ldots, c_k}$ for channel
+%% identifiers~$c_1, \ldots, c_k$, or of the form $\eset{C_1, \ldots, C_k}$ for
+%% datatype constructors~$C_1, \ldots, C_k$.  \framebox{???}
+
+%% \framebox{**} This could probably be weakened.  I think it would probably be
+%% ok to restrict set comprehensions so that each name that is bound by a
+%% generator over a set built from~$t$ is used at more once.  This would ban the
+%% expression \CSPM{\{Two.x.x.true \| x <- t\}} that caused problems above.  It's
+%% enough to ensure $T$-invariance. 
+%% %
+%% Note we also prevent such bound names appearing within the range of another
+%% generator, to prevent expressions such as  
+%% \CSPM{\{Two.x.y.true \| x <- t, y <- \{x\}\}}.
+
+%% We  need to restrict operations over sets that are built from~$t$.  We
+%% do allow sets to be built that contain values built from~$t$, and allow the
+%% \CSPM{union} and \CSPM{empty} functions to be applied to such sets.  However,
+%% we do not allow the function \CSPM{member} to be applied to a set built
+%% from~$t$, because it can be used to simulate equality tests: the expression
+%% $\CSPMM{member}(x, \set{y})$ is equivalent to $x = y$.  Likewise, we do not
+%% allow the function \CSPM{card} to be applied to a set built from~$t$: the
+%% expression $\CSPMM{card} \set{x,y} = 1$ is equivalent to $x = y$.  Similarly,
+%% we do not allow pattern matching over sets built from~$t$ that are based on
+%% the cardinality of the set.  We also do not allow the \CSPM{inter} and
+%% \CSPM{diff} functions since (when combined with \CSPM{empty}) they can be used
+%% to simulate equality tests.
+
+%% We can build sets using comprehensions over sets based on~$t$, for example,
+%% the set |T1| in Figure~\ref{fig:t-allowed}.  However, we cannot build
+%% sequences in the same way.  An expression such as \CSPM{< x.3 \| x <- t >}
+%% doesn't type check, since |t| is a set, not a sequence.  And, as noted above,
+%% we cannot use the function |seq| to convert a set into a sequence.  
+
+
+\begin{definition}
+\label{def:invariant}
+We say that a definition of a set is \emph{invariant} if it is of one of the
+following forms:
+%
+\begin{enumerate}
+\item A definition that is independent of~$t$.
+
+\item A set comprehension $\{e \| stmts\}$ or $\eset{e \| stmts}$, such  that
+for every identifier $x$ that appears in $e$ and that depends on~$t$:
+  % 
+  \begin{itemize}
+  \item $x$~is bound by a generator $x \,\M{<-}\, s_x$ in $stmts$, where $s_x$ is
+  itself invariant and uses no identifier bound by an earlier generator;
+  \item $x$~occurs only once in~$e$; and
+  \item $x$ is not used in any predicate in $stmts$.
+  \end{itemize}
+
+\item The name of a datatype (including $t$). 
+
+\item \CSPM{union(S1, S2)} where |S1| and |S2| are invariant forms. 
+
+\item ......
+\end{enumerate}
+\end{definition}
+
+I think the set comprehension case includes simple set definitions.
+
+Can the generator range over a larger set?  Would need to prevent any other
+generator depending on~$x$. 
+
+Note that the restriction that the set of a generator doesn't use an earlier
+bound variable prevents expressions such as 
+\CSPM{\{c2.x.y \| x <- t, y <- \{x\}\}}. 
+
+
+%% \framebox{Omit following?}
+
+%% We restrict all channel declarations
+%% \begin{cspm}
+%% channel c : A£$_1$£.£$\cdots$£.A£$_k$£
+%% \end{cspm}
+%% and all branches of datatypes
+%% \begin{cspm}
+%% datatype D = £$\cdots$£ | C.A£$_1$£.£$\cdots$£.A£$_k$£ | £$\cdots$£
+%% \end{cspm}
+%% such that each set |A|$_i$ is either:
+%% %
+%% \begin{itemize}
+%% \item a set that is independent of~$t$; 
+
+%% \item a datatype; or
+
+%% \item an expression of the form $\eset{C_1, \ldots, C_j}$, where $C_1, \ldots,
+%%   C_j$ are constructors of some datatype.
+%% \end{itemize}
+
+%% Conjecture: for every top-level set-valued expression $e$ in the script,
+%% \[
+%% \eval ~ \rho_1 ~ e = f\inverse \banana{\eval ~ (f\after\rho_1)~e}.
+%% \]
+%% Prove that if $\rho(x) = f\inverse \banana{f(\rho(x))}$ for every identifier~$x$
+%% associated with a set, then the above holds for~$\rho$.  Effectively this
+%% means piece-wise symmetric in~$t$. 
+
+%% ................
+
+
+We also need a restriction for renamings.  Consider
+%
+\begin{cspm}
+channel c : t.t
+P = (in?x -> in?y -> c.x.y -> STOP)[[ c.x.x <- d | x <- t ]]
+\end{cspm}
+%
+Let $T_1 = \set{A,B}$,\, $T_2 = \set{C}$ and $f(A) = f(B) = C$.  Then $P[T_1]$
+has trace $\trace{in.A, in.B, c.A.B}$.  But $P[T_2]$ does not have the
+corresponding trace $\trace{in.C, in.C, c.C.C}$.  We prevent renamings such as
+``\CSPM{c.x.x <- d}'', which contains an implicit equality test. 
+
+
+
+
+%% stable failure \[ (\trace{in.A, in.B}, \set{d}).  \] However, $P[T_2]$ does
+%% not have the corresponding stable failure \[ (\trace{in.C, in.C}, \set{d}) \]
