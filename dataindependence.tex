@@ -30,13 +30,16 @@
 \def\tick{
   \tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (0.75,.7) -- (.25,.15) -- cycle;
 } 
-\def\rename#1{{[\![}#1{]\!]}}
+\def\semanticRename#1{{[\![}#1{]\!]}} % semantics
 \def\CSPm{CSP$_M$}
 \def\banana#1{\mathord{(\!\|} #1 \mathord{\|\!)}}
 \def\Let{{\mathrm let\ }}
 \def\unit{u}
 \def\unitf{\Pi}
 \def\vec#1{\overline{#1}}
+%% Syntax
+\def\rename#1{\M{[[} #1 \M{]]}}
+\def\lArrow{\M{<-}}
 %% Semantics 
 \def\channel{\mathop{\it channel}}
 \def\dtcons{\mathop{\it dtcons}}

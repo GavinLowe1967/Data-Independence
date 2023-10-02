@@ -2,7 +2,6 @@
 
 We assume a well-typed error-free script.  \framebox{**} Error-free for~$T_1$? 
 
-
 We begin by defining the set of values associated with expressions in a
 script.  The set $Value$ contains the union of the following. 
 %
@@ -26,7 +25,7 @@ script.  The set $Value$ contains the union of the following.
 
 \item Augmented LTSs (defined below), representing processes.
 
-\item For each channel declaration $\CSPMM{channel}~c : e_1.\ldots.e_n$, a
+\item For each channel declaration $\CSPMM{channel}~c : e_1\M.\ldots\M.e_n$, a
   channel value $\channel S$, where $S$ is the set of values that can be
   passed on~$c$, i.e.~all values of the form $v_1.\ldots.v_n$ associated with
   $e_1.\ldots.e_n$.  In the case $n=0$, we use the value
@@ -54,10 +53,11 @@ We write $\rho$, $\rho'$, etc., for environments.  An environment can
 associate top-level names with values, for example corresponding to the
 declaration of channels.  If $c$ is the name of a channel, we will sometimes
 write $v \in \rho(c)$ to mean $v \in S$ where $\rho(c) = \channel S$.
-In addition, an environment can give the value of:
+In addition, an environment can give the value of, for example:
 %
 \begin{itemize}
 \item a name that corresponds to a formal parameter of a function;
+\item a name bound by a ``|let| \ldots |within|'' clause;
 \item a name bound by an input or nondeterministic choice in a process;
 \item a name for an indexing variable in an indexed process operator;
 \item a name bound by a generator in a set comprehension.
@@ -69,23 +69,22 @@ defined using a function $\eval : Env \fun Expr \pfun Value$ such that
 $\eval \rho~e$ gives the value of expression~$e$ in environment~$\rho$.
 
 For later convenience, we define the semantics of processes in terms of
-\emph{augmented LTSs}, where, each state is an element of $(Proc, Env)$,
-i.e.~a \CSPm\ syntactic processes expression (maybe with free variables) and
+\emph{augmented LTSs}, where each state is an element of $(Proc, Env)$,
+i.e.~a \CSPm\ syntactic process expression (maybe with free variables) and
 an environment giving values to free variables.  For example, three successive
 states of a process might be
 \[
 \begin{array}{rl}
-(in?x \then in?y \then c2.x.y \then STOP, & \set{}) \\
-(in?y \then c2.x.y \then STOP, & \set{x \mapsto v_1}) \\
-(c2.x.y \then STOP, & \set{x \mapsto v_1, y \mapsto v_2}).
+(\M{in?x -> in?y -> c2.x.y -> STOP}, & \rho_1) \\
+(\M{in?y -> c2.x.y -> STOP}, & \rho_1 \oplus \set{\M{x} \mapsto v_1}) \\
+(\M{c2.x.y -> STOP}, & \rho_1 \oplus \set{\M x \mapsto v_1, \M y \mapsto v_2}),
 \end{array}
 \]
-For a process expression~$P$, the value $\eval \rho~P$ is an
-LTS with initial state $(P,\rho)$.
-For simplicity, we assume that different identifiers (e.g.~in different
-parallel components) have distinct names: this can be achieved via an
-alpha-renaming.  
-
+where $\rho_1$ is the environment corresponding to top-level declarations, for
+example declarations of channels.  For a process expression~$P$, the value
+$\eval \rho~P$ is an LTS with initial state $(P,\rho)$.  For simplicity, we
+assume that different identifiers (e.g.~in different parallel components) have
+distinct names: this can be achieved via an alpha-renaming.
 
 We define a standard partial order~$\sqsubseteq$ over $Value$, with bottom
 element~$\bottom$, and such that all the datatype constructors are continuous.
@@ -125,7 +124,6 @@ values in the obvious way.
   injective, this might merge some states. 
 \end{itemize}
 
-
 The following definition captures our main assumption about the CSP script.
 %
 \begin{definition}
@@ -147,17 +145,20 @@ A CSP script is \emph{data-independent} for~$t$ if
   in alphabets and synchronisation sets for parallel composition, hiding, and
   |?x:S| fields in prefixing.
 
-\item\label{item:di-renaming} For each renaming $\rename{e_1 \leftarrow e_1',
-  \ldots, e_k \leftarrow e_k' \| stmts}$, and for each~$i \in
+\item\label{item:di-renaming} For each renaming $\rename{e_1 \lArrow e_1',
+  \ldots, e_k \lArrow e_k' ~ \M\| stmts}$, and for each~$i \in
   \set{1,\ldots,k}$, every identifier that appears in $e_i$ and that depends
   on~$t$:
 %
 \begin{itemize}
-\item is bound by a generator $x \,\M{<-}\, t$ in $stmts$,
+\item is bound by a generator $x \,\M{<-}\, t$ in $stmts$, \framebox{more
+  general?}
+
 \item occurs at most once in~$e_i$, and
+
 \item is not used in any predicate in $stmts$.
 \end{itemize}
-
+\framebox{cf. Definition~\ref{def:invariant}}
 
 \item The script does not apply any of the built-in functions
   %%  \CSPM{member}, \CSPM{card}, \CSPM{inter}, \CSPM{diff}, \CSPM{seq},
@@ -185,9 +186,9 @@ Informally, we want to say that, for each instantiation~$T$ of~$t$, if a value
 $A \in T$ can appear in a particular place in a channel or datatype value,
 then replacing that instance of~$A$ by a different value~$B$ also gives a
 valid channel or datatype value.  For example, for the definitions in
-Figure~\ref{fig:t-allowed}, if $A \in T$, then $c2.A.A$ is a valid
-value; and so is $c2.A.B$ for  $B \in T$.  The following
-definition captures this more formally.
+Figure~\ref{fig:t-allowed}, if $A \in T$, then $\M{c2}.A.A$ is a valid value;
+and so is $\M{c2}.A.B$ for $B \in T$.  The following definition captures this
+formally.
 %
 \begin{definition}
 Let $T$ be an instantiation of~$t$, let $\unit$ be a fresh value, and let
@@ -203,12 +204,12 @@ is \emph{$T$-invariant} if
 %%%%%
 
 \begin{example}
-Suppose $c2.A.A \in \eset{c2}$.  Then 
+Suppose $\M{c2}.A.A \in \eset{\M{c2}}$.  Then 
 \[
-\unitf(c2.A.A) = c2.\unit.\unit = \unitf(c2.B),
+\unitf(\M{c2}.A.A) = \M{c2}.\unit.\unit = \unitf(\M{c2}.A.B),
 \]
-so $\set{A,B}$-invariance of $\eset{c2}$ would require $c2.A.B \in
-\eset{c2}$, which is the case.
+so $\set{A,B}$-invariance of $\eset{\M{c2}}$ would require $\M{c2}.A.B \in
+\eset{\M{c2}}$, which is the case, for $B \in T$.
 
 However, recall the declaration (which is forbidden by our assumptions)
 %
@@ -228,14 +229,17 @@ The set $\eset{\M{two}}$ is not $\set{A,B}$-invariant: it includes
 
 \begin{definition}
 An environment~$\rho$ is \emph{$T$-invariant} if
+%
 \begin{itemize}
 \item For every channel identifier~$c$, either $\rho(c) = \bottom$, or
   $\rho(c) = \channel S$ for a set~$S$ that is $T$-invariant;
 
 \item For every datatype constructor~$C$, either $\rho(C) = \bottom$, or
-  $\rho(C) = \dtcons S$ for a set~$S$ that is $T$-invariant.
+  $\rho(C) = \dtcons S$ for a set~$S$ that is $T$-invariant;
+
+\item For every name~$x$ such that $\rho(x)$ is a set, $rho(x)$ is
+  $T$-invariant. 
 \end{itemize}
-\framebox{Or $\bottom$?}
 \end{definition}
 
 %%%%%
@@ -257,14 +261,14 @@ We prove the result by induction over the structure of~$s$, and perform a case
 analysis over the form of~$s$, following Definition~\ref{def:invariant}.  We
 concentrate on the interesting cases.
 
-Consider a set comprehension $s = \{ e \| stmts\}$.  Let $S = \eval \rho~s$.
-Suppose $w \in S$ and $\unitf(w) = \unitf(w')$.  Consider the fields
-$w_1,\ldots,w_k$ in~$w$ of types that depend upon~$t$.  Necessarily, these
-correspond to distinct identifiers $x_1,\ldots,x_k$ in~$e$, each of which is
-bound by a generator $x_i \,\M{<-}\, s_i$ in $stmts$, where $s_i$ is
-invariant.  Let $\rho_i$ be the environment~$\rho$ augmented corresponding to
-values taken by earlier generators corresponding to the production of~$w$; and
-let $S_i = \eval \rho_i~s_i$, so $w_i \in S_i$.  By induction, $S_i$ is
+Consider a set comprehension $s = \M\{ e ~ \M\| stmts \M\}$.  Let $S = \eval
+\rho~s$.  Suppose $w \in S$ and $\unitf(w) = \unitf(w')$.  Consider the fields
+$w_1,\ldots,w_k$ in~$w$ of types that depend upon~$t$.  By the assumption of
+invariance, these correspond to distinct identifiers $x_1,\ldots,x_k$ in~$e$,
+each of which is bound by a generator $x_i \,\M{<-}\, s_i$ in $stmts$, where
+$s_i$ is itself invariant.  Let $S_i = \eval \rho_i~s_i$, where $\rho_i$ be
+the environment~$\rho$ augmented corresponding to values taken by earlier
+generators in the production of~$w$; so $w_i \in S_i$.  By induction, $S_i$ is
 $T$-invariant.
 
 Let $w_1',\ldots,w_k'$ be the corresponding fields in~$w'$.  We show that the
@@ -274,124 +278,109 @@ Consider a generator $x_i \,\M{<-}\, s_i$.  Let $\rho_i'$ be the
 environment~$\rho$ augmented corresponding to values taken by earlier
 generators.  But, by assumption, $s_i$ uses none of the earlier bound
 variables~$x_1,\ldots,x_{i-1}$, and so $\eval \rho_i'~s_i = \eval \rho_i~s_i =
-S_i$.  Hence $w_i' \in S_i$, since $S_i$ is $T$-invariant.  Further, the
-identifiers $x_1,\ldots,x_k$ do not appear in predicates in $stmts$, so each
-such predicate will still be true with this binding.  Then evaluating $e$
-produces~$w'$, so $w' \in S$, as required.
+S_i$.  And $w_i' \in S_i$, since $S_i$ is $T$-invariant, so this generator can
+indeed produce~$w_i'$.  Further, the identifiers $x_1,\ldots,x_k$ do not
+appear in predicates in $stmts$, so each such predicate will still be true
+with this binding.  Then evaluating $e$ produces~$w'$, so $w' \in S$, as
+required.
 
-Now consider an extensions set comprehension $\eset{e \| stmts}$.
+Now consider an extensions set comprehension $\M{\{\|} e ~ \M\| stmts \M{\|\}}$.
 Necessarily, the expression~$e$ represents either a channel or a partial value
 from a datatype.  This expression represents the same set as a set
 comprehension where the ``missing'' fields are added with extra generators;
-for example, the expression \CSPM{\{\|c2\|\}}  defines the same set as
-\CSPM{\{c2.x.y \| x <- t, y <- t\}}.  By the assumption that $\rho$ is
+for example, the expression \CSPM{\{\|c2o\|\}}  defines the same set as
+\CSPM{\{c2o.x.y \| x <- t, y <- Option\}}.  By the assumption that $\rho$ is
 $T$-invariant, the generators range over sets that are themselves
 $T$-invariant.  Hence we can apply the result for standard set comprehensions
 to deduce the result for the extensions set comprehension. 
+
+Other cases from Definition~\ref{def:invariant} are straightforward.
 \end{proof}
 
-%% \begin{conjecture}
-%% Let $\rho(t) = T$.  \framebox{Probably need an assumption about $\rho$}
+
+
+
+%% \begin{definition}
+%% Consider a script instantiating~$t$ with~$T$.  Let $\rho$ be a corresponding
+%% environment.  We say that $\rho$ is \emph{$T$-invariant} if:
 %% %
-%% \begin{enumerate}
-%% \item If $e$ is an expression defining a set, and $e$ makes no use of~$t$,
-%%   then $\eval \rho~e$ is $T$-invariant. 
-
-%% \item If $d$ is the name of a datatype, then $\eval \rho~d$ is $T$-invariant.
-
-%% \item If $C$ is a constructor of a datatype, then $\eval \rho~\eset{C}$ is
-%%   $T$-invariant. 
-
-%% \item If $s$ is a set comprehension $\set{
-
-%% .........
-
-%% \item If $S_1$ and $S_2$ are $T$-invariant, then so is $S_1 \union S_2$.
-%% \end{enumerate}
-%% \end{conjecture}
-
-
-
-\begin{definition}
-Consider a script instantiating~$t$ with~$T$.  Let $\rho$ be a corresponding
-environment.  We say that $\rho$ is \emph{$T$-invariant} if:
-%
-\begin{itemize}
-\item For every channel~$c$ declared in the script, $\eval \rho ~ \eset{c}$
-  is $T$-invariant;
-
-\item For every datatype~$d$ declared in the script, $\eval \rho ~ d$ is
-  $T$-invariant;
-
-\item For every constructor $C$ of a datatype declared in the script,
-  $\eval \rho ~ \eset{C}$  is $T$-invariant.
-\end{itemize}
-\end{definition}
-
-\framebox{Show} a set is $T$-invariant if it doesn't depend on $t$; is of the
-form $\eset{C}$ for a constructor; closed under unions and dots.  
-
-
-\begin{lemma}
-\label{lem:T-invariant}
-Consider a script instantiating~$t$ with~$T$.  Then  the environment~$\rho_1$
-formed from the top-level declarations is $T$-invariant. 
-%
 %% \begin{itemize}
-%% \item For every channel~$c$ declared in the script, $\eval \rho_1 ~ \eset{c}$
+%% \item For every channel~$c$ declared in the script, $\eval \rho ~ \eset{c}$
 %%   is $T$-invariant;
-%% \item For every datatype~$d$ declared in the script, $\eval \rho_1 ~ d$ is
+
+%% \item For every datatype~$d$ declared in the script, $\eval \rho ~ d$ is
 %%   $T$-invariant;
+
 %% \item For every constructor $C$ of a datatype declared in the script,
-%%   $\eval \rho_1 ~ \eset{C}$  is $T$-invariant.
+%%   $\eval \rho ~ \eset{C}$  is $T$-invariant.
 %% \end{itemize}
-%
-Channel and datatypes are defined only at the top level; hence the same is
-true of each subsequent environment. 
-\end{lemma}
+%% \end{definition}
+
+
+%% \begin{lemma}
+%% \label{lem:T-invariant}
+%% Consider a script instantiating~$t$ with~$T$.  Then  the environment~$\rho_1$
+%% formed from the top-level declarations is $T$-invariant. 
+%% %
+%% %% \begin{itemize}
+%% %% \item For every channel~$c$ declared in the script, $\eval \rho_1 ~ \eset{c}$
+%% %%   is $T$-invariant;
+%% %% \item For every datatype~$d$ declared in the script, $\eval \rho_1 ~ d$ is
+%% %%   $T$-invariant;
+%% %% \item For every constructor $C$ of a datatype declared in the script,
+%% %%   $\eval \rho_1 ~ \eset{C}$  is $T$-invariant.
+%% %% \end{itemize}
+%% %
+%% Channel and datatypes are defined only at the top level; hence the same is
+%% true of each subsequent environment. 
+%% \end{lemma}
 
 %%%%%
 
-\begin{proof}
-We prove the result by induction over the declarations in the script.  We
-prove the case for datatypes; the cases for channels and constructors are
-similar but more straightforward.
+%% \begin{proof}
+%% We prove the result by induction over the declarations in the script.  We
+%% prove the case for datatypes; the cases for channels and constructors are
+%% similar but more straightforward.
 
-Suppose $w \in \eval \rho_1 ~ d$ and $\unitf(w) = \unitf(w')$.  Suppose $w$
-comes from a branch $C.S_1.\ldots.S_k$ of the definition of~$d$, so $w$ is of
-the form $C.w_1.\ldots.w_k$ where $w_i \in \eval \rho_1 ~ S_i$ for each~$i$.
-Since $\unitf(w) = \unitf(w')$,\, $w'$ must use the same constructor, and be
-of the form $C.w_1'.\ldots.w_k'$, where $\unitf(w_i) = \unitf(w_i')$ for
-each~$i$.  We show $w_i' \in \eval \rho_1 ~ S_i$, for each~$i$, via a case
-analysis.
-%
-\begin{itemize}
-\item If $S_i$ is a set that is independent of~$t$, when $w_i = \unitf(w_i) =
-  \unitf(w_i') = w_i'$, so $w_i' \in \eval \rho_1 ~ S_i$.
+%% Suppose $w \in \eval \rho_1 ~ d$ and $\unitf(w) = \unitf(w')$.  Suppose $w$
+%% comes from a branch $C.S_1.\ldots.S_k$ of the definition of~$d$, so $w$ is of
+%% the form $C.w_1.\ldots.w_k$ where $w_i \in \eval \rho_1 ~ S_i$ for each~$i$.
+%% Since $\unitf(w) = \unitf(w')$,\, $w'$ must use the same constructor, and be
+%% of the form $C.w_1'.\ldots.w_k'$, where $\unitf(w_i) = \unitf(w_i')$ for
+%% each~$i$.  We show $w_i' \in \eval \rho_1 ~ S_i$, for each~$i$, via a case
+%% analysis.
+%% %
+%% \begin{itemize}
+%% \item If $S_i$ is a set that is independent of~$t$, when $w_i = \unitf(w_i) =
+%%   \unitf(w_i') = w_i'$, so $w_i' \in \eval \rho_1 ~ S_i$.
 
-\item If $S_i$ is a datatype, then, by induction, $\eval \rho_1 ~ S_i$ is
-  $T$-invariant; hence  $w_i' \in \eval \rho_1 ~ S_i$. 
+%% \item If $S_i$ is a datatype, then, by induction, $\eval \rho_1 ~ S_i$ is
+%%   $T$-invariant; hence  $w_i' \in \eval \rho_1 ~ S_i$. 
 
-\item If $S_i$ is of the form $\eset{C_1, \ldots, C_j}$, where $C_1, \ldots,
-  C_j$ are constructors of some datatype, then by induction, each of $\eval
-  \rho_1 ~ \eset{C_1}, \ldots, \eval \rho_1 ~ \eset{C_j}$ is $T$-invariant;
-  hence again $w_i' \in \eval \rho_1 ~S_i$.
-\end{itemize}
-%
-Hence $w' = C.w_1'.\ldots.w_k' \in \eval \rho d$, as required.
-\end{proof}
+%% \item If $S_i$ is of the form $\eset{C_1, \ldots, C_j}$, where $C_1, \ldots,
+%%   C_j$ are constructors of some datatype, then by induction, each of $\eval
+%%   \rho_1 ~ \eset{C_1}, \ldots, \eval \rho_1 ~ \eset{C_j}$ is $T$-invariant;
+%%   hence again $w_i' \in \eval \rho_1 ~S_i$.
+%% \end{itemize}
+%% %
+%% Hence $w' = C.w_1'.\ldots.w_k' \in \eval \rho d$, as required.
+%% \end{proof}
 
 %%%%%%%%%%
 
-Introduce $\bindDecl$
-
-Consider a data-independent script.  Let $decls$ be the top level
-declarations.  We show that the environment~$\rho_1$ formed from $decls$ is
+  
+Consider a data-independent script with top-level declarations $decls$.
+Lemma~\ref{lem:invariant} had a premise that the environment is $T$-invariant.
+We now use this to show that the environment~$\rho_1$ formed from $decls$ is
 $T$-invariant.
 
+The semantics of a declaration is defined by a function $\bindDecl : Env \fun
+Decl \pfun Env$, where $Decl$ is the type of declarations: $\bindDecl
+\rho~decl$ gives the environment formed by updating~$\rho$ according to~$decl$. 
+%
 The declarations might be mutually recursive, so their semantics is defined as
-a fixed point.  One step of the iteration corresponding to that fixed point is
-given by the function
+a fixed point.  One step of the iteration for that fixed point is given by the
+function
 %
 \begin{eqnarray*}
 F(\rho) & = & \rho \oplus \Union \set{\bindDecl \rho ~ decl \| decl \in decls}.
@@ -404,50 +393,59 @@ of~$F$:
 \rho_1 & = & \bigsqcup_{n \in \nat} F^n(\rho^\bottom).
 \end{eqnarray*}
 
-Clearly $\rho^\bottom$ is $T$-invariant.  Lemma~\ref{lem:invariant} shows that
-if $\rho$ is $T$-invariant, then so is $F(\rho)$ (since every set expression
-used in $decls$ is invariant, by item~\ref{item:di-invariant} of
-Definition~\ref{defn:data-independent}).  Then a straightforward induction
-shows that $F^n(\rho^\bottom)$ is $T$-invariant, for all~$n$.  It follows that
-$\rho_1$ is $T$-invariant.
+Clearly $\rho^\bottom$ is $T$-invariant.  
+%
+Suppose $\rho$ is invariant, and consider a top-level declaration $x = s$;
+so $s$ is invariant, by item~\ref{item:di-invariant} of
+Definition~\ref{defn:data-independent}.  Then Lemma~\ref{lem:invariant} shows
+that $\eval \rho~s$ is $T$-invariant, so 
+\begin{eqnarray*}
+\bindDecl \rho~(x = s) & = & \rho \oplus \set{x \mapsto \eval \rho~s}
+\end{eqnarray*}
+is $T$-invariant.  A similar argument applies to channel and datatype
+declarations.  Hence if $\rho$ is $T$-invariant, then so is $F(\rho)$.
+%
+Then a straightforward induction shows that $F^n(\rho^\bottom)$ is
+$T$-invariant, for all~$n$.  It follows that $\rho_1$ is $T$-invariant.
+
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{lemma}
-Consider a set comprehension $s = \{ e \| stmts\}$.  Suppose that every
-identifier $x$ that appears in $e$ and that depends on~$t$:
-%
-\begin{itemize}
-\item is bound by a generator $x \,\M{<-}\, t$ in $stmts$,
-\item occurs only once in~$e$, and
-\item is not used in any predicate in $stmts$.
-\end{itemize}
-%
-Then $\eval \rho~s$ is $T$-invariant for every well-typed environment~$\rho$.
-\end{lemma}
+%% \begin{lemma}
+%% Consider a set comprehension $s = \{ e \| stmts\}$.  Suppose that every
+%% identifier $x$ that appears in $e$ and that depends on~$t$:
+%% %
+%% \begin{itemize}
+%% \item is bound by a generator $x \,\M{<-}\, t$ in $stmts$,
+%% \item occurs only once in~$e$, and
+%% \item is not used in any predicate in $stmts$.
+%% \end{itemize}
+%% %
+%% Then $\eval \rho~s$ is $T$-invariant for every well-typed environment~$\rho$.
+%% \end{lemma}
 
-%%%%%
+%% %%%%%
 
-\begin{proof}
-Let $S = \eval \rho~s$.  Suppose $w \in S$ and $\unitf(w) = \unitf(w')$.
-%% Necessarily, $w = \eval \rho_w~e$ for some $\rho_w \in \evalStmts \rho~stmts$.
-Consider the fields $w_1,\ldots,w_k$ in~$w$ of type~$t$.  Necessarily, these
-correspond to distinct identifiers $x_1,\ldots,x_k$ in~$e$, each of which is
-bound by a generator $x_i \,\M{<-}\, t$ in $stmts$.  Let $w_1',\ldots,w_k'$ be
-the corresponding fields in~$w'$.  Then the identifiers $x_1,\ldots,x_k$ could
-also be bound to $w_1',\ldots,w_k'$ by the generators.  These identifiers do
-not appear in predicates in $stmts$, so each such predicate will still be true
-with this binding.  Then evaluating $e$ produces~$w'$, so $w' \in S$, as
-required.
-\end{proof}
+%% \begin{proof}
+%% Let $S = \eval \rho~s$.  Suppose $w \in S$ and $\unitf(w) = \unitf(w')$.
+%% %% Necessarily, $w = \eval \rho_w~e$ for some $\rho_w \in \evalStmts \rho~stmts$.
+%% Consider the fields $w_1,\ldots,w_k$ in~$w$ of type~$t$.  Necessarily, these
+%% correspond to distinct identifiers $x_1,\ldots,x_k$ in~$e$, each of which is
+%% bound by a generator $x_i \,\M{<-}\, t$ in $stmts$.  Let $w_1',\ldots,w_k'$ be
+%% the corresponding fields in~$w'$.  Then the identifiers $x_1,\ldots,x_k$ could
+%% also be bound to $w_1',\ldots,w_k'$ by the generators.  These identifiers do
+%% not appear in predicates in $stmts$, so each such predicate will still be true
+%% with this binding.  Then evaluating $e$ produces~$w'$, so $w' \in S$, as
+%% required.
+%% \end{proof}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\framebox{***} Also need hidden sets and alphabets to be $T$-invariant
+%% \framebox{***} Also need hidden sets and alphabets to be $T$-invariant
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

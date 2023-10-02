@@ -1,0 +1,10 @@
+\newcount\calclinepenalty 
+\calclinepenalty=2000  % maybe too high but should be > 1000
+\def\@calccr{{\ifnum0=`}\fi\@ifstar{\global\@eqpen\@M
+    \@calcycr}{\global\@eqpen\calclinepenalty \@calcycr}}
+\def\@calcycr{\@ifnextchar [{\@calcxcr}{\@calcxcr[\z@]}}
+\def\@calcxcr[#1]{\ifnum0=`{\fi}\@@eqncr
+   \noalign{\penalty\@eqpen\vskip #1 \relax} & \hskip -2\arraycolsep}
+\def\calc{\def\@eqncr{\nonumber\@calccr} \begin{eqnarray} & \hskip -2\arraycolsep}
+\def\endcalc{\nonumber\end{eqnarray}\global\@ignoretrue}
+%\def\com#1{ \left\langle \begin{align} #1 \end{align} \right\rangle }
