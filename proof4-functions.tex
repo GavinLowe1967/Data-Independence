@@ -1,0 +1,353 @@
+\subsubsection{Functions}
+
+We now consider functions defined and/or applied in the script.
+The representation of a function~$g$ is a set of pairs $(v,w)$ such that $g$
+maps~$v$ to~$w$, with the normal property of being a function, i.e.
+\[
+\forall v, w, w' \spot (v,w) \in g \land (v,w') \in g \implies w=w'.
+\]
+We will use standard notation for function application, writing $g(v)$ for the
+unique $w$ such that $(v,w) \in g$.
+%
+Note that each \CSPm\ function is considered total, although it might map
+certain arguments to one of the special values~$\bottom$ or $error$. 
+
+Applying $f$ to a function~$g$ corresponds to applying $f$ to each element of
+each pair, i.e.~$f(g) = \set{(f(v), f(w)) \| (v,w) \in g}$.  We show below
+that $f(g)$ is a function.  Here and below, if $f: T_1 \fun T_2$, then $g$ is
+a function over a type~$A$ built from~$T_1$, and $f(g)$ is a function over the
+corresponding type $f(A)$ built from~$T_2$.
+
+The following definition will be useful.
+%
+\begin{definition}
+We say that $g$ \emph{respects~$f$} if
+\[
+\forall v, w, v', w' \spot 
+  (v,w) \in g \land (v',w') \in g \land f(v) = f(v') \implies f(w) = f(w'). 
+\]
+Equivalently:
+\[
+\forall v,  v' \spot f(v) = f(v') \implies f(g(v)) = f(g(v')). 
+\]
+\end{definition}
+%
+We show that if $g$ respects~$f$ then $f(g)$ is a function.  Later we show
+that all functions that can be defined using \CSPm\ respect~$f$. 
+%
+\begin{lemma}
+\label{lem:function-respects}
+Suppose $g$ respects $f$.  Then $f(g)$ is a function, and $f(g(x)) =
+(f(g))(f(x))$.
+\end{lemma}
+%
+\begin{proof}
+We first show $f(g)$ is a function.  Suppose $(v,w) \in f(g)$ and $(v,w') \in
+f(g)$.  Then for some $v_0, v_0', w_0, w_0'$ we have
+\[
+\begin{align}
+(v_0,w_0) \in g \land f(v_0) = v \land f(w_0) = w \land \\
+(v_0',w_0') \in g \land f(v_0') = v \land f(w_0') = w'.
+\end{align}
+\]
+But $g$ respects~$f$, and $f(v_0) = f(v_0')$, so $f(w_0) = f(w_0')$, and hence
+$w = w'$.
+
+Now suppose $g(v) = w$, i.e.~$(v,w) \in g$.  Then $(f(v),f(w)) \in f(g)$ so
+$(f(g))(f(v)) = f(w) = f(g(v))$, as required.
+\end{proof}
+
+%%%%%
+
+We can now show that a function application~$g(e)$ satisfies 
+clause~\ref{item:eval}, assuming $g$ evaluates to a function that
+respects~$f$:
+%
+\begin{calc}
+& f(\eval \rho~(g(e))) \\
+= & f((\eval \rho~g)~ (\eval \rho~e)) \\
+= & \com{Lemma \ref{lem:function-respects}} \\
+  & (f(\eval \rho~g))~ (f(\eval \rho~e)) \\
+= & \com{inductive hypothesis} \\
+  & (\eval (f\after\rho)~g) ~(\eval (f\after\rho)~e) \\
+= & \eval (f\after\rho) (g(e)).
+\end{calc}
+
+It remains to show that for any expression that defines a function: (1)~the
+resulting function respects~$f$; and (2)~the expression satisfies
+clause~\ref{item:eval}.  The following sections discharge these requirements.
+
+%%%%%%%%%%
+
+\paragraph{Lambda abstractions.}
+
+Consider the expression $\lambda pat \spot e$.  Let $g = \eval \rho (\lambda
+pat \spot e)$.  Suppose this function takes arguments of type~$A$.  Then
+%
+\begin{eqnarray*}
+g & = & 
+  \set{(v,\; 
+  \If \matches \rho~pat~v \Then \eval(\bind \rho~pat~v)~e \Else error) \|
+    v \in A}.
+\end{eqnarray*}
+%
+We show that $g$ respects~$f$.  Suppose $(v,w), (v',w') \in g$ and $f(v) =
+f(v')$.  Then
+\begin{calc}
+& f(w) \\
+= & \If \matches \rho~pat~v \Then  f(\eval(\bind \rho~pat~v)~e)
+    \Else f(error) \\
+= & \com{inductive hypothesis, clauses \ref{item:matches} and \ref{item:eval};
+  $f(error) = error$} \\
+& \If \matches (f\after\rho)~pat~(f(v))
+       \Then \eval(f\after(\bind \rho~pat~v))~e 
+    \Else error \\
+= & \com{inductive hypothesis, clause~\ref{item:bind}} \\
+&  \If \matches (f\after\rho)~pat~(f(v))
+       \Then \eval(\bind (f\after\rho)~pat~(f(v)))~e 
+    \Else error \\
+= & \com{$f(v) = f(v')$} \\
+& \If \matches (f\after\rho)~pat~(f(v'))
+       \Then \eval(\bind (f\after\rho)~pat~(f(v')))~e 
+    \Else error \\
+= & \com{as above} \\
+& f(w'),
+\end{calc}
+%
+as required. 
+
+We prove the lambda extraction satisfies clause~\ref{item:eval} as follows.
+%
+\begin{calc}
+& f(\eval \rho~(\lambda pat \spot e)) \\
+= & \com{as above} \\
+& \begin{align}
+  \set{(f(v),\; 
+    \begin{align}
+    \If \matches (f\after\rho)~pat~(f(v))
+       \Then \eval(\bind (f\after\rho)~pat~(f(v)))~e \\
+    \Else error) \| 
+    \end{align} \\
+    \qquad v \in A} 
+    \end{align} \\
+= & \com{letting $v' = f(v)$} \\& 
+  \begin{align}
+  \set{(v',\; 
+    \begin{align}
+    \If \matches (f\after\rho)~pat~v'
+       \Then \eval(\bind (f\after\rho)~pat~v')~e 
+    \Else error) \| 
+    \end{align} \\
+    \qquad v' \in f(A)} 
+    \end{align} \\
+= & \eval~(f\after\rho)~(\lambda pat \spot e).
+\end{calc}
+
+%%%%%%%%%%
+
+\paragraph{Bound function names.}
+
+Suppose the environment~$\rho$ binds a name~$h$ to a function~$g$.  We require
+that $g$ respects~$f$.  We prove this as an extension of the proof in
+Section~\ref{sec:bindDecls}.  Suppose $h$ is defined by pattern matching:
+\[
+\begin{align}
+h(pat_1)  =  e_1 \\
+h(pat_2)  =  e_2 \\
+\ldots \\
+h(pat_k) = e_k
+\end{align}
+\]
+where $k \ge 1$.  Then, letting $A$ be the argument type of~$h$, the
+environment binds~$h$ to the function
+%
+\[
+\set{(v,
+  \begin{align}
+  \If \matches \rho~ pat_1~v \Then \eval (\bind \rho~pat_1~v)~e \\
+  \Else \If \matches \rho~ pat_2~v \Then \eval (\bind \rho~pat_2~v)~e \\
+  \ldots \\
+  \Else \If \matches \rho~ pat_k~v \Then \eval (\bind \rho~pat_k~v)~e 
+  \Else error ) \| \\
+  \qquad v \in A }.
+  \end{align}
+\]
+The proofs that this function respects~$f$, and that clause{item:eval} is
+satisfied, are very similar to the proofs for lambda extractions, above.
+
+The proofs extend to curried functions in a straightforward (but notationally
+messy) way.
+
+%%%%%%%%%%
+
+\paragraph{Built-in functions}
+
+Consider a built-in function~|g|.  Let $f: T_1 \fun T_2$, and suppose the
+semantics of~|g| over types built from~$T_1$ is a function~$g_1$, and  the
+semantics of~|g| over types built from~$T_2$ is a function~$g_2$.  We seek to
+show $g_2 = f(g_1)$.  Note that we need to distinguish between $g_1$ and $g_2$
+to ensure correct typing.  
+
+%
+%% We consider which built-in functions~$g$ respect~$f$, i.e.~if $f(v) = f(v')$
+%% then $f(g(v)) = f(g(v'))$.  The following lemma will be useful.
+%
+\begin{lemma}
+\label{lem:built-in-functions}
+Suppose $\dom g_2 = f(\dom g_1)$ and $f \circ g_1 = g_2 \circ f$.  Then
+$g_1$ respects~$f$, and $f(g_1) = g_2$.
+\end{lemma}
+%
+\begin{proof}
+We first show $g_1$ respects~$f$.  Suppose $f(v) = f(v')$.  Then $f(g_1(v)) =
+g_2(f(v)) = g_2(f(v')) = f(g_1(v'))$, as required.
+
+We prove $f(g_1) = g_2$ as follows.
+%
+\begin{calc}
+& f(g_1) \\ 
+= & \set{ (f(v), f(g_1(v))) \| v \in \dom g_1 } \\ 
+= & \set{ (f(v), g_2(f(v))) \| v \in \dom g_1 } \\
+= & \com{letting $w = f(v)$} \\ 
+& \set{ (w, g_2(w)) \| w \in f(\dom g_1) }  \\
+= & \set{ (w, g_2(w)) \| w \in \dom g_2 } \\
+= & g_2.
+\end{calc}
+\end{proof}
+
+%%%%%
+
+Under the condition $f(g_1) = g_2$, we can proof condition~\ref{item:eval}
+holds for the built-in function~|g|:
+\[
+f(\eval \rho ~ \M{g}) = f(g_1) = g_2 = \eval (f\after\rho) ~ \M{g}.
+\]
+
+It remains to consider which built-in functions satisfy the premises of
+Lemma~\ref{lem:built-in-functions}.  The condition $\dom g_2 = f(\dom g_1)$
+holds for all built-in functions.  For non-polymorphic functions, $g_1$
+and~$g_2$ are the same functions, operating over values independent of~$t$,
+and $f$ is the identity on the resulting values.  For polymorphic functions,
+the functions are defined over \emph{all} types with the relevant type
+constraint (e.g.~$Set~t$ for types whose members can be included in sets), and
+corresponding types built from~$T_1$ and~$T_2$ satisfy the same type
+constraints.
+
+If a function |g| (or infix binary operator) can be applied only to values
+that do not use $t$, and so necessarily returns a result that it independent
+of~$t$, then its semantics is independent of the underlying types, i.e.~$g_1 =
+g_2$.  Further, composing it with~$f$ has no effect.  Hence $f \circ g_1 = g_1
+= g_2 = g_2 \circ f$.  Examples include operators over integers
+(e.g.~$+$,~$<=$) or booleans~(e.g.~|and|,~|!|).  The same is true for
+instances of polymorphic functions that are independent of~$t$.  Examples
+include equality or inequality tests over values independent of $t$; or
+application of the set operators to sets of values that are independent
+of~$t$.
+
+It is straightforward to show that each of the following polymorphic built-in
+functions satisfies the condition $f \circ g_1 = g_2 \circ f$.
+%
+\begin{itemize}
+\item the set functions |empty|, |union|, |Union|, |Set| and |Seq|;
+
+\item the sequence functions |concat|,  |head|, |length|, |null|, |set|
+and~|tail|; 
+
+\item the map functions |emptyMap|, |mapDelete|, |mapFromList|, |mapLookup|,
+  |mapMember|, |mapUpdate|, |mapUpdateMultiple| and~|Map| (recall that we
+  assume that the domain type of each map is independent of~$t$);
+\end{itemize}
+
+However, the condition $f \circ g_1 = g_2 \circ f$ does not hold for all
+polymorphic built-in functions when applied to arguments of type~$t$.  For
+example, it does not hold for the set-cardinality functions (denoted $\#_1$,
+$\#_2$) corresponding to the built-in function |card|; if $f(A) = f(B) = C$
+then:
+\[
+f(\#_1\set{A,B}) = f(2) = 2 \ne 1 = \#_2\set{C} = \#_2(f(\set{A,B})).
+\]
+For a binary operator with denotations~$\oplus_1$ and $\oplus_2$ (written as
+infix operators), the required condition can be stated as $f(v \oplus_1 v') =
+f(v) \oplus_2 f(v')$.  The condition does not hold for the set-intersection
+functions.
+\[
+f(\set{A} \inter_1 \set{B}) = f(\set{}) = \set{} \ne \set{C} 
+  = \set{C} \inter_2 \set{C} = f(\set{A}) \inter_2 f(\set{B}).
+\]
+All the built-in functions for which the condition does not hold were
+disallowed by condition~\ref{item:built-in-functions} of
+Definition~\ref{defn:data-independent}.
+
+%% But not
+%% \begin{itemize}
+%% \item the set functions |card|, |diff|, |inter|, |Inter|, |member| and |seq|;
+%%   or the subset relations |<=|, |<|, |>=| and |>|;
+
+%% \item the sequence function |elem|;
+
+%% \item the map function |mapToList|;
+
+%% \item the function~|show|.
+%% \end{itemize}
+
+\framebox{???} Compression functions; relation functions.  |extensions|
+|productions|.
+
+
+%% \begin{lemma}
+%% If $\dom g_2 = f(\dom g_1)$ and  $f \circ g_1 = g_2 \circ f$, then
+%% $f(g_1) = g_2$.
+%% \end{lemma}
+
+%% \begin{proof}
+%% \begin{calc}
+%% & f(g_1) \\ 
+%% = & \set{ (f(v), f(g_1(v))) \| v \in \dom g_1 } \\ 
+%% = & \set{ (f(v), g_2(f(v))) \| v \in \dom g_1 } \\
+%% = & \com{letting $w = f(v)$} \\ 
+%% & \set{ (w, g_2(w)) \| w \in f(\dom g_1) }  \\
+%% = & \set{ (w, g_2(w)) \| w \in \dom g_2 } \\
+%% = & g_2.
+%% \end{calc}
+%% \end{proof}
+%
+%% The converse does not hold.  Indeed, if $f : T_1 \fun T_2$ (suitably lifted),
+%% and $g : T_1 \fun T_1$, then $g \circ f$ might not even be well-typed.  The
+%% above lemma requires $g$ to be suitably polymorphic --- as is the case with
+%% most built-in functions.
+
+%% Further, if a built in function with name~|g| has denotation~$g$, then
+%% \[
+%% f(\eval \rho \M{g}) 
+%% = f(g) 
+%% = \set{ (f(v), f(g(v))) \| v \in \dom g } 
+%% = \set{ (f(v), g(f(v))) \| v \in \dom g } 
+%% = \set{ (w, g(w)) \| w \in f(\dom g) } 
+%% = ?? 
+%% f(\eval (f\after\rho) \M{g}) 
+%% \]
+
+%% Note that if $g$ returns results that are independent of~$t$ (on
+%% which values $f$ is the identity), the consequent is equivalent $g(v) =
+%% g(v')$.  
+%% For a binary operator with denotation~$\oplus$, the required
+%% condition can be stated as $f(v \oplus v') = f(v) \oplus f(v')$. 
+%% : if $f(v) = f(v')$ and $f(w) = f(w')$ then
+%% $f(v \oplus w) = f(v' \oplus w')$.
+
+
+%% Consider a built-in function |g| with semantics~$g$ such that $f(g(x)) =
+%% g(f(x))$ for all~$x$.  Then  clause~\ref{item:eval} holds for an application
+%% of~|g|: 
+%% %
+%% \begin{calc}
+%% & f(\eval \rho ~ (\M{g}(e))) \\
+%% = &  f(g(\eval \rho e)) \\
+%% = & g(f(\eval \rho e)) \\
+%% = & g(\eval (f\after\rho) e) \\
+%% = & \eval (f\after\rho) ~(\M{g}(e)).
+%% \end{calc}
+%% %
+%% For a binary operator with semantics $\oplus$, we can prove a corresponding
+%% result provided $f(x \oplus x') = f(x) \oplus f(x')$, for all $x, x'$. 
+

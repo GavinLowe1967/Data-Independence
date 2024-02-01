@@ -23,7 +23,8 @@ script.  The set $Value$ contains the union of the following.
 \item Functions, considered as sets of maplets ($v \mapsto v'$); we sometimes
   represent functions using lambda abstractions.
 
-\item Augmented LTSs (defined below), representing processes.
+\item Augmented labelled transition systems (defined below), representing
+  processes.
 
 \item For each channel declaration $\CSPMM{channel}~c : e_1\M.\ldots\M.e_n$, a
   channel value $\channel S$, where $S$ is the set of values that can be
@@ -69,10 +70,11 @@ defined using a function $\eval : Env \fun Expr \pfun Value$ such that
 $\eval \rho~e$ gives the value of expression~$e$ in environment~$\rho$.
 
 For later convenience, we define the semantics of processes in terms of
-\emph{augmented LTSs}, where each state is an element of $(Proc, Env)$,
-i.e.~a \CSPm\ syntactic process expression (maybe with free variables) and
-an environment giving values to free variables.  For example, three successive
-states of a process might be
+\emph{augmented labelled transition systems (ALTS)}.  An ALTS is a labelled
+transition system, where each state is an element of $(Proc, Env)$, i.e.~a
+\CSPm\ syntactic process expression (maybe with free variables) and an
+environment giving values to (at least) the free variables.  For example,
+three successive states of a process might be
 \[
 \begin{array}{rl}
 (\M{in?x -> in?y -> c2.x.y -> STOP}, & \rho_1) \\
@@ -82,7 +84,7 @@ states of a process might be
 \]
 where $\rho_1$ is the environment corresponding to top-level declarations, for
 example declarations of channels.  For a process expression~$P$, the value
-$\eval \rho~P$ is an LTS with initial state $(P,\rho)$.  For simplicity, we
+$\eval \rho~P$ is an ALTS with initial state $(P,\rho)$.  For simplicity, we
 assume that different identifiers (e.g.~in different parallel components) have
 distinct names: this can be achieved via an alpha-renaming.
 
@@ -93,15 +95,18 @@ Let $f : T_1 \fun T_2$.  We extend $f$ to other
 values in the obvious way.
 \begin{itemize}
 \item For values~$x$ not depending on~$t$ we have $f(x) = x$: this includes
-  basic values (e.g.integers and booleans), names of channels and datatype
-  constructors, $\varepsilon$, $\bottom$ and $\error$.
+  basic values (e.g.~integers and booleans), names of channels, names of
+  datatype constructors other than those in~$T_1$, and the distinguished values
+  $\varepsilon$, $\bottom$ and $\error$.
 
-\item We lift $f$ to dotted tuples ---including events--- by
-  $f(v_1.\ldots.v_n) = f(v_1).\ldots.f(v_n)$.  This is well defined provided
-  \framebox{???} (see below).
+\item We lift $f$ to dotted tuples, including events, by point-wise
+  application: $f(v_1.\ldots.v_n) = f(v_1).\ldots.f(v_n)$.  This is well
+  defined provided \framebox{???} (see below).
 
 \item We lift $f$ to tuples, sets, sequences and maps by point-wise
   application.
+
+\item \framebox{maps}
 
 \item We lift $f$ to functions, considered as sets of maplets, by
   \framebox{???} 
@@ -116,12 +121,12 @@ values in the obvious way.
 \item For convenience, we lift $f$ to environments by functional
   composition, i.e.~$f(\rho) = f\after\rho$.
 
-\item We lift $f$ to LTS states by point-wise application, so $f(Q,\rho) =
+\item We lift $f$ to ALTS states by point-wise application, so $f(Q,\rho) =
   (Q, f\after\rho)$. 
 
-\item We lift $f$ to augmented LTSs by application of~$f$ to the states
-  and to the events of the transitions.  Note that, as $f$ is not necessarily
-  injective, this might merge some states. 
+\item We lift $f$ to ALTSs by application of~$f$ to the states and to the
+  events of the transitions.  Note that, as $f$ is not necessarily injective,
+  this might merge some states.
 \end{itemize}
 
 The following definition captures our main assumption about the CSP script.
@@ -135,36 +140,52 @@ A CSP script is \emph{data-independent} for~$t$ if
 
 \item There are no equality or inequality tests over values built from~$t$.
 
-\item When two processes synchronise on a channel built from~$t$, for each
-  field from~$t$ in the corresponding events, at least one of the processes is
-  willing to accept an arbitrary value.
+\item\label{item:sync} When two processes synchronise on a channel built
+  from~$t$, for each field from~$t$ in the corresponding events, at least one
+  of the processes is willing to accept an arbitrary value.
 
 \item\label{item:di-invariant} Every expression that produces a set is
   invariant (Definition~\ref{def:invariant}) for: (1) top-level declarations
   (which includes declarations used for channels and datatypes); (2) sets used
-  in alphabets and synchronisation sets for parallel composition, hiding, and
-  |?x:S| fields in prefixing.
+  in alphabets and synchronisation sets for parallel composition, the
+  exception operator, and hiding.
 
 \item\label{item:di-renaming} For each renaming $\rename{e_1 \lArrow e_1',
-  \ldots, e_k \lArrow e_k' ~ \M\| stmts}$, and for each~$i \in
-  \set{1,\ldots,k}$, every identifier that appears in $e_i$ and that depends
-  on~$t$:
+  \ldots, e_k \lArrow e_k' ~ \M\| stmts}$, for each~$i \in \set{1,\ldots,k}$,
+  and for each identifier~$x$ that appears in $e_i$ and that depends on~$t$:
 %
-\begin{itemize}
-\item is bound by a generator $x \,\M{<-}\, t$ in $stmts$, \framebox{more
-  general?}
+  \begin{itemize}
+  \item $x$ is bound by a generator $x \,\M{<-}\, s_x$ in $stmts$, where $s_x$
+    is invariant and uses no identifier bound by an earlier generator;
 
-\item occurs at most once in~$e_i$, and
+  \item $x$ occurs at most once in~$e_i$; and
 
-\item is not used in any predicate in $stmts$.
-\end{itemize}
-\framebox{cf. Definition~\ref{def:invariant}}
+  \item $x$ is not used in any predicate in $stmts$.
+  \end{itemize}
 
-\item The script does not apply any of the built-in functions
+\item\label{item:indexing} For each use of the replicated parallel operators
+  (replicated alphabetised parallel, replicated generalised parallel,
+  replicated interleaving, and replicated link parallel), and for replicated
+  sequential composition, the statements that generate the component processes
+  make no use of~$t$. 
+
+
+\item\label{item:built-in-functions} The script does not apply any of the
+  following built-in functions:
+  \begin{itemize}
+    \item the set functions |card|, |diff|, |inter|, |Inter|, |member| and
+      |seq|; or the subset relations |<=|, |<|, |>=| and |>|;
+
+    \item the sequence function |elem|;
+
+    \item the map function |mapToList|;
+
+    \item the function |show|.
+  \end{itemize}
   %%  \CSPM{member}, \CSPM{card}, \CSPM{inter}, \CSPM{diff}, \CSPM{seq},
   %% \CSPM{mapToList},
   \CSPM{mtransclose} or \CSPM{show} to a value built from~$t$.
-  \framebox{\ldots}. 
+  \framebox{\ldots -- as in functions section}. 
 
 \item The script makes no use of any compression function.
   %% s \CSPM{deter},
@@ -176,16 +197,17 @@ A CSP script is \emph{data-independent} for~$t$ if
 
 \subsection{Invariance of sets}
 
-Recall from the introduction that we need to place restrictions on expressions
-that define sets, mainly concerning the use of bound variables in set
-comprehensions.  In this section, we present a corresponding semantic
-condition on the set produced, and show that it is satisfied under the
-conditions of Definition~\ref{def:invariant}.
+Recall from the introduction that we need to place restrictions,
+\emph{invariance}, on expressions that define sets, mainly concerning the use
+of bound variables in set comprehensions.  In this section, we present a
+corresponding semantic condition, \emph{$T$-invariance}, on the set produced,
+and show that it is satisfied under the conditions of
+Definition~\ref{def:invariant}.
 
 Informally, we want to say that, for each instantiation~$T$ of~$t$, if a value
 $A \in T$ can appear in a particular place in a channel or datatype value,
-then replacing that instance of~$A$ by a different value~$B$ also gives a
-valid channel or datatype value.  For example, for the definitions in
+then replacing that instance of~$A$ by a different value~$B \in T$ also gives
+a valid channel or datatype value.  For example, for the definitions in
 Figure~\ref{fig:t-allowed}, if $A \in T$, then $\M{c2}.A.A$ is a valid value;
 and so is $\M{c2}.A.B$ for $B \in T$.  The following definition captures this
 formally.
@@ -211,7 +233,8 @@ Suppose $\M{c2}.A.A \in \eset{\M{c2}}$.  Then
 so $\set{A,B}$-invariance of $\eset{\M{c2}}$ would require $\M{c2}.A.B \in
 \eset{\M{c2}}$, which is the case, for $B \in T$.
 
-However, recall the declaration (which is forbidden by our assumptions)
+However, recall the declaration (which is not invariant, and so forbidden by
+our assumptions)
 %
 \begin{cspm}
 channel two : union({Two.x.x.true | x <- t}, {Two.x.y.false | x <- t, y <- t})
@@ -227,18 +250,23 @@ The set $\eset{\M{two}}$ is not $\set{A,B}$-invariant: it includes
 
 %%%%%
 
+The following definition mainly captures that channel identifiers, datatype
+constructors or identifiers representing sets are mapped to $T$-invariant
+values; however, it also allows them to be mapped to improper values,
+$\bottom$ or~$error$. 
+%
 \begin{definition}
 An environment~$\rho$ is \emph{$T$-invariant} if
 %
 \begin{itemize}
-\item For every channel identifier~$c$, either $\rho(c) = \bottom$, or
-  $\rho(c) = \channel S$ for a set~$S$ that is $T$-invariant;
+\item For every channel identifier~$c$, either $\rho(c) \in \set{\bottom,
+  error}$, or $\rho(c) = \channel S$ for a set~$S$ that is $T$-invariant;
 
-\item For every datatype constructor~$C$, either $\rho(C) = \bottom$, or
-  $\rho(C) = \dtcons S$ for a set~$S$ that is $T$-invariant;
+\item For every datatype constructor~$C$, either $\rho(C) \in \set{\bottom,
+  error}$, or $\rho(C) = \dtcons S$ for a set~$S$ that is $T$-invariant;
 
-\item For every name~$x$ such that $\rho(x)$ is a set, $rho(x)$ is
-  $T$-invariant. 
+\item For every name~$x$ that represents a set, either $\rho(x) \in
+  \set{\bottom, error}$ or $\rho(x)$ is $T$-invariant.
 \end{itemize}
 \end{definition}
 
@@ -261,15 +289,17 @@ We prove the result by induction over the structure of~$s$, and perform a case
 analysis over the form of~$s$, following Definition~\ref{def:invariant}.  We
 concentrate on the interesting cases.
 
-Consider a set comprehension $s = \M\{ e ~ \M\| stmts \M\}$.  Let $S = \eval
-\rho~s$.  Suppose $w \in S$ and $\unitf(w) = \unitf(w')$.  Consider the fields
-$w_1,\ldots,w_k$ in~$w$ of types that depend upon~$t$.  By the assumption of
-invariance, these correspond to distinct identifiers $x_1,\ldots,x_k$ in~$e$,
-each of which is bound by a generator $x_i \,\M{<-}\, s_i$ in $stmts$, where
-$s_i$ is itself invariant.  Let $S_i = \eval \rho_i~s_i$, where $\rho_i$ be
-the environment~$\rho$ augmented corresponding to values taken by earlier
-generators in the production of~$w$; so $w_i \in S_i$.  By induction, $S_i$ is
-$T$-invariant.
+Consider a set comprehension $s = \M\{ e ~ \M\| stmts \M\}$.  Suppose $s$
+evaluates correctly to a set $S = \eval \rho~s$ (so $\rho$ binds identifiers
+of~$s$ to proper values, and errors do not occur).  Suppose $w \in S$ and
+$\unitf(w) = \unitf(w')$.  Consider the identifiers $x_1,\ldots,x_k$ in~$e$
+that depend on~$t$, and let $w_1,\ldots,w_k$ be the corresponding fields
+in~$w$.  By the assumption of invariance, the identifiers $x_1,\ldots,x_k$
+each appears only once in~$e$, and each is bound by a generator $x_i
+\,\M{<-}\, s_i$ in $stmts$, where $s_i$ is itself invariant.  Let $S_i = \eval
+\rho_i~s_i$, where $\rho_i$ is the environment~$\rho$ augmented corresponding
+to values taken by earlier generators in the production of~$w$; so $w_i \in
+S_i$.  By induction, $S_i$ is $T$-invariant.
 
 Let $w_1',\ldots,w_k'$ be the corresponding fields in~$w'$.  We show that the
 identifiers $x_1,\ldots,x_k$ could also be bound to $w_1',\ldots,w_k'$ by the
@@ -284,7 +314,7 @@ appear in predicates in $stmts$, so each such predicate will still be true
 with this binding.  Then evaluating $e$ produces~$w'$, so $w' \in S$, as
 required.
 
-Now consider an extensions set comprehension $\M{\{\|} e ~ \M\| stmts \M{\|\}}$.
+Now consider a productions set comprehension $\M{\{\|} e ~ \M\| stmts \M{\|\}}$.
 Necessarily, the expression~$e$ represents either a channel or a partial value
 from a datatype.  This expression represents the same set as a set
 comprehension where the ``missing'' fields are added with extra generators;
@@ -292,7 +322,7 @@ for example, the expression \CSPM{\{\|c2o\|\}}  defines the same set as
 \CSPM{\{c2o.x.y \| x <- t, y <- Option\}}.  By the assumption that $\rho$ is
 $T$-invariant, the generators range over sets that are themselves
 $T$-invariant.  Hence we can apply the result for standard set comprehensions
-to deduce the result for the extensions set comprehension. 
+to deduce the result for the productions set comprehension. 
 
 Other cases from Definition~\ref{def:invariant} are straightforward.
 \end{proof}
@@ -386,9 +416,9 @@ function
 F(\rho) & = & \rho \oplus \Union \set{\bindDecl \rho ~ decl \| decl \in decls}.
 \end{eqnarray*}
 %
-Let $\rho^\bottom$ be the environment that maps all identifiers bound by
-$decls$ to~$\bottom$.  Then the semantics of $decls$ is the least fixed point
-of~$F$: 
+Let $\rho^\bottom$ be the environment that maps all top-level identifiers
+to~$\bottom$ (and maps no other identifier).  Then the semantics of $decls$ is
+the least fixed point of~$F$:
 \begin{eqnarray*}
 \rho_1 & = & \bigsqcup_{n \in \nat} F^n(\rho^\bottom).
 \end{eqnarray*}
@@ -449,19 +479,3 @@ $T$-invariant, for all~$n$.  It follows that $\rho_1$ is $T$-invariant.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{Main result}
-
-The following is the main result of this section.
-%
-\begin{prop}
-\label{prop:expressions}
-Suppose a script is data-independent for~$t$, let $T_1$ and~$T_2$ be two
-instantiations of~$t$, and let $f : T_1 \fun T_2$ be surjective.  Then for
-every expression~$e$ in the script, and every environment~$\rho$,
-\begin{eqnarray*}
-f(\eval \rho ~ e) & = \eval (f \after \rho) e .
-\end{eqnarray*}
-\end{prop}
-%
-The proof is in Appendix~\ref{sec:proof}.

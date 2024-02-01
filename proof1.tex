@@ -1,0 +1,104 @@
+\subsection{$\matches$}
+
+We show that for every pattern $pat$ and value~$v$
+\begin{eqnarray*}
+  \matches \rho~ pat~v & \iff & \matches (f\after\rho) ~ pat~(f(v)).
+\end{eqnarray*}
+
+
+\begin{itemize}
+  \item Case $x$, a variable.  This matches all values, so both sides are
+    $true$. 
+
+  \item A pattern of the form $pat = pat_1 @@ pat_2$.  Then (using the
+    inductive hypothesis):
+    \begin{calc}
+    & \matches \rho~pat~v \\
+    \iff & \matches \rho~pat_1~v \land \matches \rho~pat_2~v \\
+    \iff & \matches (f\after\rho)~pat_1~(f(v)) 
+         \land \matches (f\after\rho)~pat_2~(f(v)) \\
+    \iff & \matches (f\after\rho)\rho~pat~(f(v)).
+  \end{calc}
+
+  \item A pattern of the form $pat = A$ where $A$ is a constructor of a
+    datatype (i.e., $\rho(A)$ and $(f\after\rho)(A)$ are $\dtcons$ values).
+    Necessarily $A$ is not an element of~$t$ (since the pattern contains no
+    constant of type~$t$).  Then $\matches pat~v$ iff $v = A$.  But this holds
+    iff $\matches pat~(f(v))$, since $f(A) = A$.
+  
+  \item A pattern of the form $pat = A.pat'$ where $A$ is a constructor of a
+    datatype, and $pat'$ is a non-empty pattern.  Again $A$ is not an element
+    of~$t$.  Then $\matches \rho~pat~v$ iff $v$ is of the form $A.v'$ and
+    $\matches \rho~pat'~v'$.  By the inductive hypothesis, the latter clause
+    holds iff $\matches \linebreak[1] {(f\after\rho)}~pat'~(f(v'))$.  But then
+    $\matches (f\after\rho)~pat~f(v)$, since $f(v) = A.f(v')$.
+
+  \item A pattern of the form $pat = c$ or $pat = c.pat'$ where $c$ is a
+    channel name.  These cases are very similar to the two previous cases.
+
+  \item A pattern of the form $pat = x.pat_1$ where $x$ is a variable, and
+    $pat_1$ is a pattern.  Consider, first, a dotted value $v = v_0.v_1$,
+    where $v_0$ is the shortest prefix of~$v$ that is a completed value, and
+    $v_1$ is non-empty (so $x$ will be matched by~$v_0$).  Note that
+    $f(v_0)$ is also a completed value, by Lemma~\ref{lem:complete}.  Note
+    also that $x$ cannot appear in~$pat_1$.  Then
+\framebox{***}
+    \begin{calc}
+    & \matches \rho~pat~v \\
+    \iff & \matches \rho~pat_1~v_1 \\
+    \iff & \com{inductive hypothesis} \\
+         & \matches (f\after\rho)~pat_1~(f(v_1)) \\
+    \iff & \com{$f(v_0)$ is a completed value} \\
+         & \matches (f\after\rho)~(x.pat_1)~(f(v_0).f(v_1)) \\
+    \iff & \matches (f\after\rho)~pat~(f(v)).
+    \end{calc}%
+    If $v$ is not of the above form, then neither $\matches \rho~pat~ v$ nor
+    $\matches \linebreak[1] (f\after\rho)~pat~(f(v))$ holds.
+
+  \item A pattern of the form $pat = \_.pat_1$ where $pat_1$ is a pattern.
+    This case is very similar to the previous.
+
+  \item A pattern of the form $pat = (pat_1 @@ pat_2) . pat_3$.  Suppose
+    $pat_1 @@ pat_2$ matches dotted tuples of minimal size $n>0$.  (Note that
+    the sub-patterns may end with variables or wildcards that allow them to
+    match arbitrarily long dotted tuples; here we are defining $n$ to be the
+    minimal length dotted tuple that can be matched; FDR calculates $n$ in a
+    straightforward way.)  If $v$ is not a dotted tuple of size
+    at least $n+1$ then $pat$ matches neither $v$ nor~$f(v)$.  Let
+    $v = v_1.v_2$ where $v_1$ has size~$n$.  Then
+    \begin{calc}
+    & \matches \rho~pat~v \\
+    \iff & \matches \rho~pat_1~v_1 \land \matches \rho~pat_2~v_1 \land
+         \matches \rho~pat_3~v_2 \\
+    \iff & 
+      \begin{align}
+      \matches (f\after\rho)~pat_1~(f(v_1)) 
+      \land \matches (f\after\rho)~pat_2~(f(v_1)) \land \\
+      \matches (f\after\rho)~pat_3~(f(v_2))
+      \end{align} \\
+    \iff & \matches (f\after\rho)~pat~(f(v)),
+    \end{calc}%
+    noting that $f(v) = f(v_1).f(v_2)$ and $f(v_1)$ has size~$n$.
+
+  \item A pattern of the form $pat = pat_0.pat_1$, other than the previous
+    five cases; i.e.~$pat_0$ is a basic value, tuple, set
+    or sequence pattern, so $pat_0$ matches just the first term of a dotted
+    tuple.  Consider a dotted value $v = v_0.v_1$, where $v_0$ is not a dotted
+    value.  Then
+    \begin{calc}
+    & \matches  \rho~pat~v \\
+    \iff & \matches \rho~pat_0~v_0 \land \matches \rho~pat_1~v_1 \\
+    \iff & \com{inductive hypothesis} \\
+    \iff & \matches (f\after\rho)~pat_0~(f(v_0)) \land 
+           (f\after\rho)~\matches pat_1~(f(v_1)) \\
+    \iff & \matches (f\after\rho)~(pat_0.pat_1)~(f(v_0).f(v_1)) \\
+    \iff & \matches (f\after\rho)~pat~(f(v)).
+    \end{calc}%
+    If $v$ is not a dotted value, then neither $\matches \rho~pat~ v$ nor
+    $\matches {(f\after\rho)}~ pat~(f(v))$ holds.
+
+  \item All other cases are similar.  % Constants are like a previous
+    % case.  Tuples, literal list pattern and variants
+    % (e.g.~\verb!<x,y>^z^<a,b,c>!), singleton or empty set, are all similar to
+    % the previous cases.  Wildcard is like a variable.
+\end{itemize}

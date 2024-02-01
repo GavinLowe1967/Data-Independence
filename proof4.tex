@@ -1,5 +1,4 @@
-
-\subsubsection{Expressions}
+\subsection{Expressions}
 
 We show that for every expression~$e$ in the script,
 \begin{eqnarray*}
@@ -8,320 +7,168 @@ f(\eval \rho ~ e) & = \eval (f \after \rho) e .
 
 \framebox{\ldots}
 
-Note:
-\begin{eqnarray*}
-\eval \rho ~(g(e)) & = & (\eval \rho ~g) (\eval \rho~ e) \\
-\eval \rho ~(\lambda x \spot e) & = & 
-  \lambda z \spot \eval (\rho \oplus \set{x \mapsto z})~ e.
-\end{eqnarray*}
-
-
-Case $e = t$, i.e.~the name of the distinguished type ...
-
-
-We now consider process expressions.
-
-\paragraph{Basic processes.} $STOP$, $SKIP$, $div$: these are all trivial. 
+%% Note:
+%% \begin{eqnarray*}
+%% \eval \rho ~(g(e)) & = & (\eval \rho ~g) (\eval \rho~ e) \\
+%% \eval \rho ~(\lambda x \spot e) & = & 
+%%   \lambda z \spot \eval (\rho \oplus \set{x \mapsto z})~ e.
+%% \end{eqnarray*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\input{proof4-prefix}
+\subsubsection{Atomic values}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\paragraph{Names.}
 
-\paragraph{Non-indexed sequential operators.}
+Consider a name~$x$ bound by the environments, other than a datatype
+constructor or channel name.  Then
+\[
+f(\eval \rho~x) = f(\rho~x) = \eval (f\after\rho)~x.
+\]
 
-Below we write $\extchoice$ for a semantic operator: ``${P \extchoice Q}$''
-represents an external choice between~$P$ and~$Q$, each of which is an LTS\@.
-We have
+Not consider the name~$d$ of a datatype constructor (so both $\rho$ and
+$f\after\rho$ map $c$ to a $\dtcons$ value).  Necessarily, $d$ is not a member
+of~$t$, given our assumption about values from~$t$ not appearing in the
+script.  Note that $d$ evaluates to itself, regardless of the environment.
+Hence
+\[
+f(\eval \rho~d) = f(d) = d = \eval (f\after\rho)~d.
+\]
+Note that the middle step would fail to hold for a member of~$t$: this
+justifies our assumption about such values not appearing in the script. 
+
+The case of the name of a channel is identical to the previous case. 
+
+
+
+%% Now consider the name~$c$ of a channel (so both $\rho$ and $f\after\rho$ map
+%% $c$ to a $\channel$ value).  In this case, $c$ evaluates to itself,
+%% regardless of the environment.  Hence
+%% \[
+%% f(\eval \rho~c) = f(c) = c = \eval (f\after\rho)~c.
+%% \]
+
+%% I don't think we need this -- it's dealt with in bindDecls
 %
-\begin{eqnarray*}
-f(P \extchoice Q) & = & f(P) \extchoice f(Q).
-\end{eqnarray*}
-%
-For every transition $P \trans{e} P'$, the initial state of each of the above
-processes has a transition labelled $f(e)$ to~$f(P')$; and similarly for
-transitions of~$Q$.
+%% Now consider the name $d$ of a datatype with constructors $C_1,\ldots,C_k$.
+%% If a constructor $C$ maps to a value $\dtcons S$ in an environment, we write
+%% $C.S$ for the corresponding set of extensions, $\set{C.x \| c \in S}$.
+%% %
+%% \begin{calc}
+%% & f(\eval \rho~d) \\
+%% = & f\Big(\Union\nolimits_{i \in \set{1,\ldots,k}}  
+%%        \Let \dtcons S_i = \rho(C_i) \In S_i \Big) \\ 
+%% = & \Union\nolimits_{i \in \set{1,\ldots,k}} 
+%%        \Let \dtcons S_i = \rho(C_i) \In f(S_i) \\
+%% = & \Union\nolimits_{i \in \set{1,\ldots,k}} 
+%%       \Let \dtcons S_i' = f(\rho(C_i)) \In S_i \\
+%% = & \eval (f\after\rho)~d.
+%% \end{calc}
 
-We then have the following (for syntactic expressions~$P$ and~$Q$):
-%
-\begin{calc}
-& f(\eval \rho ~ (P \; \M{[]} Q) \\
-= & f((\eval \rho~P) \extchoice (\eval \rho~Q)) \\
-= & \com{above result} \\
-& f(\eval \rho~P) \extchoice f(\eval \rho~Q) \\
-= & \com{inductive hypothesis} \\
-& (\eval (f\after\rho)~P) \extchoice (\eval (f\after\rho)~Q) \\
-= & \eval (f\after\rho) (P \; \M{[]} Q).
-\end{calc}
+Names of types *** I don't think this is necessary as a separate case -- dealt
+with in bindDecls.
 
-The proofs for the  binary operators nondeterministic choice (\CSPM{_ \|~\| _}),
-sliding choice (\CSPM{_ [> _}), interrupt (\CSPM{_ /\\ _}), exception
-(\CSPM{_ [\| _ \|> _}), and sequential composition (\CSPM{_ ; _})
-are very similar.
-
-For hiding, note that if $A$ is $T$-invariant, then
-\begin{eqnarray*}
-f(P \hide A) & = & f(P) \hide f(A).
-\end{eqnarray*}
-%
-One the right-hand side, an event $e$ of~$P$ is hidden if $f(e) \in f(A)$; but
-then $e \in A$, by Lemma~\ref{lem:T-invariant-inclusion}.  The rest of the
-proof is then as for external choice.
-
-\framebox{Guards}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\paragraph{Renaming}
-
-The semantics of a renaming is a set of pairs of events $(e,e')$ indicating
-that~$e$ is renamed to~$e'$.  \framebox{Or channels?}  I think the basic
-definition should be extended to complete all events, and also add the
-identity relation. 
-
-We show the renaming itself satisfies the desired result.  Below, we use this
-to show that the application of a renaming to a process also satisfies the
-desired result. 
-%
-\begin{calc}
-& f(\eval \rho~
-   \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|  stmts}) \\
-= & f \set{ (\eval \rho'~e_i, \eval \rho'~e_i') \|
-     \rho' \in \evalStmts \rho~stmts, i \in \set{1,\ldots,k} } \\
-= & \set{ (f(\eval \rho'~e_i), f(\eval \rho'~e_i')) \|
-     \rho' \in \evalStmts \rho~stmts, i \in \set{1,\ldots,k} } \\
-= & \com{inductive hypothesis} \\
-  & \set{ (\eval (f\after\rho')~e_i, \eval (f\after\rho')~e_i') \|
-     \rho' \in \evalStmts \rho~stmts, i \in \set{1,\ldots,k} } \\
-= & \com{letting $\rho'' = f \after \rho'$} \\ 
-  & \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \|
-     \rho'' \in f(\evalStmts \rho~stmts), i \in \set{1,\ldots,k} } \\
-= & \com{inductive hypothesis, part~\ref{item:evalStmts}} \\
-  & \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \|
-     \rho'' \in \evalStmts (f\after\rho)~stmts, i \in \set{1,\ldots,k} } \\
-= & \eval (f\after\rho)
-       \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|  stmts}.
-\end{calc}
+|Events|
 
 
-%% We need the following property for each relation~$R$ corresponding to a
-%% renaming:
-%% \begin{eqnarray}
-%% \label{eqn:renaming-invariant}
-%% (v,v') \in R \land f(v) = f(w) & \implies &
-%%   \exists w' \spot (w,w') \in R \land f(v') = f(w').
-%% \end{eqnarray}
-
-Recall that each renaming satisfies condition~\ref{item:di-renaming} of
-Definition~\ref{defn:data-independent}.  We will need the following lemma,
-which shows that the value of a renaming is consistent with~$f$.
-%
-\begin{lemma}
-\label{lem:renaming-invariant}
-Consider a renaming $r = \rename{ e_1 \leftarrow e_1', \ldots, e_k
-  \leftarrow e_k' \| stmts}$, and let $R = \eval \rho~ r$.  Then
-%
-\begin{eqnarray*}
-%\label{eqn:renaming-invariant}
-(v,v') \in R \land f(v) = f(w) & \implies &
-  \exists w' \spot (w,w') \in R \land f(v') = f(w').
-\end{eqnarray*}
-\end{lemma}
 
 %%%%%
 
-\begin{proof}
-Suppose $(v,v') \in R$ and $f(v) = f(w)$.  Suppose $(v,v')$ is produced by the
-individual renaming $e_j \leftarrow e_j'$.  Consider the fields
-$v_1,\ldots,v_k$ in~$v$ of type~$t$.  By condition~\ref{item:di-renaming} of
-Definition~\ref{defn:data-independent}, these correspond to distinct
-identifiers $x_1,\ldots,x_k$ in~$e_j$, each of which is bound by a generator
-$x_i \,\M{<-}\, t$ in $stmts$.  Let the corresponding fields in~$w$ be
-$w_1,\ldots,w_k$, so $f(v_i) = f(w_i)$ for each~$i$.
+\paragraph{Basic values.}
+
+For a basic value~$v$ (an integers, boolean or character):
+\[
+f(\eval \rho~v) = f(v) = v = \eval(f\after\rho)~v,
+\]
+since $v$ is independent of~$t$. 
+
+%%%%%%%%%%
+
+\paragraph{\ldots}
+
+
+
+|Events|
+
+
+\subsubsection{Composite values}
+
+Case $e_1 . e_2$.
 %
-Consider the case where each~$x_i$ is bound to $w_i$, and every other
-generator is bound as in the production of $(v,v')$.  These identifiers do not
-appear in predicates in $stmts$, so each such predicate will still be true
-with this binding.  Then the individual renaming $e_j \leftarrow e_j'$
-produces $(w,w')$ for some $w'$ such that $f(v') = f(w')$.
-\end{proof}
+\begin{calc}
+& f(\eval \rho ~(e_1.e_2)) \\
+ = & f(\eval \rho~e_1. \eval \rho~e_2) \\
+ = & f(\eval \rho~e_1) . f(\eval \rho~e_2) \\
+ = & \com{inductive hypothesis} \\
+  & \eval (f\after\rho)~e_1 . \eval (f\after\rho)~e_2 \\
+ = & \eval (f\after\rho) (e_1.e_2).
+\end{calc}
+
+The case for tuples is very similar.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Structural operators}
+
+The case for local declarations is as follows.
+%
+\begin{calc}
+& f(\eval \rho~(\M{let}~decls~\M{within}~e)) \\
+= & f(\Let \rho' = \bindDecls \rho~decls \In \eval \rho'~e) \\
+= & \Let \rho' = \bindDecls \rho~decls \In f(\eval \rho'~e) \\
+= & \com{inductive hypothesis} \\
+ &  \Let \rho' = \bindDecls \rho~decls \In \eval (f\after\rho')~e \\
+= & \com{letting $\rho'' = f\after\rho'$} \\
+& \Let \rho'' = f \after \bindDecls \rho~decls \In \eval \rho''~e \\
+= & \com{inductive hypothesis, clause~\ref{item:bindDecls}} \\
+& \Let \rho'' = \bindDecls (f\after\rho)~decls \In \eval \rho''~e \\
+= & \eval (f\after\rho)~(\M{let}~decls~\M{within}~e).
+\end{calc}
+
+The case for if statements is as follows.
+%
+\begin{calc}
+& f(\eval \rho~(\M{if}~b~\M{then}~e_1~\M{else}~e_2)) \\
+= & f(\If \eval \rho~b \Then \eval \rho~e_1 \Else \eval \rho~e_2) \\
+= & \com{boolean values invariant under~$f$} \\
+ & \If f(\eval \rho~b) \Then f(\eval \rho~e_1) \Else f(\eval \rho~e_2) \\
+= & \com{inductive hypothesis} \\
+ & \If \eval~(f\after\rho)~b \Then \eval (f\after\rho)~e_1) 
+    \Else \eval(f\after\rho)~e_2 \\
+= & \eval (f\after\rho) (\M{if}~b~\M{then}~e_1~\M{else}~e_2).
+\end{calc}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\framebox{** Partial events?}  Extend to total. 
+\input{proof4-functions}
 
-The following lemma concerns semantic renaming, i.e.~the effect of applying a
-renaming relation~$R$ to an LTS~$P$, denoted $P\rename{R}$.  
-%
-\begin{lemma}
-\label{lem:renaming-f}
-Let $P$ be an LTS, and $R$ a renaming relation.  Then
-%
-\begin{eqnarray*}
-f(P\rename{R}) & = & (f(P))\rename{f(R)}.
-\end{eqnarray*}
-%
-\end{lemma}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%
+%% \paragraph{Function application}
 
-\begin{proof}
-On each side, each state $Q$ of $P$ is replaced by $f(Q)$.
-%
-Suppose that $P$ contains a transition $Q \trans{e} Q'$.  Then the left-hand
-side contains a transition $f(Q) \trans{f(e')} f(Q')$ for every $(e,e') \in
-R$.  And the right-hand side contains a transition $f(Q) \trans{e''} f(Q')$
-for every $e''$ such that $(f(e), e'') \in f(R)$.  We show that these
-transitions correspond. 
-%
-\begin{itemize}
-\item Consider such a transition of the left-hand side.  Then $(e,e') \in R$
-  implies $(f(e),f(e') \in f(R)$, so the right-hand side has a corresponding
-  transition.
+%% \begin{calc}
+%% & f(\eval \rho~(g(e))) \\
+%% = & f((\eval \rho~g)~ (\eval \rho~e)) \\
+%% = & f(\eval \rho~g)~ (f(\eval \rho~e)) \\
+%% = & \eval (f\after\rho)~g ~(\eval (f\after\rho)~e) \\
+%% = & \eval (f\after\rho) (g(e)).
+%% \end{calc}
 
-\item Consider such a transition of the right-hand side.  If $(f(e), e'') \in
-  f(R)$ then there is some $(e_1,e_2) \in R$ such that $f(e) = f(e_1)$ and
-  $e'' = f(e_2)$.  But then Lemma~\ref{lem:renaming-invariant} implies
-  $(e,e_3) \in R$ for some $e_3$ such that $f(e_3) = f(e_2) = e''$.  Hence
-  the left-hand side has a corresponding transition.
-\end{itemize}
-\end{proof}
+\subsubsection{Collections}
+\label{sec:collections}
 
-Let $r = \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|
-  stmts}$ be a renaming.  We show the desired result is satisfied for the
-application of~$r$ to a process~$P$.
-%
-\begin{calc}
-& f(\eval \rho ~ (P~r)) \\
-= & f((\eval \rho~P) \rename{ \eval \rho~r }) \\
-= & \com{Lemma \ref{lem:renaming-f}} \\
-  &  (f(\eval \rho~P)) \rename{ f(\eval \rho~r) } \\
-= & \com{inductive hypothesis; earlier result} \\
-  &  (\eval (f\after\rho)~P)) \rename{ \eval (f\after\rho)~r } \\
-= & \eval (f\after\rho) (P~r).
-\end{calc}
+Lists
+
+Sets, mappings
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Other stuff.}
+
+Case |extensions|, |productions|,
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\paragraph{Binary Parallel operators.}
-
-We write $\_ \parallel[\_] \_$ for a semantic operator that forms the parallel
-composition of LTSs.  Recall that we assume that the identifiers bound by the
-two components of the parallel composition are disjoint; this means that we
-can restrict a ``global'' environment to the identifiers of each component, or
-form the union of the environments of the two components.  For example, if
-$(P, \rho_P) \trans{e} (P', \rho_P')$ and $(Q, \rho_Q) \trans{e} (Q',
-\rho_Q')$ with $e \in A$, and $\rho_P$ and~$\rho_Q$ agree on common
-identifiers, then $(P \parallel[A] Q, \rho_P \union \rho_Q) \trans{e} (P'
-\parallel[A] Q', \rho_P' \union \rho_Q')$: the resulting environments
-$\rho_P'$ and $\rho_Q'$ agree on common identifiers, so their union makes
-sense.
-
-
-We show
-\begin{eqnarray}
-\label{eqn:parallel-dist}
-f((P,\rho_P) \parallel[A] (Q,\rho_Q)) & = & 
-  f(P,\rho_P) \parallel[f(A)] f(Q,\rho_Q).
-\end{eqnarray}
-%
-The tricky case is as follows.  Consider a transition of the right-hand side
-corresponding to a synchronisation on event~$e \in f(A)$.  This must
-correspond to transitions 
-\[
-(P,\rho_P) \trans{e_P} (P',\rho_P') \quad\mbox{and}\quad
-(Q,\rho_Q) \trans{e_Q} (Q',\rho_Q') \quad
-\mbox{with}\quad f(e_P) = f(e_Q) = e.
-\]
-The subsequent state is 
-\[
-f(P',\rho_P') \parallel[f(A)] f(Q',\rho_Q') = 
-  (P',f\after\rho_P') \parallel[f(A)] (Q',f\after\rho_Q').
-\]
-If $e_P \ne e_Q$, then consider the first field in which they differ; say $e_p
-= c.\vec{u}.v_P.\vec{w_P}$ and $e_Q = c.\vec{u}.v_Q.\vec{w_Q}$ with $v_P \ne
-v_Q$ but $f(v_P) = f(v_Q)$.
-%
-Then by assumption \framebox{???}, one of the processes must be willing to
-accept an arbitrary value in this position; without loss of generality,
-suppose this is~$P$, so $P$ can also perform $e_P' = c.\vec{u}.v_Q.\vec{w_P}$.
-If the transition binds $x$ to this field in $P$'s environment, then this
-corresponds to the transition $(P,\rho_P) \trans{e_P'} (P,\rho_P'')$ where
-$\rho_P'' = \rho_P' \oplus \set{x \mapsto v_Q}$.  Note that $f(e_P') = e$ and
-$f\after\rho_P'' = f \after \rho_P'$. 
-%
-Continuing in this way, we obtain transitions
-\[
-\begin{array}{c}
-(P,\rho_P) \trans{e'} (P',\hat\rho_P) \quad\mbox{and}\quad
-(Q,\rho_Q) \trans{e'} (Q',\hat\rho_Q) \\
-\mbox{with}\quad f(e')  = e, \quad 
-f \after \hat\rho_P = f \after \rho_P', \quad
-f \after \hat\rho_Q = f \after \rho_Q'.
-\end{array}
-\]
-Also, note that $f(e') = e \in f(A)$, so $e' \in A$, by
-Lemma~\ref{lem:T-invariant-inclusion}, since $A$ is $T$-invariant.
-%
-Hence, in the left-hand side of (\ref{eqn:parallel-dist}), the two
-components can synchronise on~$e'$, giving a transition on $f(e') = e$, and
-producing state 
-\[
-f( (P',\hat\rho_P) \parallel[A] (Q',\hat\rho_Q) ) .
-\]
-This matches the original transition of the right-hand side.
-
-Other cases ---that every synchronisation of the left-hand side is matched by
-a synchronisation of the right-hand side, and that non-synchronisation
-transitions match--- can be proved in a similar but more straightforward way. 
-
-\framebox{Other parallel ops}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\paragraph{Indexed operators.}
-
-Below we write $\Extchoice$ for a semantic operator: ``$\Extchoice S$''
-represents an external choice over the set of processes in~$S$, each of which
-is an LTS\@.  We have
-%
-\begin{eqnarray*}
-f(\Extchoice S) & = & \Extchoice \set{f(P) \| P \in S}.
-\end{eqnarray*}
-%
-For every $P \in S$, and for every transition $P \trans{e} Q$, the initial
-state of each of the above processes has a transition labelled with $f(e)$ to
-$f(Q)$.
-
-We then have the following (for syntactic expressions~$S$ and~$P$):
-%
-\begin{calc}
-& f(\eval \rho ~ (\M{**[]} pat \leftarrow S \spot P)) \\
-= & f(\Extchoice \set{\eval (\bind \rho ~ pat~ v) ~ P \| 
-        v \in \eval \rho~ S, \matches \rho ~ pat ~ v}) \\
-= & \com{above result} \\
-& \Extchoice \set{f(\eval (\bind \rho ~ pat~ v) ~ P) \| 
-        v \in \eval \rho~ S, \matches \rho ~ pat ~ v} \\
-= & \com{inductive hypothesis for~$P$} \\
-& \Extchoice \set{\eval (f \after \bind \rho ~ pat~ v) ~ P) \| 
-        v \in \eval \rho~ S, \matches \rho ~ pat ~ v} \\
-= & \com{inductive hypothesis, parts~\ref{item:matches} and~\ref{item:bind}} \\
-& \Extchoice 
-  \begin{align}
-  \set{\eval (\bind (f \after \rho) ~ pat~ (f(v))) ~ P) \| \\
-  \qquad   v \in \eval \rho~ S, \matches (f\after\rho) ~ pat ~ (f(v)) }
-  \end{align} \\
-= & \com{letting $w = f(v)$} \\
-& \Extchoice 
-  \set{\eval (\bind (f \after \rho) ~ pat~ w) ~ P) \| 
-     w \in f(\eval \rho~ S), \matches (f\after\rho) ~ pat ~ w } \\
-= & \com{inductive hypothesis for~$S$} \\
-& \Extchoice 
-  \set{\eval (\bind (f \after \rho) ~ pat~ w) ~ P) \| 
-     w \in \eval (f\after\rho)~ S, \matches (f\after\rho) ~ pat ~ w } \\
-= & \eval (f\after\rho) ~ (\M{**[]} pat \leftarrow S \spot P).
-\end{calc}
-
+\input{proof4-procs}

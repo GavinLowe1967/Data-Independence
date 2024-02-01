@@ -33,13 +33,14 @@
 \def\semanticRename#1{{[\![}#1{]\!]}} % semantics
 \def\CSPm{CSP$_M$}
 \def\banana#1{\mathord{(\!\|} #1 \mathord{\|\!)}}
-\def\Let{{\mathrm let\ }}
+\def\Let{{\mathrm{let}\ }}
 \def\unit{u}
 \def\unitf{\Pi}
 \def\vec#1{\overline{#1}}
 %% Syntax
-\def\rename#1{\M{[[} #1 \M{]]}}
-\def\lArrow{\M{<-}}
+\def\rename#1{\M{[[} #1 \M{]]}\!}
+\def\lArrow{\mathbin{\M{<-}}}
+\def\throw#1{\mathbin{[\|#1\|\rangle}} % ]
 %% Semantics 
 \def\channel{\mathop{\it channel}}
 \def\dtcons{\mathop{\it dtcons}}
@@ -59,6 +60,7 @@
 \def\bindDecl{\mathop{\sf bindDecl}}
 \def\bindDecls{\mathop{\sf bindDecls}}
 \def\evalStmts{\mathop{\sf evalStmts}}
+\def\evalStmtsSet{\mathop{\sf evalStmts^{Set}}}
 
 %% \def\calc{\[ \begin{array}{@{}cl@{}} }
 %% \def\endcalc{ \end{array} \]}
@@ -76,6 +78,7 @@
 
 \input{intro}
 \input{evaluation}
+\input{main-result}
 
 \section{Denotational semantics}
 
@@ -94,6 +97,16 @@ datatype tt = A | Simple.t
 and using |tt| in place of |t|.
 
 \appendix
+\input{semantics}
 \input{proof}
+\input{proof1}
+
+\subsection{$\bind$}
+
+\subsection{$\bindDecls$}
+\label{sec:bindDecls}
+
+Include distinguished type.
 \input{proof4}
+% imports: proof4-functions; proof4-processes -> proof4-prefix, proof4-renaming
 \end{document}
