@@ -1,5 +1,73 @@
+\section{Main result}
 
-\subsection{Main result}
+
+
+\subsection{Defining data independence}
+
+The following definition captures our main assumption about the CSP script.
+%
+\begin{definition}
+\label{defn:data-independent}
+A CSP script is \emph{data-independent} for~$t$ if
+\begin{enumerate}
+\item The only constants from~$t$ that appear are within the definition
+  of the instantiation of~$t$.
+
+\item There are no equality or inequality tests over values built from~$t$.
+
+\item\label{item:sync} When two processes synchronise on a channel built
+  from~$t$, for each field from~$t$ in the corresponding events, at least one
+  of the processes is willing to accept an arbitrary value.
+
+\item\label{item:di-invariant} Every expression that produces a set is
+  invariant (Definition~\ref{def:invariant}) for: (1) top-level declarations
+  (which includes declarations used for channels and datatypes); (2) sets used
+  in alphabets and synchronisation sets for parallel composition, the
+  exception operator, and hiding.
+
+\item\label{item:di-renaming} For each renaming $\rename{e_1 \lArrow e_1',
+  \ldots, e_k \lArrow e_k' ~ \M\| stmts}$, for each~$i \in \set{1,\ldots,k}$,
+  and for each identifier~$x$ that appears in $e_i$ and that depends on~$t$:
+%
+  \begin{itemize}
+  \item $x$ is bound by a generator $x \,\M{<-}\, s_x$ in $stmts$, where $s_x$
+    is invariant and uses no identifier bound by an earlier generator;
+
+  \item $x$ occurs at most once in~$e_i$; and
+
+  \item $x$ is not used in any predicate in $stmts$.
+  \end{itemize}
+
+\item\label{item:indexing} For each use of the replicated parallel operators
+  (replicated alphabetised parallel, replicated generalised parallel,
+  replicated interleaving, and replicated link parallel), and for replicated
+  sequential composition, the statements that generate the component processes
+  make no use of~$t$. 
+
+
+\item\label{item:built-in-functions} The script does not apply any of the
+  following built-in functions:
+  \begin{itemize}
+    \item the set functions |card|, |diff|, |inter|, |Inter|, |member| and
+      |seq|; or the subset relations |<=|, |<|, |>=| and |>|;
+
+    \item the sequence function |elem|;
+
+    \item the map function |mapToList|;
+
+    \item the function |show|.
+  \end{itemize}
+  %%  \CSPM{member}, \CSPM{card}, \CSPM{inter}, \CSPM{diff}, \CSPM{seq},
+  %% \CSPM{mapToList},
+  \CSPM{mtransclose} or \CSPM{show} to a value built from~$t$.
+  \framebox{\ldots -- as in functions section}. 
+
+\item The script makes no use of any compression function.
+  %% s \CSPM{deter},
+  %% \CSPM{chase} or \CSPM{chase_nocache}.
+\end{enumerate}
+\end{definition}
+
 
 The following is the main result of this section.
 %
@@ -14,3 +82,5 @@ f(\eval \rho ~ e) & = \eval (f \after \rho) e .
 \end{prop}
 %
 The proof is in Appendix~\ref{sec:proof}.
+
+\framebox{Give all clauses here}

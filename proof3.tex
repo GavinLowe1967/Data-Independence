@@ -1,0 +1,336 @@
+
+\subsection{$\bindDecls$}
+\label{sec:bindDecls}
+
+We now prove clause~\ref{item:bindDecls}.  We start with $\bindDecl$, and show
+%
+\begin{eqnarray*}
+  f \after \bindDecl \rho~decl & = & \bindDecl (f \after \rho)~decl.
+\end{eqnarray*}
+
+\framebox{***} Also every function produced respects~$f$. 
+
+%%%%%%%%%%
+
+\paragraph{Case $pat = e$.}
+
+We have
+\begin{calc}
+  & f \after \bindDecl \rho~(pat = e) \\
+  = & f \after (
+        \begin{align}
+        \Let v = \eval \rho~e \In \\
+        \If \matches \rho~pat~v \Then \bind_0 \rho~pat~v \Else \error)
+        \end{align} \\
+  = & \begin{align}
+      \Let v = \eval \rho~e \In \\
+        \If \matches \rho~pat~v \Then f \after \bind_0 \rho~pat~v
+        \Else f(\error)
+      \end{align}  \\
+  = & \com{clauses~\ref{item:matches} and \ref{item:bind}; 
+    $f(error) = error$} \\
+  & \begin{align}
+    \Let v = \eval \rho~e \In \\
+     \If \matches (f\after\rho)~pat~(f(v)) 
+      \Then \bind_0 (f \after \rho)~pat~(f(v)) 
+        \Else \error
+    \end{align} \\
+  = & \com{letting $w = f(v)$} \\
+    & \begin{align}
+      \Let w = f(\eval \rho~e) \In \\
+        \If \matches (f\after\rho)~pat ~w 
+        \Then \bind_0 (f \after \rho)~pat~w
+        \Else \error
+      \end{align}  \\
+  = & \com{part~\ref{item:eval}} \\
+    & \begin{align}
+      \Let w = \eval (f\after\rho)~e \In \\
+      \If \matches (f\after\rho)~pat ~w \Then \bind_0 (f \after \rho)~pat~w
+        \Else \error
+      \end{align} \\
+  = & \bindDecl (f\after\rho)~(pat=e).
+\end{calc}
+
+%%%%%%%%%%
+
+\paragraph{Case of a function definition.}
+
+Consider, first, a function~$g$ of a single argument with $m>0$ sub-arguments.
+The definition can use $n>0$ clauses, each clause using patterns for the
+sub-arguments.  We write $\vec{pat}_i$ for the tuple of $m$~patterns used in
+the $i$th clause; necessarily, for each~$i$, the variables of the patterns in
+$\vec{pat}_i$ are disjoint.  Let $decl$ be the declaration
+\[
+\begin{array}{c}
+g(\vec{pat}_1) = e_1 \\
+\ldots \\
+g(\vec{pat}_n) = e_n.
+\end{array}
+\]
+We write $\vec{v}$ for a tuple of $m$ values (supplied as actual parameters).
+
+We extend $\matches$ and $\bind$ to tuples in the obvious way:
+\[
+\begin{align}
+\matches \rho~(pat_1,\ldots,pat_m)~(v_1,\ldots, v_m)  = \\
+\qquad  \matches \rho~pat_1~v_1 \land \ldots \land \matches \rho~pat_m~v_m, \\
+\bind \rho~(pat_1,\ldots,pat_m)~(v_1,\ldots, v_m)  = \\
+\qquad  \bind(\ldots(\bind (\bind \rho~pat_1~v_1)~pat_2~v_2)\ldots)~pat_m~v_m.
+\end{align}
+\]
+It is clear that parts~\ref{item:matches} and~\ref{item:bind} imply
+corresponding results for these generalised versions.  
+
+Suppose $g$ in environment~$\rho$ evaluates to a function over type~$A$; then
+$g$ in environment~$f\after\rho$ evaluates to a function over~$f(A)$.
+
+We proceed as follows.
+%
+\begin{calc}
+& f \after \bindDecl \rho ~ decl \\
+= & f \after \set{g \mapsto
+  \begin{align}
+  \set{\vec{v} \mapsto  
+    \begin{align}  
+      \If \matches \rho~ \vec{pat}_1~\vec{v} 
+      \Then \eval (\bind \rho~\vec{pat}_1~\vec{v})~ e_1 \\
+      \Else \ldots \\
+      \Else \If \matches \rho~ \vec{pat}_n~\vec{v} 
+      \Then \eval (\bind \rho~\vec{pat}_n~\vec{v})~ e_n \\
+      \Else \error \| 
+    \end{align} \\
+  \quad \vec{v} \in A} }
+  \end{align} \\
+= & \com{applying~$f$} \\
+& \set{g \mapsto
+  \begin{align}
+  \set{f(\vec{v}) \mapsto 
+    \begin{align}  
+      \If \matches \rho~ \vec{pat}_1~\vec{v} 
+      \Then f(\eval (\bind \rho~\vec{pat}_1~\vec{v})~ e_1) \\
+      \Else \ldots \\
+      \Else \If \matches \rho~ \vec{pat}_n~\vec{v} 
+      \Then f(\eval (\bind \rho~\vec{pat}_n~\vec{v})~ e_n) \\
+      \Else f(\error) \| 
+    \end{align} \\
+  \quad \vec{v} \in A} }
+  \end{align} \\
+= & \com{clauses~\ref{item:matches} and~\ref{item:eval}; $f(error) = error$} \\
+& \set{g \mapsto
+  \begin{align}
+  \set{f(\vec{v}) \mapsto 
+    \begin{align}  
+      \If \matches (f\after\rho)~ \vec{pat}_1~(f(\vec{v})) \\
+      \Then \eval (f\after \bind \rho~\vec{pat}_1~\vec{v}) ~ e_1 \\
+      \Else \ldots \\
+      \Else \If \matches (f\after\rho)~ \vec{pat}_n~(f(\vec{v})) \\
+      \Then \eval (f\after \bind \rho~\vec{pat}_n~\vec{v} ) ~ e_n \\
+      \Else \error \| 
+    \end{align} \\
+  \quad \vec{v} \in A} }
+  \end{align} \\
+= & \com{clause~\ref{item:bind}} \\
+& \set{g \mapsto
+  \begin{align}
+  \set{f(\vec{v}) \mapsto 
+    \begin{align}  
+      \If \matches (f\after\rho)~ \vec{pat}_1~(f(\vec{v})) \\
+      \Then \eval (\bind (f\after\rho)~\vec{pat}_1~(f(\vec{v}))) ~ e_1 \\
+      \Else \ldots \\
+      \Else \If \matches (f\after\rho)~ \vec{pat}_n~ (f(\vec{v})) \\
+      \Then \eval (\bind (f\after\rho) ~\vec{pat}_n~ (f(\vec{v}))) ~ e_n \\
+      \Else \error \| 
+    \end{align} \\
+  \quad \vec{v} \in A} }
+  \end{align} \\
+= & \com{letting $\vec{w} = f(\vec{w})$} \\
+& \set{g \mapsto
+  \begin{align}
+  \set{\vec{w} \mapsto 
+    \begin{align}  
+      \If \matches (f\after\rho)~ \vec{pat}_1~\vec{w} 
+      \Then \eval  (\bind (f\after\rho)~\vec{pat}_1~ \vec{w} ) ~ e_1 \\
+      \Else \ldots \\
+      \Else \If \matches (f\after\rho)~ \vec{pat}_n~ \vec{w} 
+      \Then \eval  (\bind (f\after\rho) ~\vec{pat}_n~ \vec{w}) ~ e_n \\
+      \Else \error \| 
+    \end{align} \\
+  \quad \vec{w} \in f(A)} }
+  \end{align} \\
+= & \bindDecl (f\after\rho) ~ decl.
+\end{calc}
+
+The extension to a function with $k$ curried arguments ---where each argument
+has several sub-arguments, presented as patterns--- is straightforward but
+notationally messy. 
+
+%%%%%%%%%%%%%%%%%%
+
+\paragraph{Case of a channel declaration.}
+
+Consider a declaration $\CSPMM{channel}~ c : e_1.\ldots.e_n$.
+%
+\begin{calc}
+  & f \after \bindDecl \rho~ (\CSPMM{channel}~ c : e_1.\ldots.e_n) \\
+  = & f \after \set{c \mapsto 
+         \dtcons\set{v_1.\ldots.v_n \mid 
+            v_1 \in \eval \rho~e_1, \ldots, v_n \in\eval \rho~e_n}} \\
+  = & \set{c \mapsto \dtcons \set{
+        \begin{align}
+        f(v_1).\ldots.f(v_n) \mid \\
+        \quad    v_1 \in \eval \rho~e_1, \ldots, v_n \in\eval \rho~e_n}}
+        \end{align} \\
+  = & \com{letting $w_i = f(v_i)$} \\
+    & \set{c \mapsto \dtcons\set{
+        \begin{align}
+        w_1.\ldots.w_n \mid \\
+        \quad w_1 \in f(\eval \rho~e_1), \ldots, 
+           w_n \in f(\eval \rho~e_n)}}
+        \end{align} \\
+  = & \com{clause~\ref{item:eval}} \\
+    & \set{c \mapsto \dtcons\set{
+        \begin{align}
+        w_1.\ldots.w_n \mid \\
+        \quad w_1 \in \eval (f\after\rho)~e_1, \ldots,
+        w_n \in \eval (f\after\rho)~e_n}}
+        \end{align} \\
+  = & \bindDecl (f\after\rho)~ (\CSPMM{channel}~ c : e_1.\ldots.e_n).
+\end{calc}%
+%
+Note, in particular, that $v_1.\ldots.v_n$ is a complete value if and only if
+$w_1.\ldots.w_n$ is a complete value, by Lemma~\ref{lem:complete}.
+
+%%%%%%%%%%
+
+\paragraph{Case of a datatype declaration.}
+
+Let $decl$ be the declaration
+\[
+\CSPMM{datatype}~D = 
+A_1.e_{1,1}.\ldots.e_{1,m_1} \mid \ldots \mid A_n.e_{n,1}.\ldots.e_{n,m_n} \;.
+\]
+Suppose, first, that this is not the declaration of the distinguished
+type~$t$.  Then
+\begin{calc}
+&  f \after \bindDecl \rho~decl \\
+= & 
+  \begin{align}
+  \Let S_i = \set{v_{i,1}.\ldots.v_{i,m_i} \mid 
+         v_{i,j} \in \eval \rho ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
+  \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
+  f \after (
+    \begin{align}
+    \set{A_i \mapsto \dtcons S_i \mid i \in \set{1,\ldots,n}} \union\null \\
+    \set{D \mapsto 
+      \set{A_i.v_i \mid i \in \set{1,\ldots,n},  v_i \in S_i } } )
+    \end{align}
+  \end{align} \\
+= & 
+  \begin{align}
+  \Let S_i = \set{v_{i,1}.\ldots.v_{i,m_i} \mid 
+         v_{i,j} \in \eval \rho ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
+  \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
+  \begin{align}
+    \set{A_i \mapsto \dtcons f(S_i) \mid i \in \set{1,\ldots,n}} \union \null \\
+    \set{D \mapsto 
+      \set{A_i.f(v_i) \mid i \in \set{1,\ldots,n},  v_i \in S_i } } )
+    \end{align}
+  \end{align} 
+\\
+= & \com{letting $w_i = f(v_i)$} 
+\\
+& \begin{align}
+  \Let S_i = \set{v_{i,1}.\ldots.v_{i,m_i} \mid 
+         v_{i,j} \in \eval \rho ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
+  \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
+  \begin{align}
+    \set{A_i \mapsto \dtcons f(S_i) \mid i \in \set{1,\ldots,n}} \union \null \\
+    \set{D \mapsto 
+      \set{A_i.w_i \mid i \in \set{1,\ldots,n},  w_i \in f(S_i) } } )
+    \end{align}
+  \end{align} \\
+= & \com{letting $S_i' = f(S_i)$} 
+\\
+& \begin{align}
+  \Let S_i' = \set{f(v_{i,1}).\ldots.f(v_{i,m_i}) \mid 
+         v_{i,j} \in \eval \rho ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
+  \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
+  \begin{align}
+    \set{A_i \mapsto \dtcons S_i' \mid i \in \set{1,\ldots,n}} \union \null \\
+    \set{D \mapsto 
+      \set{A_i.w_i \mid i \in \set{1,\ldots,n},  w_i \in S_i' } } )
+    \end{align}
+  \end{align} \\
+= & \com{letting $w_{i,j} = f(v_{i,j})$} 
+\\
+& \begin{align}
+  \Let S_i' = \set{w_{i,1}.\ldots.w_{i,m_i} \mid 
+         w_{i,j} \in f(\eval \rho ~ e_{i,j}),\, j  = 1,\ldots, m_i},\\
+  \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
+  \begin{align}
+    \set{A_i \mapsto \dtcons S_i' \mid i \in \set{1,\ldots,n}} \union \null \\
+    \set{D \mapsto 
+      \set{A_i.w_i \mid i \in \set{1,\ldots,n},  w_i \in S_i' } } )
+    \end{align}
+  \end{align} \\
+= & \com{clause \ref{item:eval}} 
+\\
+& \begin{align}
+  \Let S_i' = \set{w_{i,1}.\ldots.w_{i,m_i} \mid 
+         w_{i,j} \in \eval (f\after\rho) ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
+  \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
+  \begin{align}
+    \set{A_i \mapsto \dtcons S_i' \mid i \in \set{1,\ldots,n}} \union \null \\
+    \set{D \mapsto 
+      \set{A_i.w_i \mid i \in \set{1,\ldots,n},  w_i \in S_i' } } )
+    \end{align}
+  \end{align} \\
+= & \bindDecl (f\after\rho) ~ decl
+\end{calc}
+%
+Note, in particular, that $A_i.v_i$ is a complete value iff $A_i.w_i$ is a
+complete value, by Lemma~\ref{lem:complete}.
+
+%%%%%
+
+
+Now suppose this is the declaration of the distinguished type~$t$.
+
+
+
+
+Without loss of generality, suppose the elements of the distinguished
+sub-type $T_i$ are the first $N$ branches of $decl$,
+i.e.~$T_i = \set{A_1,\ldots,A_N}$, with $N \le n$.  The only part of the
+above calculation that changes is the binding for~$D$, which becomes
+\begin{calc}
+  & D \mapsto 
+      \begin{align}
+      \set{f(A_1),\ldots,f(A_N)} \union\null \\
+      \set{f(A_i).f(v_i) \mid i \in \set{N+1,\ldots,n}, v_i \in S_i } 
+      \end{align} \\
+  = & \com{$f$ is a permutation on~$T_i$; as above} \\
+  & D \mapsto 
+      \begin{align}
+      \set{A_1,\ldots,A_N} \union\null \\
+      \set{A_i.w_i \mid i \in \set{N+1,\ldots,n}, w_i \in S_i'} 
+      \end{align}
+\end{calc}%
+which is the relevant part of $\bindDecl (f\after\rho) decl$. 
+
+
+
+
+\paragraph{\framebox{\ldots}}
+
+
+
+Include distinguished type.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ if $decls$ is a list of declarations
+of values, channels and datatypes, with disjoint names, then
+\begin{eqnarray*}
+  f \after \bindDecls \rho~decls & = & \bindDecls (f \after \rho)~decls.
+\end{eqnarray*}

@@ -1,0 +1,269 @@
+\section{Invariance of sets}
+
+Recall from the introduction that we place a restriction, \emph{invariance}
+(Definition~\ref{def:invariant}), on expressions that define sets, mainly
+concerning the use of bound variables in set comprehensions.  In this section,
+we present a corresponding semantic condition, \emph{$T$-invariance}, on the
+set produced, and show that it is satisfied. 
+
+Informally, we want to say that, for each instantiation~$T$ of~$t$, if a value
+$A \in T$ can appear in a particular place in a channel or datatype value,
+then replacing that instance of~$A$ by a different value~$B \in T$ also gives
+a valid channel or datatype value.  For example, for the definitions in
+Figure~\ref{fig:t-allowed}, if $A \in T$, then $\M{c2}.A.A$ is a valid value;
+and so is $\M{c2}.A.B$ for $B \in T$.  The following definition captures this
+formally.
+%
+\begin{definition}
+Let $T$ be an instantiation of~$t$, let $\unit$ be a fresh value, and let
+$\unitf : T \fun \set{\unit}$ be the function that maps each element of~$T$
+to~$\unit$. Extend~$\unitf$ to other values in the normal way.  Then a set $S$
+is \emph{$T$-invariant} if
+\[
+\forall w, w' \spot
+  \unitf(w) = \unitf(w') \land w \in S  \implies w' \in S.
+\]
+\end{definition}
+
+%%%%%
+
+\begin{example}
+Suppose $\M{c2}.A.A \in \eset{\M{c2}}$.  Then 
+\[
+\unitf(\M{c2}.A.A) = \M{c2}.\unit.\unit = \unitf(\M{c2}.A.B),
+\]
+so $\set{A,B}$-invariance of $\eset{\M{c2}}$ would require $\M{c2}.A.B \in
+\eset{\M{c2}}$.  This holds for the declarations in
+Figure~\ref{fig:t-allowed}.
+
+However, recall the declaration (which is not invariant, and so forbidden by
+our assumptions)
+%
+\begin{cspm}
+channel two : union({Two.x.x.true | x <- t}, {Two.x.y.false | x <- t, y <- t})
+\end{cspm}
+%
+The set $\eset{\M{two}}$ is not $\set{A,B}$-invariant: it includes
+|two.Two.A.A.true|, but not |two.Two.A.B.true|; and
+\[
+\unitf(\M{two.Two.A.A.true}) = \M{two.Two}.u.u.\M{true} =
+   \unitf(\M{two.Two.A.B.true}).
+\]
+\end{example}
+
+%%%%%
+
+The following definition captures that channel identifiers, datatype
+constructors or identifiers representing sets are either mapped to
+$T$-invariant values, or to improper values, $\bottom$ or~$error$; our main
+interest is in the former case, but we need the latter for completeness.
+%
+\begin{definition}
+An environment~$\rho$ is \emph{$T$-invariant} if
+%
+\begin{itemize}
+\item For every channel identifier~$c$, either $\rho(c) \in \set{\bottom,
+  error}$, or $\rho(c) = \channel S$ for a set~$S$ that is $T$-invariant;
+
+\item For every datatype constructor~$C$, either $\rho(C) \in \set{\bottom,
+  error}$, or $\rho(C) = \dtcons S$ for a set~$S$ that is $T$-invariant;
+
+\item For every name~$x$ that represents a set, either $\rho(x) \in
+  \set{\bottom, error}$ or $\rho(x)$ is $T$-invariant.
+\end{itemize}
+\end{definition}
+
+%%%%%
+
+Fix an instantiation $T$ of $t$.  We show that the syntactic property of
+invariance implies the semantic property of $T$-invariance. 
+
+\begin{lemma}
+\label{lem:invariant}
+Let $T$ be an instantiation of~$t$.  Let $\rho$ be a $T$-invariant environment
+such that $\rho(t) = T$. 
+%
+Consider a particular expression~$s$ that defines a set and is invariant.
+Then $\eval \rho~s$ is $T$-invariant.
+\end{lemma}
+
+\begin{proof}
+We prove the result by induction over the structure of~$s$, and perform a case
+analysis over the form of~$s$, following Definition~\ref{def:invariant}.  We
+concentrate on the interesting cases.
+
+Consider a set comprehension $s = \M\{ e ~ \M\| stmts \M\}$.  Suppose $s$
+evaluates correctly to a set $S = \eval \rho~s$ (so $\rho$ binds identifiers
+used in~$s$ to proper values, and errors do not occur).  Suppose $w \in S$ and
+$\unitf(w) = \unitf(w')$.  Consider the identifiers $x_1,\ldots,x_k$ in~$e$
+that depend on~$t$, and let $w_1,\ldots,w_k$ be the corresponding fields
+in~$w$.  By the assumption of invariance, the identifiers $x_1,\ldots,x_k$
+each appears only once in~$e$, and each is bound by a generator $x_i
+\,\M{<-}\, s_i$ in $stmts$, where $s_i$ is itself invariant.  Let $S_i = \eval
+\rho_i~s_i$, where $\rho_i$ is the environment~$\rho$ augmented corresponding
+to values taken by earlier generators in the production of~$w$; so $w_i \in
+S_i$.  By induction, $S_i$ is $T$-invariant.
+
+Let $w_1',\ldots,w_k'$ be the corresponding fields in~$w'$.  We show that the
+identifiers $x_1,\ldots,x_k$ could also be bound to $w_1',\ldots,w_k'$ by the
+generators, with all other generators being bound as in the production of~$w$.
+Consider a generator $x_i \,\M{<-}\, s_i$.  Let $\rho_i'$ be the
+environment~$\rho$ augmented corresponding to values taken by earlier
+generators.  But, by assumption, $s_i$ uses none of the earlier bound
+variables~$x_1,\ldots,x_{i-1}$, and so $\eval \rho_i'~s_i = \eval \rho_i~s_i =
+S_i$.  And $w_i' \in S_i$, since $S_i$ is $T$-invariant, so this generator can
+indeed produce~$w_i'$.  Further, the identifiers $x_1,\ldots,x_k$ do not
+appear in predicates in $stmts$, so each such predicate will still be true
+with this binding.  Then evaluating $e$ produces~$w'$, so $w' \in S$, as
+required.
+
+Now consider a productions set comprehension $\M{\{\|} e ~ \M\| stmts \M{\|\}}$.
+Necessarily, the expression~$e$ represents either a channel or a partial value
+from a datatype.  This expression represents the same set as a set
+comprehension where the ``missing'' fields are added with extra generators;
+for example, the expression \CSPM{\{\|c2o\|\}}  defines the same set as
+\CSPM{\{c2o.x.y \| x <- t, y <- Option\}}.  By the assumption that $\rho$ is
+$T$-invariant, the generators range over sets that are themselves
+$T$-invariant.  Hence we can apply the result for standard set comprehensions
+to deduce the result for the productions set comprehension. 
+
+Other cases from Definition~\ref{def:invariant} are straightforward.
+\end{proof}
+
+%%%%%%%%%%
+
+
+Consider a data-independent script with top-level declarations $decls$.
+Lemma~\ref{lem:invariant} had a premise that the environment is $T$-invariant.
+We now use this to show that the environment~$\rho_1$ formed from $decls$ is
+$T$-invariant.
+
+Recall that $\bindDecl \rho~decl$ gives the environment formed by
+updating~$\rho$ according to~$decl$.  The declarations might be mutually
+recursive, so their semantics is defined as a fixed point.  One step of the
+iteration for that fixed point is given by the function
+%
+\begin{eqnarray*}
+F(\rho) & = & \rho \oplus \Union \set{\bindDecl \rho ~ decl \| decl \in decls}.
+\end{eqnarray*}
+%
+Let $\rho^\bottom$ be the environment that maps all top-level identifiers
+to~$\bottom$ (and maps no other identifier).  Then the environment~$\rho_1$
+defined by $decls$ is the least fixed point of~$F$:
+\begin{eqnarray*}
+\rho_1 & = & \bigsqcup_{n \in \nat} F^n(\rho^\bottom).
+\end{eqnarray*}
+
+%%%%%
+
+\begin{prop}
+The initial environment~$\rho_1$ is $T$ invariant.
+\end{prop}
+
+\begin{proof}
+Clearly $\rho^\bottom$ is $T$-invariant.  
+%
+Suppose $\rho$ is invariant, and consider a top-level declaration $x = s$;
+so $s$ is invariant, by item~\ref{item:di-invariant} of
+Definition~\ref{defn:data-independent}.  Then Lemma~\ref{lem:invariant} shows
+that $\eval \rho~s$ is $T$-invariant, so 
+\begin{eqnarray*}
+\bindDecl \rho~(x = s) & = & \rho \oplus \set{x \mapsto \eval \rho~s}
+\end{eqnarray*}
+is $T$-invariant.  A similar argument applies to channel and datatype
+declarations.  Hence if $\rho$ is $T$-invariant, then so is $F(\rho)$.
+%
+Then a straightforward induction shows that $F^n(\rho^\bottom)$ is
+$T$-invariant, for all~$n$.  It follows that $\rho_1$ is $T$-invariant.
+\end{proof}
+
+%%%%%
+
+We can immediately deduce that the parts of all subsequent environments
+concerning channel identifiers and datatype constructors is $T$-invariant,
+because channel identifiers and datatype constructors are declared only at the
+top level.
+%
+\begin{corollary}
+\label{cor:invariant}
+Suppose the initial environment is well-formed, i.e.~no name gets mapped to
+$\bottom$ or $error$.  Then for each subsequent environment~$\rho$:
+\begin{itemize}
+\item For every channel identifier~$c$,\, $\rho(c) = \channel S$ for a set~$S$
+  that is $T$-invariant;
+
+\item For every datatype constructor~$C$,\, $\rho(C) = \dtcons S$ for a
+  set~$S$ that is $T$-invariant.
+\end{itemize}
+\end{corollary}
+%
+From now on, we will assume the result of the above corollary for all
+environments subsequent to the initial environment. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Channel types}
+
+We'll need the following lemma concerning $T$-invariant sets.
+%
+\begin{lemma}
+\label{lem:T-invariant-inclusion}
+Suppose $S$ is $T$-invariant.  Then 
+%
+\begin{eqnarray*}
+v \in S & \iff & f(v) \in f(S).
+\end{eqnarray*}
+\end{lemma}
+
+%%%%%
+
+\begin{proof}
+The left-to-right implication is immediate.  For the right-to-left
+implication, suppose $f(v) \in f(S)$.  Then there is some $v' \in S$ such that
+$f(v) = f(v')$.  Note that $\unitf \circ f = \unitf$: each maps elements
+of~$T$ to~$\unit$, and is lifted in the normal way to other values.  Hence
+\[
+\unitf(v) = \unitf(f(v)) = \unitf(f(v')) = \unitf(v').
+\]
+Hence $v \in S$, since $S$ is $T$-invariant.
+\end{proof}
+
+%%%%%
+
+\begin{corollary}
+\label{cor:channel-types}
+Consider a script instantiating~$t$ with $T$.  Consider a channel
+identifier~$c$ and environment~$\rho$, and suppose $\rho(c) = \channel S$.
+Then for each value~$v$,
+\begin{eqnarray*}
+v \in S & \iff & f(v) \in f(S).
+\end{eqnarray*}
+%
+Likewise for a datatype constructor~$C$ such that $\rho(C) = \dtcons S$. 
+\end{corollary}
+
+\begin{proof}
+By Corollary~\ref{cor:invariant}, $S$ is $T$-invariant (in each case).  The
+result then follows from Lemma~\ref{lem:T-invariant-inclusion}.
+\end{proof}
+
+%%%%%%%%%%
+
+Values may be either \emph{incomplete} or \emph{complete}, depending on
+whether additional fields may be added to them using the dot ($.$) operator.
+For example, with the declarations of Figure~\ref{fig:t-allowed}, the values
+|c2| and |c2.A| are incomplete, but |c2.A.B| is complete.  
+
+\begin{lemma}
+\label{lem:complete}
+If $v$ is a complete value in environment~$\rho$ (subsequent to the initial
+environment), then $f(v)$ is a complete value in environment $f\after\rho$.
+\end{lemma}
+
+\begin{proof}
+Suppose $v$ is an event on channel~$c$, so $v = c.w$ for some $w \in S$ where
+$\rho(c) = \channel S$.  Then $(f\after\rho)(c) = \channel f(S)$, and $S$ is
+$T$-invariant, by Corollary~\ref{cor:invariant}.  Hence $f(w) \in f(S)$ by
+Corollary~\ref{cor:channel-types}, and so $f(v) = c.f(w)$ is a complete
+value. 
+\end{proof}

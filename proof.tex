@@ -29,6 +29,10 @@ f \after (\bind \rho~pat~v) & = & \bind (f\after\rho)~pat~(f(v)).
 \item\label{item:bindDecls} Suppose $decls$ is a list of declarations of
   values, channels and datatypes, with disjoint names.  Then
   \begin{eqnarray*}
+  f \after \bindDecl \rho~decls & = & \bindDecl (f \after \rho)~decls.
+  \end{eqnarray*}
+  and hence
+  \begin{eqnarray*}
   f \after \bindDecls \rho~decls & = & \bindDecls (f \after \rho)~decls.
   \end{eqnarray*}
 

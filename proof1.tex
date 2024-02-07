@@ -5,7 +5,9 @@ We show that for every pattern $pat$ and value~$v$
   \matches \rho~ pat~v & \iff & \matches (f\after\rho) ~ pat~(f(v)).
 \end{eqnarray*}
 
-
+We proceed by a case analysis over $pat$.  Most cases are as
+in~\cite{symmetry-TR}, but we include them for completeness.  
+%
 \begin{itemize}
   \item Case $x$, a variable.  This matches all values, so both sides are
     $true$. 
@@ -42,7 +44,6 @@ We show that for every pattern $pat$ and value~$v$
     $v_1$ is non-empty (so $x$ will be matched by~$v_0$).  Note that
     $f(v_0)$ is also a completed value, by Lemma~\ref{lem:complete}.  Note
     also that $x$ cannot appear in~$pat_1$.  Then
-\framebox{***}
     \begin{calc}
     & \matches \rho~pat~v \\
     \iff & \matches \rho~pat_1~v_1 \\

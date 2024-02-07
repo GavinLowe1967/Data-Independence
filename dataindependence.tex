@@ -22,7 +22,7 @@
 \def\div{\mathop{\it div}}
 
 %% Symbols
-\def\T{\mathcal{T}}
+%\def\T{\mathcal{T}}
 \def\after{\circ}
 \def\CSP{{\it CSP}}
 \def\simo{\mathord{\sim}}
@@ -79,6 +79,9 @@
 \input{intro}
 \input{evaluation}
 \input{main-result}
+\input{invariance}
+
+
 
 \section{Denotational semantics}
 
@@ -97,16 +100,11 @@ datatype tt = A | Simple.t
 and using |tt| in place of |t|.
 
 \appendix
-\input{semantics}
+%\input{semantics}
 \input{proof}
 \input{proof1}
-
-\subsection{$\bind$}
-
-\subsection{$\bindDecls$}
-\label{sec:bindDecls}
-
-Include distinguished type.
+\input{proof2}
+\input{proof3}
 \input{proof4}
 % imports: proof4-functions; proof4-processes -> proof4-prefix, proof4-renaming
 \end{document}
