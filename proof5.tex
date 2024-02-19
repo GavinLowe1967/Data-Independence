@@ -1,0 +1,113 @@
+\subsection{Statements}
+
+We start with sequence-generating statements.  
+We show that 
+\begin{eqnarray*}
+f(\evalStmt \rho ~stmt) & = & \evalStmt (f(\rho))~stmt,
+\end{eqnarray*}
+%
+via a case analysis.
+%
+\begin{itemize}
+\item Case $pat \lArrow e$.
+%
+\begin{calc}
+& f(\evalStmt \rho ~(pat \lArrow e)) \\
+= & f(\seq{ \bind \rho ~pat~v \| v \leftarrow \eval \rho~e,\, 
+   \matches \rho~pat~v}) \\
+= & \seq{ f(\bind \rho ~pat~v) \| v \leftarrow \eval \rho~e,\, 
+   \matches \rho~pat~v} \\
+= & \com{clauses~\ref{item:matches} and~\ref{item:bind}} \\
+& \seq{ \bind (f(\rho)) ~pat~(f(v)) \| v \leftarrow \eval \rho~e,\,
+    \matches (f(\rho))~pat~(f(v)) } \\
+= & \com{letting $w = f(v)$} \\
+& \seq{ \bind (f(\rho)) ~pat~w \| w \leftarrow f(\eval \rho~e),\,
+    \matches (f(\rho))~pat~w} \\
+= & \com{clause \ref{item:eval}} \\
+& \seq{ \bind (f(\rho)) ~pat~w \| w \leftarrow \eval (f(\rho))~e,\,
+    \matches (f(\rho))~pat~w } \\
+= & \evalStmt (f(\rho)) ~(pat \lArrow e).
+\end{calc}
+
+\item Case a predicate $pred$.
+%
+\begin{calc}
+& f(\evalStmt \rho ~pred) \\
+= & f(\If \eval \rho~pred \Then \seq{\rho} \Else \seq{}) \\
+= & \com{$\eval \rho~pred = f(\eval \rho~pred)$, since it is independent of~$t$}
+\\
+ & \If f(\eval \rho~pred) \Then f(\seq{\rho}) \Else f(\seq{}) \\
+= & \com{clause \ref{item:eval}} \\
+& \If \eval (f(\rho)~pred \Then \seq{f(\rho)} \Else \seq{} \\
+& = \evalStmt (f(\rho)) ~ pred.
+\end{calc}
+\end{itemize}
+
+%%%%%%%%%%
+
+We now consider a list $stmts$ of statements.  We prove
+\begin{eqnarray*}
+f (\evalStmts \rho ~ stmts) & = & \evalStmts (f(\rho))~stmts,
+\end{eqnarray*}
+by induction on the length of $stmts$.  The base case is trivial.  For the
+inductive case:
+\begin{calc}
+& f (\evalStmts \rho ~ (\seq{stmt} \cat stmts)) \\
+= & f( \seq{ \rho_2 \| \rho_1 \leftarrow \evalStmt \rho~stmt, \, 
+         \rho_2 \leftarrow \evalStmts \rho_1~stmts }) \\
+= & \seq{ f(\rho_2) \| \rho_1 \leftarrow \evalStmt \rho~stmt, \, 
+         \rho_2 \leftarrow \evalStmts \rho_1~stmts } \\
+=  & \com{letting $\rho_2' = f(\rho_2)$} \\
+& \seq{ \rho_2' \| \rho_1 \leftarrow \evalStmt \rho~stmt, \, 
+         \rho_2' \leftarrow f(\evalStmts \rho_1~stmts) } \\
+= & \com{inductive hypothesis} \\
+& \seq{ \rho_2' \| \rho_1 \leftarrow \evalStmt \rho~stmt, \, 
+         \rho_2' \leftarrow \evalStmts (f(\rho_1)) ~stmts } \\
+= & \com{letting $\rho_1' = f(\rho_1)$} \\
+& \seq{ \rho_2' \| \rho_1' \leftarrow f(\evalStmt \rho~stmt), \, 
+         \rho_2' \leftarrow \evalStmts \rho_1' ~stmts } \\
+= & \com{earlier result} \\
+& \seq{ \rho_2' \| \rho_1' \leftarrow \evalStmt (f(\rho))~stmt, \, 
+         \rho_2' \leftarrow \evalStmts \rho_1' ~stmts } \\
+= & \evalStmts (f(\rho)) (\seq{stmt} \cat stmts).
+\end{calc}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% We show that $f(\evalStmtSet \rho ~stmt) = \evalStmtSet (f(\rho))~stmt$.
+
+%% Case $pat \lArrow e$.
+%% %
+%% \begin{calc}
+%% & f(\evalStmtSet \rho ~(pat \lArrow e)) \\
+%% = & f(\set{ \bind \rho ~pat~v \| v \in \eval \rho~e,\, \matches \rho~pat~v}) \\
+%% = & \set{ f(\bind \rho ~pat~v) \| v \in \eval \rho~e,\, \matches \rho~pat~v} \\
+%% = & \com{clauses~\ref{item:matches} and~\ref{item:bind}} \\
+%% & \set{ \bind (f(\rho)) ~pat~(f(v)) \| v \in \eval \rho~e,\,
+%%     \matches (f(\rho))~pat~f(v) } \\
+%% = & \com{letting $w = f(v)$} \\
+%% & \set{ \bind (f(\rho) ~pat~w \| w \in f(\eval \rho~e),\,
+%%     \matches (f(\rho))~pat~w} \\
+%% = & \com{clause \ref{item:eval}} \\
+%% & \set{ \bind (f(\rho) ~pat~w \| w \in \eval (f(\rho)~e,\,
+%%     \matches (f(\rho))~pat~w } \\
+%% = & \evalStmtSet (f(\rho)) ~(pat \lArrow e)).
+%% \end{calc}
+
+%% Case a predicate $pred$.
+%% %
+%% \begin{calc}
+%% & f(\evalStmtSet \rho ~pred) \\
+%% = & f(\If \eval \rho~pred \Then \set{\rho} \Else \set{}) \\
+%% = & \com{$\eval \rho~pred = f(\eval \rho~pred)$, since it is independent of~$t$}
+%% \\
+%%  & \If f(\eval \rho~pred) \Then f(\set{\rho}) \Else f(\set{}) \\
+%% = & \com{clause \ref{item:eval}} \\
+%% & \If \eval (f(\rho)~pred \Then \set{f(\rho)} \Else \set{} \\
+%% & = \evalStmtSet (f(\rho)) ~ pred.
+%% \end{calc}
+
+The proofs for set-generating statements are almost identical. 
+
+

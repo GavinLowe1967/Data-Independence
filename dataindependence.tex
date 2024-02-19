@@ -23,7 +23,7 @@
 
 %% Symbols
 %\def\T{\mathcal{T}}
-\def\after{\circ}
+%\def\after{\circ}
 \def\CSP{{\it CSP}}
 \def\simo{\mathord{\sim}}
 \def\project{\mathord{\|}}
@@ -37,6 +37,8 @@
 \def\unit{u}
 \def\unitf{\Pi}
 \def\vec#1{\overline{#1}}
+\def\frho{f(\rho)} % previously f\after\rho; macro to allow backtracking.
+\def\extendables{\mathop{\it extendables}}
 %% Syntax
 \def\rename#1{\M{[[} #1 \M{]]}\!}
 \def\lArrow{\mathbin{\M{<-}}}
@@ -59,6 +61,8 @@
 \def\bind{\mathop{\sf bind}\nolimits}
 \def\bindDecl{\mathop{\sf bindDecl}}
 \def\bindDecls{\mathop{\sf bindDecls}}
+\def\evalStmt{\mathop{\sf evalStmt}}
+\def\evalStmtSet{\mathop{\sf evalStmt^{Set}}}
 \def\evalStmts{\mathop{\sf evalStmts}}
 \def\evalStmtsSet{\mathop{\sf evalStmts^{Set}}}
 
@@ -77,13 +81,14 @@
 \maketitle
 
 \input{intro}
+\input{di}
 \input{evaluation}
-\input{main-result}
 \input{invariance}
+\input{functions}
+\input{main-result}
+\input{denotational}
 
-
-
-\section{Denotational semantics}
+%%%%%
 
 \section{Conclusions}
 
@@ -99,12 +104,16 @@ datatype tt = A | Simple.t
 \end{cspm}
 and using |tt| in place of |t|.
 
+%%%%%
+
 \appendix
 %\input{semantics}
+%\input{invariance-app}
 \input{proof}
 \input{proof1}
 \input{proof2}
-\input{proof3}
-\input{proof4}
-% imports: proof4-functions; proof4-processes -> proof4-prefix, proof4-renaming
+\input{proof3} % bindDecls
+\input{proof4} % imports: proof4-functions; proof4-processes -> proof4-prefix,
+               % proof4-renaming
+\input{proof5}
 \end{document}

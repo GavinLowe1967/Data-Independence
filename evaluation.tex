@@ -49,9 +49,36 @@ $m_i=0$, we use the value $\dtcons\set\varepsilon$.
   representing a non-terminating computation.
 \end{itemize}
 
+
+We define a standard partial order~$\sqsubseteq$ over $Value$, with bottom
+element~$\bottom$, and such that all the datatype constructors are continuous.
+
+%%%%%%%%%%
+
+
+We use an \emph{environment} mapping identifiers (variable names) to values:
+\[
+Env = Var \pfun Value.
+\]
+We write $\rho$, $\rho'$, etc., for environments.  An environment can
+associate top-level names with values, for example corresponding to the
+declaration of channels.  If $c$ is the name of a channel, we will sometimes
+write $v \in \rho(c)$ to mean $v \in S$ where $\rho(c) = \channel S$.
+In addition, an environment can give the value of, for example:
+%
+\begin{itemize}
+\item the name of a datatype or a constructor of a datatype, including the
+  distinguished type~$t$;
+\item a name that corresponds to a formal parameter of a function;
+\item a name bound by a ``|let| \ldots |within|'' clause;
+\item a name bound by an input or nondeterministic choice in a process;
+\item a name for an indexing variable in an indexed process operator;
+\item a name bound by a generator in a set comprehension.
+\end{itemize}
+
 For later convenience, we define the semantics of processes in terms of
 \emph{augmented labelled transition systems (ALTS)}.  An ALTS is a labelled
-transition system, where each state is an element of $(Proc, Env)$, i.e.~a
+transition system, where each state is an element of $Proc \cross Env$, i.e.~a
 \CSPm\ syntactic process expression (maybe with free variables) and an
 environment giving values to (at least) the free variables.  For example,
 three successive states of a process might be
@@ -63,13 +90,29 @@ three successive states of a process might be
 \end{array}
 \]
 where $\rho_1$ is the environment corresponding to top-level declarations, for
-example declarations of channels.  For a process expression~$P$, the value
-$\eval \rho~P$ is an ALTS with initial state $(P,\rho)$.  For simplicity, we
-assume that different identifiers (e.g.~in different parallel components) have
-distinct names: this can be achieved via an alpha-renaming.
+example declarations of channels.  
 
-We define a standard partial order~$\sqsubseteq$ over $Value$, with bottom
-element~$\bottom$, and such that all the datatype constructors are continuous.
+More precisely, an ALTS is a tuple $(S,E,s_0)$, where
+%
+\begin{itemize}
+\item $S \subseteq Proc \cross Env$ is a set of states;
+
+\item $E \subseteq S \cross (\Sigma \union \set{\tau.\tick}) \cross S$ is a
+  set of edges, labelled with events;
+
+\item $s_0 \in S$ is the initial state.
+\end{itemize}
+%
+The value of a process expression~$P$ in environment~$\rho$, then, is an ALTS
+with initial state $(P,\rho)$ (and with transitions defined in a standard
+way).  Consider a state $(Q,\rho')$ in this ALTS, and consider the sub-ALTS
+with initial state $(Q,\rho')$; that sub-ALTS is itself the value of
+process~$Q$ in environment~$\rho'$.
+
+
+For simplicity, we assume that different identifiers (e.g.~in different
+parallel components) have distinct names: this can be achieved via an
+alpha-renaming.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,8 +134,6 @@ values in the obvious way.
 \item We lift $f$ to tuples, sets, sequences and maps by point-wise
   application.
 
-\item \framebox{maps}
-
 \item For channel and datatype constructor values we define
   $f(\channel S) = \channel (f(S))$, and
   $f(\dtcons S) = \dtcons (f(S))$.
@@ -102,17 +143,18 @@ values in the obvious way.
 
 \item We lift $f$ to environments as for other functions, i.e.~$f(\rho) =
   \set{f(x) \mapsto f(y) \| x \mapsto y \in \rho}$.  Note that for all
-  names~$x$ other than elements of the distinguished type, $f(x) = x$.  When
-  applied to names from the distinguished type, each mapping $x \mapsto
-  \dtcons\set\epsilon$ is replaced by $f(x) \mapsto \dtcons\set\epsilon$.
+  names~$x$ other than elements of the distinguished type and the
+  distinguished type itself, $f(x) = x$.  When applied to a name from the
+  distinguished type, the mapping $x \mapsto \dtcons\set\epsilon$ is replaced
+  by $f(x) \mapsto \dtcons\set\epsilon$.  \framebox{Well-defined}.
 
-%% For convenience, we lift $f$ to environments by functional
-%%   composition, i.e.~$f(\rho) = f\after\rho$.
+\item We lift $f$ to a state of an ALTS by point-wise application, so
+  $f(Q,\rho) = (Q, f(\rho))$.
 
-\item We lift $f$ to ALTS states by point-wise application, so $f(Q,\rho) =
-  (Q, f\after\rho)$. 
+\item We lift $f$ to a transition on an ALTS by point-wise application, so
+  $f(S,a,S') = (f(S), f(a), f(S'))$.
 
-\item We lift $f$ to ALTSs by application of~$f$ to the states and to the
+\item We lift $f$ to an ALTS by application of~$f$ to the states and to the
   events of the transitions.  Note that, as $f$ is not necessarily injective,
   this might merge some states.
 \end{itemize}
@@ -122,41 +164,28 @@ values in the obvious way.
 
 \subsection{Semantics}
 
-We use an \emph{environment} mapping identifiers (variables) to values:
-\[
-Env = Var \pfun Value.
-\]
-We write $\rho$, $\rho'$, etc., for environments.  An environment can
-associate top-level names with values, for example corresponding to the
-declaration of channels.  If $c$ is the name of a channel, we will sometimes
-write $v \in \rho(c)$ to mean $v \in S$ where $\rho(c) = \channel S$.
-In addition, an environment can give the value of, for example:
-%
-\begin{itemize}
-\item a name that corresponds to a formal parameter of a function;
-\item a name bound by a ``|let| \ldots |within|'' clause;
-\item a name bound by an input or nondeterministic choice in a process;
-\item a name for an indexing variable in an indexed process operator;
-\item a name bound by a generator in a set comprehension.
-\end{itemize}
-
 \CSPm\ uses the following syntactic categories.
 %
 \begin{itemize}
 \item The type $Expr$ represents \CSPm\ expressions, both process expressions
   and non-process expressions.
 
-\item The type $Pat$ represents a pattern used in pattern matching, including
+\item The type $Pat$ represents  patterns used in pattern matching, including
   constant patterns (e.g.~|3|), variable patterns (e.g.~|x|), wildcard
   patterns (\CSPM{\_}), tuple patterns (e.g.~|(3,x)|), dotted patterns
-  (e.g.~\CSPM{3.x.\_}), set patterns (e.g.~\CSPM{\{x\}}, sequence patterns
-  (e.g.~|<x> ^ xs|), and double patterns~(e.g.~\CSPM{pair @@ (x,y)}.
+  (e.g.~\CSPM{3.x.\_}), set patterns (e.g.~\CSPM{\{x\}}), sequence patterns
+  (e.g.~|<x> ^ xs|), and double patterns~(e.g.~\CSPM{pair @@ (x,y)}).
 
-\item The type |Decl| represents a declaration (e.g. |P = STOP|,\, \CSPM{f(x) =
+\item The type |Decl| represents  declarations (e.g.~|P = STOP|,\, \CSPM{f(x) =
   x+1},\, \CSPM{datatype T1 = A \| B}, or |channel c: T1|.
 
 \item The type |Stmt| represents statements in set or sequence comprehensions,
-  either generators (e.g.~|x <- xs|), or predicates (e.g.~|x < 3|).
+  and indexed operators: either generators (e.g.~|x <- s|), or predicates
+  (e.g.~|x < 3|).  Note that in some cases, a statement produces a
+  \emph{sequence} (and each generator must range over a sequence): we call
+  these \emph{sequence statements}.  And in other cases, a statement produces
+  a \emph{set} (and each generator must range over a set): we call these
+  \emph{set statements}.
 \end{itemize}
 
 %% The semantics of expressions is
@@ -193,19 +222,77 @@ The semantics is defined using the following functions:
   least fixed point:
   \[
   \begin{align}
-  \bindDecls \rho~decls = \bigsqcup_{n \in \nat} F^n(\rho) \\
+  \bindDecls \rho~decls = \bigsqcup_{n \in \nat} F^n(\rho^\bottom) \\
   \mbox{where } F(\rho_1)  =  
-    \rho_1 \oplus \Union \set{\bindDecl \rho_1 ~ decl \| decl \in decls}.
+    \rho_1 \oplus \Union \set{\bindDecl \rho_1 ~ decl \| decl \in decls},
   \end{align}
   \]
+  where $\rho^\bottom$ extends $\rho$ by mapping all names bound by $decls$
+  to~$\bottom$. 
 
-\item $\evalStmts : Env \fun Stmt^* \fun Env^*$ such that $\evalStmts
-  \rho~stmts$ gives the sequence of environments resulting from evaluating the
-  statements~$stmts$.  (In some circumstances, this sequence of environments
-  is converted into a multiset; we elide this conversion below.)
+\item $\evalStmt: Env \fun Stmt \fun Env^*$, and $\evalStmts : Env \fun Stmt^*
+  \fun Env^*$, such that $\evalStmt \rho~stmt$ gives the sequence of
+  environments resulting from evaluating the sequence statement~$stmt$, and
+  $\evalStmts$ does likewise for a list of statements.
 
-\item $\evalStmtsSet : Env \fun Stmt^* \fun \power(Env)$ such that
-  $\evalStmtsSet \rho~stmts$ gives the set of environments resulting from
-  evaluating the statements~$stmts$.
+\item $\evalStmtSet : Env \fun Stmt \fun \power(Env)$, and $\evalStmtsSet :
+  Env \fun Stmt^* \fun \power(Env)$ that operate similarly over set statements
+  (and produce a set of environments).
 \end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Consider two scripts that are identical other than their definitions of the
+distinguished type~$t$, with the two scripts defining $t$ as
+\begin{cspm}
+  datatype t = A£$_1$£ | ... | A£$_m$£
+\end{cspm}
+and 
+\begin{cspm}
+  datatype t = B£$_1$£ | ... | B£$_n$£
+\end{cspm}
+respectively, with $T_1 = \set{\M{A}_1, \ldots, \M{A}_m}$ and $T_2 =
+\set{\M{B}_1, \ldots \M{B}_n}$.  Let $\rho_1$ and $\rho_2$ be the environments
+that result from evaluating just those declarations:
+%
+\begin{eqnarray*}
+\rho_1 & = & \set{t \mapsto T_1, \M A_1 \mapsto \dtcons\set\epsilon, \ldots,
+   \M A_m \mapsto \dtcons\set\epsilon}, \\
+\rho_2 & = & \set{t \mapsto T_2, \M B_1 \mapsto \dtcons\set\epsilon, \ldots,
+   \M B_n \mapsto \dtcons\set\epsilon} .
+\end{eqnarray*}
+%
+Then the semantics of the two scripts will be equal to the result of
+evaluating the remainder of the scripts (i.e.~omitting the declarations
+of~$t$) in~$\rho_1$ and $\rho_2$, respectively.
+%
+The following lemma captures a relationship between these environments.
+%
+\begin{lemma}
+\label{lem:distinguished-type-declaration}
+Let $\rho_1$ and $\rho_2$ be as above, and suppose $f: T_1 \fun T_2$ is
+surjective.  Then $f(\rho_1) = \rho_2$.  
+\end{lemma}
+
+We show below that other values defined in the two scripts, including all
+subsequent environments, are likewise related by~$f$.
+%
+Our main result, proved as part of Proposition~\ref{prop:expressions}, is that
+for every expression~$e$ in the script, and for every environment~$\rho$:
+\begin{eqnarray*}
+f(\eval \rho ~ e) & = \eval (f(\rho)) ~e .
+\end{eqnarray*}
+%
+In particular, this implies $f(\eval \rho_1 ~ e) = \eval \rho_2 ~e$.  In the
+case that $e$ is a process expression, this will allow us to deduce
+equations~(\ref{eqn:traces})--(\ref{eqn:fd}), concerning the denotational
+semantics of that process.
+
+But first, we need some additional results.  In Section~\ref{sec:invariance}
+we show that top-level sets defined in the script satisfy a particular
+property \framebox{\ldots}; in particular, this includes the alphabet of all
+channels.  In Section~\ref{sec:functions} we identify a particular property of
+each function defined in the script, which implies that applying~$f$ to that
+function returns a function; part of Proposition~\ref{prop:expressions} shows
+that all functions defined by the script do indeed satisfy this property.
 

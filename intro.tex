@@ -22,6 +22,7 @@ inverse image of~$X$ under~$f$, i.e.~$\set{y \| f(y) \in X}$.}
   \set{(f(tr), X) \| (tr, f\inverse \banana{X}) \in \failures(P[T_1])},
   \label{eqn:failures} \\
 \divergences(P[T_2]) & = & \set{f(tr) \| tr \in \divergences(P[T_1])}.
+\label{eqn:fd}
 \end{eqnarray}
 
 %%%%%
@@ -100,6 +101,8 @@ constant.
 Also not functions like \CSPM{seq} \framebox{\ldots}
 
 We also do not allow any equality or inequality tests over values of type~$t$.
+%
+\begin{example}
 Consider the process
 \begin{cspm}
 c?x -> c?y -> if x = y then a -> STOP else b -> STOP.
@@ -108,11 +111,14 @@ c?x -> c?y -> if x = y then a -> STOP else b -> STOP.
 %% c?x \then c?y \then \If x = y \Then a \then STOP \Else b \then STOP
 %% \]
 %
-This does not satisfy equation~\ref{eqn:traces}.  Let $v$ and~$v'$ be distinct
+This does not satisfy equation~(\ref{eqn:traces}).  Let $v$ and~$v'$ be distinct
 elements of~$T_1$; then $tr = \trace{c.v, c.v', b} \in traces(P[T_1])$.  But
 consider $f: T_1 \fun T_2$ such that $f(v) = f(v') = w$; then the
 corresponding trace $f(tr) = \trace{c.w, c.w, b}$ is not a trace of
-$P[T_2]$.  If remapping by~$f$ unifies two values, equality tests can affect
+$P[T_2]$.  
+\end{example}
+%
+If remapping by~$f$ unifies two values, equality tests can affect
 the path followed by a process. 
 
 We allow external choices and nondeterministic choices to be indexed over a
@@ -148,8 +154,10 @@ We need to place various restrictions upon how sets based on~$t$ are defined.
 In particular, we will have to place restrictions on the use of set
 comprehensions. 
 
-We need to restrict the set of events hidden by the hiding operator.  Consider
-the following process.
+We need to restrict the set of events hidden by the hiding operator.  
+%
+\begin{example}
+Consider the following process.
 \begin{cspm}
 P = (in?x1 -> in?x2 -> c2.x1.x2 -> STOP) \ {c2.x.x | x <- t}
 \end{cspm}
@@ -159,8 +167,12 @@ T_1 = \set{A,B}, \quad T_2 = \set{C}, \quad f(A) = f(B) =  C.
 \]
 Then $P[T_2]$ has trace $\seq{\M{in}.A, \M{in}.B, \M{c2}.A.B}$, but $P[T_1]$
 doesn't have the corresponding trace $\seq{\M{in}.C, \M{in}.C, \M{c2}.C.C}$,
-contrary to equation~(\ref{eqn:traces}).  In effect, the definition of the set
-of hidden events introduces an equality test between the two data values.
+contrary to equation~(\ref{eqn:traces}), because the final event would be
+hidden.  In effect, the definition of the set of hidden events introduces an
+equality test between the two data values.
+\end{example}
+
+%%%%%
 
 To avoid situations like this, we will require that in each hidden set defined
 by a set comprehension $\{ e \| stmts\}$, each identifier $x$ that appears in
@@ -172,8 +184,10 @@ Similar examples shows that we need to restrict, in the same way, the sets
 used for alphabets or synchronisation sets in parallel compositions, and the
 set of thrown events for the exception operator.
 
-We need the same restrictions on the types of channels.  Consider the
-following.
+We need the same restrictions on the types of channels.  
+%
+\begin{example}
+Consider the following.
 \begin{cspm}
 datatype PairB = Two.t.t.Bool
 channel two : union({Two.x.x.true | x <- t}, {Two.x.y.false | x <- t, y <- t})
@@ -187,7 +201,8 @@ and {\cspmfont Two} type constructor is necessary to meet FDR's requirements
 that the alphabet of each channel is rectangular, i.e.~the cartesian product
 of sets of complete values; they aren't otherwise important for this
 example.}.  The $P$ processes do not satisfy equation~(\ref{eqn:failures}), in
-general.  Let $T_1$, $T_2$ and~$f$ be as above.  Then $P[T_1]$ has a failure
+general.  Let $T_1$, $T_2$ and~$f$ be as in the previous example.  Then
+$P[T_1]$ has a failure
 \[
 (\trace{\M{in}.A, \M{in}.B},\; 
   \set{\M{two.Two}.x.y.\M{true} \| x \in \set{A,B}, y \in \set{A,B}}),
@@ -202,6 +217,9 @@ In effect, the declaration of the type of~|two| has introduced an implicit
 equality test: the ``|?b|'' is equivalent to ``\CSPM{?b:(if x==y
 then \{true,false\} else \{false\})}'', which would not be allowed because of
 the equality test.
+\end{example}
+
+%%%%%
 
 We avoid this problem by imposing the same restriction as for hiding: we do
 not allow an identifier to appear twice in the term defining the events, which
@@ -258,9 +276,12 @@ $x$ that appears in $e$ and that depends on~$t$:
   % 
   \begin{itemize}
   \item $x$~is bound by a generator $x \,\M{<-}\, s_x$ in $stmts$, where $s_x$ is
-  itself invariant and uses no identifier bound by an earlier generator;
+  itself invariant: 
+  % and uses no identifier bound by an earlier generator;
   \item $x$~occurs only once in~$e$; and
-  \item $x$ is not used in any predicate in $stmts$.
+  \item $x$ is not used in any predicate in $stmts$, or in the set~$s$ used in
+  any subsequent generator $pat \,\M{<-} s$ (whether or not $pat$ uses values of
+  type~$t$). 
   \end{itemize}
 
 \item The name of a datatype (including $t$). 
@@ -284,8 +305,8 @@ Note that the cases of a set comprehension or an extensions set comprehension
 allow the statements $stmts$ to be empty, corresponding to a simple expression
 $\M\{ e \M\}$ or $\M{\{\|} e \M{\|\}}$.
 
-Note that the restriction that the set of a generator doesn't use an earlier
-bound variable prevents expressions such as 
+We included a restriction that the set of a generator doesn't use an earlier
+bound variable.  This prevents expressions such as
 \CSPM{\{c2.x.y \| x <- t, y <- \{x\}\}}, which would produce a set that we
 want to disallow.
 
@@ -296,10 +317,12 @@ channel d
 P = (in?x -> in?y -> c2.x.y -> STOP)[[ c2.x.x <- d | x <- t ]]
 \end{cspm}
 %
-Let $T_1$, $T_2$ and $f$ be as earlier.  Then $P[T_1]$ has trace $\trace{\M{in}.A,
-\M{in}.B, \M{c2}.A.B}$.  But $P[T_2]$ does not have the corresponding trace
-$\trace{\M{in}.C, \M{in}.C, \M{c2}.C.C}$.  We prevent renamings such as
-``\CSPM{c2.x.x <- d}'', which contains an implicit equality test.
+Let $T_1$, $T_2$ and $f$ be as earlier.  Then $P[T_1]$ has trace
+$\trace{\M{in}.A, \M{in}.B, \M{c2}.A.B}$.  But $P[T_2]$ does not have the
+corresponding trace $\trace{\M{in}.C, \M{in}.C, \M{c2}.C.C}$.  We prevent
+renamings such as ``\CSPM{c2.x.x <- d}'', which contains an implicit equality
+test.  (We define the restriction as item~\ref{item:di-renaming} of
+Definition~\ref{defn:data-independent}.) 
 
 Perhaps surprisingly, we don't need a similar restriction for selective inputs
 in prefixes.  For example we allow a prefixing construct such

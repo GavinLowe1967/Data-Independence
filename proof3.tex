@@ -1,54 +1,56 @@
-
-\subsection{$\bindDecls$}
+\subsection{Declarations}
 \label{sec:bindDecls}
 
-We now prove clause~\ref{item:bindDecls}.  We start with $\bindDecl$, and show
-%
-\begin{eqnarray*}
-  f \after \bindDecl \rho~decl & = & \bindDecl (f \after \rho)~decl.
-\end{eqnarray*}
-
-\framebox{***} Also every function produced respects~$f$. 
+We now prove clause~\ref{item:bindDecls}.  We consider the various subclauses
+in the subsections below.
 
 %%%%%%%%%%
+
+\subsubsection{Single declarations}
+
+We start with $\bindDecl$, and show
+%
+\begin{eqnarray*}
+  f(\bindDecl \rho~decl) & = & \bindDecl (\frho)~decl.
+\end{eqnarray*}
 
 \paragraph{Case $pat = e$.}
 
 We have
 \begin{calc}
-  & f \after \bindDecl \rho~(pat = e) \\
-  = & f \after (
+  & f(\bindDecl \rho~(pat = e)) \\
+  = & f(
         \begin{align}
         \Let v = \eval \rho~e \In \\
         \If \matches \rho~pat~v \Then \bind_0 \rho~pat~v \Else \error)
         \end{align} \\
   = & \begin{align}
       \Let v = \eval \rho~e \In \\
-        \If \matches \rho~pat~v \Then f \after \bind_0 \rho~pat~v
+        \If \matches \rho~pat~v \Then f(\bind_0 \rho~pat~v)
         \Else f(\error)
       \end{align}  \\
   = & \com{clauses~\ref{item:matches} and \ref{item:bind}; 
     $f(error) = error$} \\
   & \begin{align}
     \Let v = \eval \rho~e \In \\
-     \If \matches (f\after\rho)~pat~(f(v)) 
-      \Then \bind_0 (f \after \rho)~pat~(f(v)) 
+     \If \matches (\frho)~pat~(f(v)) 
+      \Then \bind_0 (\frho)~pat~(f(v)) 
         \Else \error
     \end{align} \\
   = & \com{letting $w = f(v)$} \\
     & \begin{align}
       \Let w = f(\eval \rho~e) \In \\
-        \If \matches (f\after\rho)~pat ~w 
-        \Then \bind_0 (f \after \rho)~pat~w
+        \If \matches (\frho)~pat ~w 
+        \Then \bind_0 (\frho)~pat~w
         \Else \error
       \end{align}  \\
   = & \com{part~\ref{item:eval}} \\
     & \begin{align}
-      \Let w = \eval (f\after\rho)~e \In \\
-      \If \matches (f\after\rho)~pat ~w \Then \bind_0 (f \after \rho)~pat~w
+      \Let w = \eval (\frho)~e \In \\
+      \If \matches (\frho)~pat ~w \Then \bind_0 (\frho)~pat~w
         \Else \error
       \end{align} \\
-  = & \bindDecl (f\after\rho)~(pat=e).
+  = & \bindDecl (\frho)~(pat=e).
 \end{calc}
 
 %%%%%%%%%%
@@ -82,13 +84,13 @@ It is clear that parts~\ref{item:matches} and~\ref{item:bind} imply
 corresponding results for these generalised versions.  
 
 Suppose $g$ in environment~$\rho$ evaluates to a function over type~$A$; then
-$g$ in environment~$f\after\rho$ evaluates to a function over~$f(A)$.
+$g$ in environment~$\frho$ evaluates to a function over~$f(A)$.
 
 We proceed as follows.
 %
 \begin{calc}
-& f \after \bindDecl \rho ~ decl \\
-= & f \after \set{g \mapsto
+& f(\bindDecl \rho ~ decl) \\
+= & f(\set{g \mapsto
   \begin{align}
   \set{\vec{v} \mapsto  
     \begin{align}  
@@ -99,7 +101,7 @@ We proceed as follows.
       \Then \eval (\bind \rho~\vec{pat}_n~\vec{v})~ e_n \\
       \Else \error \| 
     \end{align} \\
-  \quad \vec{v} \in A} }
+  \quad \vec{v} \in A} })
   \end{align} \\
 = & \com{applying~$f$} \\
 & \set{g \mapsto
@@ -120,11 +122,11 @@ We proceed as follows.
   \begin{align}
   \set{f(\vec{v}) \mapsto 
     \begin{align}  
-      \If \matches (f\after\rho)~ \vec{pat}_1~(f(\vec{v})) \\
-      \Then \eval (f\after \bind \rho~\vec{pat}_1~\vec{v}) ~ e_1 \\
+      \If \matches (\frho)~ \vec{pat}_1~(f(\vec{v})) \\
+      \Then \eval (f(\bind \rho~\vec{pat}_1~\vec{v})) ~ e_1 \\
       \Else \ldots \\
-      \Else \If \matches (f\after\rho)~ \vec{pat}_n~(f(\vec{v})) \\
-      \Then \eval (f\after \bind \rho~\vec{pat}_n~\vec{v} ) ~ e_n \\
+      \Else \If \matches (\frho)~ \vec{pat}_n~(f(\vec{v})) \\
+      \Then \eval (f(\bind \rho~\vec{pat}_n~\vec{v} )) ~ e_n \\
       \Else \error \| 
     \end{align} \\
   \quad \vec{v} \in A} }
@@ -134,11 +136,11 @@ We proceed as follows.
   \begin{align}
   \set{f(\vec{v}) \mapsto 
     \begin{align}  
-      \If \matches (f\after\rho)~ \vec{pat}_1~(f(\vec{v})) \\
-      \Then \eval (\bind (f\after\rho)~\vec{pat}_1~(f(\vec{v}))) ~ e_1 \\
+      \If \matches (\frho)~ \vec{pat}_1~(f(\vec{v})) \\
+      \Then \eval (\bind (\frho)~\vec{pat}_1~(f(\vec{v}))) ~ e_1 \\
       \Else \ldots \\
-      \Else \If \matches (f\after\rho)~ \vec{pat}_n~ (f(\vec{v})) \\
-      \Then \eval (\bind (f\after\rho) ~\vec{pat}_n~ (f(\vec{v}))) ~ e_n \\
+      \Else \If \matches (\frho)~ \vec{pat}_n~ (f(\vec{v})) \\
+      \Then \eval (\bind (\frho) ~\vec{pat}_n~ (f(\vec{v}))) ~ e_n \\
       \Else \error \| 
     \end{align} \\
   \quad \vec{v} \in A} }
@@ -148,16 +150,16 @@ We proceed as follows.
   \begin{align}
   \set{\vec{w} \mapsto 
     \begin{align}  
-      \If \matches (f\after\rho)~ \vec{pat}_1~\vec{w} 
-      \Then \eval  (\bind (f\after\rho)~\vec{pat}_1~ \vec{w} ) ~ e_1 \\
+      \If \matches (\frho)~ \vec{pat}_1~\vec{w} 
+      \Then \eval  (\bind (\frho)~\vec{pat}_1~ \vec{w} ) ~ e_1 \\
       \Else \ldots \\
-      \Else \If \matches (f\after\rho)~ \vec{pat}_n~ \vec{w} 
-      \Then \eval  (\bind (f\after\rho) ~\vec{pat}_n~ \vec{w}) ~ e_n \\
+      \Else \If \matches (\frho)~ \vec{pat}_n~ \vec{w} 
+      \Then \eval  (\bind (\frho) ~\vec{pat}_n~ \vec{w}) ~ e_n \\
       \Else \error \| 
     \end{align} \\
   \quad \vec{w} \in f(A)} }
   \end{align} \\
-= & \bindDecl (f\after\rho) ~ decl.
+= & \bindDecl (\frho) ~ decl.
 \end{calc}
 
 The extension to a function with $k$ curried arguments ---where each argument
@@ -168,13 +170,17 @@ notationally messy.
 
 \paragraph{Case of a channel declaration.}
 
-Consider a declaration $\CSPMM{channel}~ c : e_1.\ldots.e_n$.
+Consider a declaration 
+\[
+\CSPMM{channel}~ c : e_1.\ldots.e_n. 
+\]
+Then
 %
 \begin{calc}
-  & f \after \bindDecl \rho~ (\CSPMM{channel}~ c : e_1.\ldots.e_n) \\
-  = & f \after \set{c \mapsto 
+  & f(\bindDecl \rho~ (\CSPMM{channel}~ c : e_1.\ldots.e_n)) \\
+  = & f(\set{c \mapsto 
          \dtcons\set{v_1.\ldots.v_n \mid 
-            v_1 \in \eval \rho~e_1, \ldots, v_n \in\eval \rho~e_n}} \\
+            v_1 \in \eval \rho~e_1, \ldots, v_n \in\eval \rho~e_n}}) \\
   = & \set{c \mapsto \dtcons \set{
         \begin{align}
         f(v_1).\ldots.f(v_n) \mid \\
@@ -191,10 +197,10 @@ Consider a declaration $\CSPMM{channel}~ c : e_1.\ldots.e_n$.
     & \set{c \mapsto \dtcons\set{
         \begin{align}
         w_1.\ldots.w_n \mid \\
-        \quad w_1 \in \eval (f\after\rho)~e_1, \ldots,
-        w_n \in \eval (f\after\rho)~e_n}}
+        \quad w_1 \in \eval (\frho)~e_1, \ldots,
+        w_n \in \eval (\frho)~e_n}}
         \end{align} \\
-  = & \bindDecl (f\after\rho)~ (\CSPMM{channel}~ c : e_1.\ldots.e_n).
+  = & \bindDecl (\frho)~ (\CSPMM{channel}~ c : e_1.\ldots.e_n).
 \end{calc}%
 %
 Note, in particular, that $v_1.\ldots.v_n$ is a complete value if and only if
@@ -204,21 +210,22 @@ $w_1.\ldots.w_n$ is a complete value, by Lemma~\ref{lem:complete}.
 
 \paragraph{Case of a datatype declaration.}
 
-Let $decl$ be the declaration
+The case of the declaration of the distinguished type~$t$ was dealt with
+in Lemma~\ref{lem:distinguished-type-declaration}.
+
+Let $decl$ be the following declaration, not of the distinguished type~$t$:
 \[
 \CSPMM{datatype}~D = 
 A_1.e_{1,1}.\ldots.e_{1,m_1} \mid \ldots \mid A_n.e_{n,1}.\ldots.e_{n,m_n} \;.
-\]
-Suppose, first, that this is not the declaration of the distinguished
-type~$t$.  Then
+\]Then
 \begin{calc}
-&  f \after \bindDecl \rho~decl \\
+&  f(\bindDecl \rho~decl) \\
 = & 
   \begin{align}
   \Let S_i = \set{v_{i,1}.\ldots.v_{i,m_i} \mid 
          v_{i,j} \in \eval \rho ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
   \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
-  f \after (
+  f(
     \begin{align}
     \set{A_i \mapsto \dtcons S_i \mid i \in \set{1,\ldots,n}} \union\null \\
     \set{D \mapsto 
@@ -277,7 +284,7 @@ type~$t$.  Then
 \\
 & \begin{align}
   \Let S_i' = \set{w_{i,1}.\ldots.w_{i,m_i} \mid 
-         w_{i,j} \in \eval (f\after\rho) ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
+         w_{i,j} \in \eval (\frho) ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
   \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
   \begin{align}
     \set{A_i \mapsto \dtcons S_i' \mid i \in \set{1,\ldots,n}} \union \null \\
@@ -285,52 +292,117 @@ type~$t$.  Then
       \set{A_i.w_i \mid i \in \set{1,\ldots,n},  w_i \in S_i' } } )
     \end{align}
   \end{align} \\
-= & \bindDecl (f\after\rho) ~ decl
+= & \bindDecl (\frho) ~ decl
 \end{calc}
 %
 Note, in particular, that $A_i.v_i$ is a complete value iff $A_i.w_i$ is a
 complete value, by Lemma~\ref{lem:complete}.
 
-%%%%%
-
-
-Now suppose this is the declaration of the distinguished type~$t$.
-
-
-
-
-Without loss of generality, suppose the elements of the distinguished
-sub-type $T_i$ are the first $N$ branches of $decl$,
-i.e.~$T_i = \set{A_1,\ldots,A_N}$, with $N \le n$.  The only part of the
-above calculation that changes is the binding for~$D$, which becomes
-\begin{calc}
-  & D \mapsto 
-      \begin{align}
-      \set{f(A_1),\ldots,f(A_N)} \union\null \\
-      \set{f(A_i).f(v_i) \mid i \in \set{N+1,\ldots,n}, v_i \in S_i } 
-      \end{align} \\
-  = & \com{$f$ is a permutation on~$T_i$; as above} \\
-  & D \mapsto 
-      \begin{align}
-      \set{A_1,\ldots,A_N} \union\null \\
-      \set{A_i.w_i \mid i \in \set{N+1,\ldots,n}, w_i \in S_i'} 
-      \end{align}
-\end{calc}%
-which is the relevant part of $\bindDecl (f\after\rho) decl$. 
-
-
-
-
-\paragraph{\framebox{\ldots}}
-
-
-
-Include distinguished type.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- if $decls$ is a list of declarations
-of values, channels and datatypes, with disjoint names, then
-\begin{eqnarray*}
-  f \after \bindDecls \rho~decls & = & \bindDecls (f \after \rho)~decls.
-\end{eqnarray*}
+\subsubsection{Defined functions respect $f$}
+
+Recall that we need to show that if a declaration, based on~$\rho$, binds a
+name~$h$ to a function~$g$, then $g$ respects~$f$.
+
+Consider the case of a point-free declaration of the form $h = e$, for example
+where $e$ is a lambda abstraction.  By clause~\ref{item:eval} of the inductive
+hypothesis, $g = \eval \rho~e$ respects~$f$, as required.
+
+%% Suppose the environment~$\rho$ binds a name~$h$ to a function~$g$.  We require
+%% that $g$ respects~$f$.  We prove this as an extension of the proof in
+%% Section~\ref{sec:bindDecls}.  
+
+For the case of a function defined by pattern matching, the proof is a
+straightforward extension of the proof for lambda abstractions in
+Section~\ref{sssec:function-decl}.
+
+%% Now consider the case of a function defined by pattern matching:
+%% \[
+%% \begin{align}
+%% h(pat_1)  =  e_1 \\
+%% h(pat_2)  =  e_2 \\
+%% \ldots \\
+%% h(pat_k) = e_k
+%% \end{align}
+%% \]
+%% where $k \ge 1$.  Then, letting $A$ be the argument type of~$h$, the
+%% environment binds~$h$ to the function
+%% %
+%% \[
+%% \set{(v,
+%%   \begin{align}
+%%   \If \matches \rho~ pat_1~v \Then \eval (\bind \rho~pat_1~v)~e \\
+%%   \Else \If \matches \rho~ pat_2~v \Then \eval (\bind \rho~pat_2~v)~e \\
+%%   \ldots \\
+%%   \Else \If \matches \rho~ pat_k~v \Then \eval (\bind \rho~pat_k~v)~e 
+%%   \Else error ) \| \\
+%%   \qquad v \in A }.
+%%   \end{align}
+%% \]
+%% The proof that the defined function respects~$f$ is very similar to the proof
+%% for lambda extractions in Section~\ref{sssec:function-decl}.
+%% %
+%% The proof extends to curried functions in a straightforward (but notationally
+%% messy) way.
+
+\framebox{Forward ref - reorder?} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsubsection{Sets of declarations}
+
+Now consider a set of declarations $decls$, which necessarily bind disjoint
+variables.  Recall that
+\[
+\begin{align}
+\bindDecls \rho~decls = \bigsqcup_{n \in \nat} F^n(\rho^\bottom) \\
+\mbox{where } F(\rho_1)  =  
+  \rho_1 \oplus \Union \set{\bindDecl \rho_1 ~ decl \| decl \in decls},
+\end{align}
+\]
+where $\rho^\bottom$ extends $\rho$ by mapping all names bound by $decls$
+to~$\bottom$. 
+
+Recall that the proof of Proposition~\ref{prop:initial-env-invariant} showed
+that each $F^n(\rho^\bottom)$ is $T$-invariant, under the assumption that
+$\rho$ is. 
+
+%% These may be mutually recursive, so their semantics is defined as
+%% a fixed point.  One step of the iteration corresponding to that fixed point is
+%% given by the following function: 
+%% \begin{eqnarray*}
+%% F(\rho) & = & \rho \oplus \Union 
+%%                   \set{\bindDecl \rho ~decl \mid decl \in decls} .
+%% \end{eqnarray*}
+%% %
+%% Given an environment~$\rho$ and a set of declarations~$decls$, we write
+%% $\rho^\bottom$ for the extension of~$\rho$ that maps the variables bound
+%% by~$decls$ to~$\bottom$.  Then the semantics of $decls$ is defined as the
+%% least fixed point of~$F$:
+%% \begin{eqnarray*}
+%% \bindDecls \rho~ decls & = & \bigsqcup_{n \in \nat}  F^n(\rho^\bottom) .
+%% \end{eqnarray*}
+
+We have, for $T$-invariant environment~$\rho_1$:
+%
+\begin{calc}
+& f(F (\rho_1)) \\
+= & f(\rho_1) \oplus \Union 
+    \set{f(\bindDecl \rho_1 ~decl) \mid decl \in decls} \\
+= & \com{result for $\bindDecl$} \\
+  & f(\rho_1) \oplus \Union 
+    \set{\bindDecl (f(\rho_1)) ~decl \mid decl \in decls} \\
+= & F (f(\rho_1)).
+\end{calc}
+%
+A simple induction then shows that $f(F^n(\rho^\bottom)) =
+F^n(f(\rho^\bottom))$.  Hence (using continuity of~$f$):
+%
+\begin{calc}
+& f(\bindDecls \rho~ decls) \\
+ = & f(\bigsqcup_{n \in \nat}  F^n(\rho^\bottom) ) \\
+ = & \bigsqcup_{n \in \nat}  f(F^n(\rho^\bottom) ) \\
+ = & \bigsqcup_{n \in \nat}  F^n(f(\rho^\bottom) ) \\
+ = & \bindDecl (f(\rho))~ decls.
+\end{calc}

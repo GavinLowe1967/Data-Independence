@@ -1,24 +1,23 @@
 
 \subsection{$\bind$}
 
-We now prove clause~\ref{item:bind} of Proposition~\ref{prop:expressions-1}:
+We now prove clause~\ref{item:bind} of Proposition~\ref{prop:expressions}:
 if $pat$ is a pattern, and $v$ a value, then
 \begin{eqnarray*}
-f \after (\bind_0 \rho~pat~v) &  = & \bind_0 (f\after\rho)~pat~(f(v)).
+f  (\bind_0 \rho~pat~v) &  = & \bind_0 (f(\rho))~pat~(f(v)).
 \end{eqnarray*}
 It follows immediately that 
 \begin{eqnarray*}
-f \after (\bind \rho~pat~v) & = & \bind (f\after\rho)~pat~(f(v)).
+f (\bind \rho~pat~v) & = & \bind (f(\rho))~pat~(f(v)).
 \end{eqnarray*}
 
-We proceed by a case analysis on~$pat$.  Most cases are as
-in~\cite{symmetry-TR}, but we include them for completeness.  In all cases,
+We proceed by a case analysis on~$pat$.  In all cases,
 \begin{calc}
 & \mbox{$\bind_0 \rho~pat~v$ is defined} \\
 \iff & \matches \rho~pat~v \\
 \iff & \com{clause~\ref{item:matches}} \\
- &  \matches (f\after\rho)~pat~(f(v)) \\
-\iff & \mbox{$\bind_0 (f\after\rho)~pat~(f(v))$ is defined.}
+ &  \matches (f(\rho))~pat~(f(v)) \\
+\iff & \mbox{$\bind_0 (f(\rho))~pat~(f(v))$ is defined.}
 \end{calc}
 %
 We assume these hold in the following.
@@ -26,18 +25,17 @@ We assume these hold in the following.
 \begin{itemize}
 \item Case $x$, a variable.  
   \begin{calc}
-    & f \after \bind_0 \rho~x~v \\
-    = & f \after \set{x \mapsto v} \\
+    & f (\bind_0 \rho~x~v) \\
+    = & f(\set{x \mapsto v}) \\
     = & \set{x \mapsto f(v)} \\
-    = & \bind_0 (f\after\rho)~x~(f(v)).
+    = & \bind_0 (f(\rho))~x~(f(v)).
   \end{calc}
 
 \item A pattern of the form $pat = A$ where $A$ is a constructor of a
   datatype.  Again, $A$ is not a member of~$t$, by assumption.  Necessarily,
   $v = A$, and so $f(v) = A$.  Then
   \[
-  f \after \bind_0 \rho~pat~v = \set{}
-  = \bind_0 (f \after \rho)~pat~(f(v)).
+  f(\bind_0 \rho~pat~v = \set{})  = \bind_0 (f(\rho))~pat~(f(v)).
   \]  
 
 \item A pattern of the form $pat = A.pat_1$ where $A$ is a constructor of a
@@ -45,10 +43,10 @@ We assume these hold in the following.
   Necessarily, $v$ is of the form $A.v_1$ such that
   $\matches \rho~pat_1~v_1$, and so $f(v) = A.f(v_1)$.  Then 
   \begin{calc}
-    & f \after \bind_0 \rho~pat~v \\
-    = & f \after \bind_0 \rho~pat_1~v_1 \\
-    = & \bind_0 (f \after \rho)~pat_1~(f(v_1)) \\
-    = & \bind_0 (f \after \rho)~pat~(f(v)).
+    & f(\bind_0 \rho~pat~v) \\
+    = & f(\bind_0 \rho~pat_1~v_1) \\
+    = & \bind_0 (f(\rho))~pat_1~(f(v_1)) \\
+    = & \bind_0 (f(\rho))~pat~(f(v)).
   \end{calc}
 
 \item A pattern of the form $pat = pat_0.pat_1$, where $pat_0$ is not a dotted
@@ -59,14 +57,13 @@ We assume these hold in the following.
   $\matches \rho~pat_0~v_0$ and $\matches \rho~pat_1~v_1$, and $f(v_0)$ is not
   a dotted term.  Then
   \begin{calc}
-    & f \after \bind_0 \rho~pat~v \\
-    = & f \after (\bind_0 \rho~pat_0~v_0 \union \bind_0 \rho~pat_1~v_1) \\
-    = & (f \after \bind_0 \rho~pat_0~v_0) \union 
-        (f \after \bind_0 \rho~pat_1~v_1) \\
-    = & \bind_0 (f \after \rho)~pat_0~(f(v_0)) \union 
-        \bind_0 (f \after \rho)~pat_1~(f(v_1)) \\
-    = & \bind_0 (f \after \rho)~(pat_0.pat_1)~(f(v_0).f(v_1)) \\
-    = & \bind_0 (f \after \rho)~pat~v.
+    & f (\bind_0 \rho~pat~v) \\
+    = & f  (\bind_0 \rho~pat_0~v_0 \union \bind_0 \rho~pat_1~v_1) \\
+    = & f (\bind_0 \rho~pat_0~v_0) \union  f (\bind_0 \rho~pat_1~v_1) \\
+    = & \bind_0 (f(\rho))~pat_0~(f(v_0)) \union 
+        \bind_0 (f(\rho))~pat_1~(f(v_1)) \\
+    = & \bind_0 (f(\rho))~(pat_0.pat_1)~(f(v_0).f(v_1)) \\
+    = & \bind_0 (f(\rho))~pat~v.
   \end{calc}
 
 \item A pattern of the form $pat = x.pat_1$ where $x$ is a variable, and

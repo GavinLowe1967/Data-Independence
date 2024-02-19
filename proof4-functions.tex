@@ -1,76 +1,18 @@
 \subsubsection{Functions}
+\label{sssec:function-decl}
 
-We now consider functions defined and/or applied in the script.
-The representation of a function~$g$ is a set of pairs $(v,w)$ such that $g$
-maps~$v$ to~$w$, with the normal property of being a function, i.e.
-\[
-\forall v, w, w' \spot (v,w) \in g \land (v,w') \in g \implies w=w'.
-\]
-We will use standard notation for function application, writing $g(v)$ for the
-unique $w$ such that $(v,w) \in g$.
-%
-Note that each \CSPm\ function is considered total, although it might map
-certain arguments to one of the special values~$\bottom$ or $error$. 
-
-Applying $f$ to a function~$g$ corresponds to applying $f$ to each element of
-each pair, i.e.~$f(g) = \set{(f(v), f(w)) \| (v,w) \in g}$.  We show below
-that $f(g)$ is a function.  Here and below, if $f: T_1 \fun T_2$, then $g$ is
-a function over a type~$A$ built from~$T_1$, and $f(g)$ is a function over the
-corresponding type $f(A)$ built from~$T_2$.
-
-The following definition will be useful.
-%
-\begin{definition}
-We say that $g$ \emph{respects~$f$} if
-\[
-\forall v, w, v', w' \spot 
-  (v,w) \in g \land (v',w') \in g \land f(v) = f(v') \implies f(w) = f(w'). 
-\]
-Equivalently:
-\[
-\forall v,  v' \spot f(v) = f(v') \implies f(g(v)) = f(g(v')). 
-\]
-\end{definition}
-%
-We show that if $g$ respects~$f$ then $f(g)$ is a function.  Later we show
-that all functions that can be defined using \CSPm\ respect~$f$. 
-%
-\begin{lemma}
-\label{lem:function-respects}
-Suppose $g$ respects $f$.  Then $f(g)$ is a function, and $f(g(x)) =
-(f(g))(f(x))$.
-\end{lemma}
-%
-\begin{proof}
-We first show $f(g)$ is a function.  Suppose $(v,w) \in f(g)$ and $(v,w') \in
-f(g)$.  Then for some $v_0, v_0', w_0, w_0'$ we have
-\[
-\begin{align}
-(v_0,w_0) \in g \land f(v_0) = v \land f(w_0) = w \land \\
-(v_0',w_0') \in g \land f(v_0') = v \land f(w_0') = w'.
-\end{align}
-\]
-But $g$ respects~$f$, and $f(v_0) = f(v_0')$, so $f(w_0) = f(w_0')$, and hence
-$w = w'$.
-
-Now suppose $g(v) = w$, i.e.~$(v,w) \in g$.  Then $(f(v),f(w)) \in f(g)$ so
-$(f(g))(f(v)) = f(w) = f(g(v))$, as required.
-\end{proof}
-
-%%%%%
-
-We can now show that a function application~$g(e)$ satisfies 
-clause~\ref{item:eval}, assuming $g$ evaluates to a function that
-respects~$f$:
+We show that a function application~$g(e)$ satisfies clause~\ref{item:eval}.
+Note that we can assume inductively that $g$ evaluates to a function that
+respects~$f$. 
 %
 \begin{calc}
 & f(\eval \rho~(g(e))) \\
 = & f((\eval \rho~g)~ (\eval \rho~e)) \\
-= & \com{Lemma \ref{lem:function-respects}} \\
+= & \com{$\eval \rho~g$ respects $f$; Lemma \ref{lem:function-respects}} \\
   & (f(\eval \rho~g))~ (f(\eval \rho~e)) \\
 = & \com{inductive hypothesis} \\
-  & (\eval (f\after\rho)~g) ~(\eval (f\after\rho)~e) \\
-= & \eval (f\after\rho) (g(e)).
+  & (\eval (f(\rho))~g) ~(\eval (f(\rho))~e) \\
+= & \eval (f(\rho)) (g(e)).
 \end{calc}
 
 It remains to show that for any expression that defines a function: (1)~the
@@ -99,16 +41,16 @@ f(v')$.  Then
     \Else f(error) \\
 = & \com{inductive hypothesis, clauses \ref{item:matches} and \ref{item:eval};
   $f(error) = error$} \\
-& \If \matches (f\after\rho)~pat~(f(v))
-       \Then \eval(f\after(\bind \rho~pat~v))~e 
+& \If \matches (f(\rho))~pat~(f(v))
+       \Then \eval(f(\bind \rho~pat~v))~e 
     \Else error \\
 = & \com{inductive hypothesis, clause~\ref{item:bind}} \\
-&  \If \matches (f\after\rho)~pat~(f(v))
-       \Then \eval(\bind (f\after\rho)~pat~(f(v)))~e 
+&  \If \matches (f(\rho))~pat~(f(v))
+       \Then \eval(\bind (f(\rho))~pat~(f(v)))~e 
     \Else error \\
 = & \com{$f(v) = f(v')$} \\
-& \If \matches (f\after\rho)~pat~(f(v'))
-       \Then \eval(\bind (f\after\rho)~pat~(f(v')))~e 
+& \If \matches (f(\rho))~pat~(f(v'))
+       \Then \eval(\bind (f(\rho))~pat~(f(v')))~e 
     \Else error \\
 = & \com{as above} \\
 & f(w'),
@@ -124,8 +66,8 @@ We prove the lambda extraction satisfies clause~\ref{item:eval} as follows.
 & \begin{align}
   \set{(f(v),\; 
     \begin{align}
-    \If \matches (f\after\rho)~pat~(f(v))
-       \Then \eval(\bind (f\after\rho)~pat~(f(v)))~e \\
+    \If \matches (f(\rho))~pat~(f(v))
+       \Then \eval(\bind (f(\rho))~pat~(f(v)))~e \\
     \Else error) \| 
     \end{align} \\
     \qquad v \in A} 
@@ -134,53 +76,29 @@ We prove the lambda extraction satisfies clause~\ref{item:eval} as follows.
   \begin{align}
   \set{(v',\; 
     \begin{align}
-    \If \matches (f\after\rho)~pat~v'
-       \Then \eval(\bind (f\after\rho)~pat~v')~e 
+    \If \matches (f(\rho))~pat~v'
+       \Then \eval(\bind (f(\rho))~pat~v')~e 
     \Else error) \| 
     \end{align} \\
     \qquad v' \in f(A)} 
     \end{align} \\
-= & \eval~(f\after\rho)~(\lambda pat \spot e).
+= & \eval~(f(\rho))~(\lambda pat \spot e).
 \end{calc}
 
 %%%%%%%%%%
 
 \paragraph{Bound function names.}
 
-Suppose the environment~$\rho$ binds a name~$h$ to a function~$g$.  We require
-that $g$ respects~$f$.  We prove this as an extension of the proof in
-Section~\ref{sec:bindDecls}.  Suppose $h$ is defined by pattern matching:
+Consider a name~$h$ declared as a function in the script, and suppose $\rho$
+maps~$h$ to a function~$g$.  By clause~\ref{item:bindDecls} of the inductive
+hypothesis, $g$ respects~$f$.  Further
 \[
-\begin{align}
-h(pat_1)  =  e_1 \\
-h(pat_2)  =  e_2 \\
-\ldots \\
-h(pat_k) = e_k
-\end{align}
+f(\eval \rho~h) = f(g) = \eval (f(\rho))~h.
 \]
-where $k \ge 1$.  Then, letting $A$ be the argument type of~$h$, the
-environment binds~$h$ to the function
-%
-\[
-\set{(v,
-  \begin{align}
-  \If \matches \rho~ pat_1~v \Then \eval (\bind \rho~pat_1~v)~e \\
-  \Else \If \matches \rho~ pat_2~v \Then \eval (\bind \rho~pat_2~v)~e \\
-  \ldots \\
-  \Else \If \matches \rho~ pat_k~v \Then \eval (\bind \rho~pat_k~v)~e 
-  \Else error ) \| \\
-  \qquad v \in A }.
-  \end{align}
-\]
-The proofs that this function respects~$f$, and that clause{item:eval} is
-satisfied, are very similar to the proofs for lambda extractions, above.
-
-The proofs extend to curried functions in a straightforward (but notationally
-messy) way.
 
 %%%%%%%%%%
 
-\paragraph{Built-in functions}
+\paragraph{Built-in functions.}
 
 Consider a built-in function~|g|.  Let $f: T_1 \fun T_2$, and suppose the
 semantics of~|g| over types built from~$T_1$ is a function~$g_1$, and  the
@@ -220,7 +138,7 @@ We prove $f(g_1) = g_2$ as follows.
 Under the condition $f(g_1) = g_2$, we can proof condition~\ref{item:eval}
 holds for the built-in function~|g|:
 \[
-f(\eval \rho ~ \M{g}) = f(g_1) = g_2 = \eval (f\after\rho) ~ \M{g}.
+f(\eval \rho ~ \M{g}) = f(g_1) = g_2 = \eval (f(\rho)) ~ \M{g}.
 \]
 
 It remains to consider which built-in functions satisfy the premises of
@@ -250,12 +168,15 @@ functions satisfies the condition $f \circ g_1 = g_2 \circ f$.
 \begin{itemize}
 \item the set functions |empty|, |union|, |Union|, |Set| and |Seq|;
 
-\item the sequence functions |concat|,  |head|, |length|, |null|, |set|
-and~|tail|; 
+\item the sequence functions \CSPM{^} (concatenation), \CSPM{#} (length),
+  |concat|, |head|, |length|, |null|, |set| and~|tail|;
 
 \item the map functions |emptyMap|, |mapDelete|, |mapFromList|, |mapLookup|,
   |mapMember|, |mapUpdate|, |mapUpdateMultiple| and~|Map| (recall that we
   assume that the domain type of each map is independent of~$t$);
+
+\item the relation functions \CSPM{relational_image},
+  \CSPM{relational_inverse_image}, and \CSPM{transpose}.
 \end{itemize}
 
 However, the condition $f \circ g_1 = g_2 \circ f$ does not hold for all
@@ -290,8 +211,223 @@ Definition~\ref{defn:data-independent}.
 %% \item the function~|show|.
 %% \end{itemize}
 
-\framebox{???} Compression functions; relation functions.  |extensions|
-|productions|.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subparagraph{{\cspmInlineStyle extensions} and {\cspmInlineStyle productions}.}
+
+We now consider the |extensions| function, which, given a partially completed
+channel or datatype value~$a$, gives all values~$v$ such that $a.v$ is a
+complete event or datatype value (here $a$ and $v$ might be dotted values).
+Given an environment~$\rho$, we write $\extendables(\rho)$ for all the
+extendable values in~$\rho$, i.e.~partially constructed channels or datatype
+values.\footnote{Here we use ``$\prefix$'' to denote the prefix relation over
+  dotted tuples.}
+%
+\begin{eqnarray*}
+\extendables(\rho) & = & 
+  \set{ c.v \|
+    \exists S \spot 
+      \begin{align}
+      (\rho(c) = \channel S \lor \rho(c) = \dtcons(S)) \land \\
+      \exists w \in S \spot v \prefix w }.
+      \end{align}
+\end{eqnarray*}
+%
+Here and in the following, $c$ denoted a non-dotted term, so either a channel
+name or a datatype constructor.  The semantics of the |extensions| function in
+environment~$\rho$ is then the function:
+\[
+\set{ c.v \mapsto \set{ w \| v.w \in \rho(c) } \| 
+     c.v \in \extendables(\rho) }.
+\]
+
+%We will need the following two lemmas.
+% 
+%% \begin{lemma}
+%% \label{lem:extendables-f-rho}
+%% $\extendables (f(\rho)) = f(\extendables(\rho))$.
+%% \end{lemma}
+
+%% \begin{proof}
+%% We prove a set-inclusion in each direction.
+%% %
+%% \begin{description}
+%% \item[($\supseteq$)]  Suppose $c.v \in \extendables(\rho)$, and let $S$ be such
+%%   that $\rho(c)$ is either $\channel S$ or $\dtcons S$.  Then for some $w \in
+%%   S$,\, $v \prefix w$.  But then $f(\rho)(f(c))$ is either $\channel (f(S))$
+%%   or $\dtcons (f(S))$; and $f(w) \in f(S)$ and $f(v) \prefix f(w)$.  Hence
+%%   $f(c.v) = f(c).f(v) \in \extendables(f(\rho))$.
+
+%% \item[($\subseteq$)] Suppose $f(c.v) = f(c).f(v) \in \extendables(f(\rho))$.
+%%   Then $\rho(c)$ must be either $\channel S$ or $\dtcons S$, for some~$S$, and
+%%   $f(\rho)(f(c))$ is either $\channel (f(S))$ or $\dtcons (f(S))$,
+%%   respectively.  Further, there is some $f(w) \in f(S)$ such that $f(v)
+%%   \prefix f(w)$.  Let $u$ be such that $f(w) = f(v).f(u) = f(v.u)$.  But then
+%%   Lemma~\ref{lem:T-invariant-inclusion} implies that $v.u \in S$, and so $c.v
+%%   \in \extendables(\rho)$.
+%% \end{description}
+%% \end{proof}
+
+%% \begin{lemma}
+%% \label{lem:extensibles-vs-f}
+%% $c.v \in \extendables(\rho) \iff f(c).f(v) \in f(\extendables(\rho))$.
+%% \end{lemma}
+
+%% \begin{proof}
+%% The left-to-right implication is trivial.  For the right-to-left implication,
+%% suppose $f(c).f(v) \in f(\extendables(\rho))$.
+%% %
+%% \begin{itemize}
+%% \item If $c$ is a member of the distinguished datatype, then $f(v) = \epsilon$
+%%   (since $\rho(c) = \dtcons\set\epsilon$).  Hence $v = \epsilon$, and $c.v = c
+%%   \in \extendables(\rho)$.
+
+%% \item Otherwise $f(c) = c$.  Let $S$ be such that $\rho(c)$ is either
+%%   $\channel S$ or $\dtcons S$.  Then there is some $v'$ such that $c.v' \in
+%%   \extendables(\rho)$ and $f(v) = f(v')$.  Hence there is some $w' \in S$ such
+%%   that $v' \prefix w'$.  Let $u$ be such that $w' = v'.u$, and let $w = v.u$.
+%%   Then $f(w) = f(v).f(u) = f(v').f(u) = f(v'.u) = f(w')$.  But $S$ is
+%%   $T$-invariant, so $w \in S$, by Lemma~\ref{lem:T-invariant-vs-f}.  And $v
+%%   \prefix w$, so $c.v \in \extendables(\rho)$, as required.
+%% \end{itemize}
+%% \end{proof}
+
+%%%%%%%%%%
+
+We will need the following lemma.
+%
+\begin{lemma}\label{lem:extendables-f-rho}
+$c.v \in \extendables(\rho) \iff f(c).f(v) \in \extendables(f(\rho))$.
+\end{lemma}
+
+\begin{proof}
+For the left-to-right direction, suppose $c.v \in \extendables(\rho)$.  Let
+$S$ be such that $\rho(c)$ is either $\channel S$ or $\dtcons S$.  Then for
+some $w \in S$,\, $v \prefix w$.  But then $f(\rho)(f(c))$ is either $\channel
+(f(S))$ or $\dtcons (f(S))$; and $f(w) \in f(S)$ and $f(v) \prefix
+f(w)$. Hence $f(c.v) = f(c).f(v) \in \extendables(f(\rho))$.
+
+For the right-to-left direction, suppose $f(c).f(v) \in
+\extendables(f(\rho)))$.
+\begin{itemize}
+\item If $c$ is a member of the distinguished datatype, $f(\rho)(f(c)) =
+  \dtcons\set\epsilon$, so $f(v) = \epsilon$, and hence $v = \epsilon$.  But
+  then $\rho(c) = \dtcons\set\epsilon$, so $c.v = c.\epsilon \in
+  \extendables(\rho)$.
+
+\item Otherwise, $f(c) = c$.  Let $S$ be such that $\rho(c)$ is either
+  $\channel S$ or $\dtcons S$.  Hence $f(\rho)(c)$ is either $\channel (f(S))$
+  or $\dtcons (f(S))$, and there is some $w' \in f(S)$ such that $f(v) \prefix
+  w'$.  Let $u$ be such that $w' = f(v).f(u) = f(v.u)$, and let $w = v.u$.
+  But $S$ is $T$-invariant, so $w \in S$, by Lemma~\ref{lem:T-invariant-vs-f}.
+  And $v \prefix w$, so $c.v \in \extendables(\rho)$, as required.
+\end{itemize}
+\end{proof}
+
+
+%% Then $f(w') \in f(S)$, and so ..........
+
+%%  Then $\extendables(\rho)$
+%% contains a value $d.v'$ such that $f(c) = f(d)$ and $f(v) = f(v')$.  
+%% \begin{itemize}
+%% \item If $d$ is a member of the distinguished datatype, then so is~$c$, and
+%%   vice versa.  And then $v = v' = \epsilon$, and $c.v = c \in
+%%   \extendables(\rho)$.
+
+%% \item Otherwise, $c = d = f(c) = f(d)$.  Let $S$ be such that $\rho(c)$ is
+%%   either $\channel S$ or $\dtcons S$.  Then, since $d.v' = c.v' \in
+%%   \extendables(\rho)$,\, $S$ contains a value $w'$ such that $v' \prefix w'$.
+%%   Let $w' = v'.u'$.  
+%% \end{itemize}
+ 
+We can now prove clause~\ref{item:eval} for the |extensions| function.
+%
+\begin{calc}
+& f(\eval \rho~\M{extensions}) \\
+= & f(\set{ c.v \mapsto \set{ w \| v.w \in \rho(c) } \| 
+     c.v \in \extendables(\rho) }) \\
+= & \com{applying~$f$; Lemma \ref{lem:extendables-f-rho}} \\
+& \set{ f(c).f(v) \mapsto \set{ f(w) \| v.w \in \rho(c) } \| 
+      f(c).f(v) \in \extendables(f(\rho))) } \\
+= & \com{letting $v' = f(v)$ and $w' = f(w')$} \\
+ & \set{ f(c).v' \mapsto \set{ w' \| v'.w' \in f(\rho(c)) } \| 
+      f(c).v' \in f(\extendables(\rho)) } \\
+= & \com{letting $c' = f(c)$; $f(\rho(c)) = f(\rho)(f(c)) = f(\rho)(c')$} \\
+%%  & \set{ f(c).v' \mapsto \set{ w' \| v'.w' \in f(\rho)(f(c)) } \| 
+%%       f(c).v' \in \extendables(f(\rho)) } \\
+%% = & \com{letting $c' = f(c)$} \\
+ & \set{ c'.v' \mapsto \set{ w' \| v'.w' \in f(\rho)(c') } \| 
+      c'.v' \in \extendables(f(\rho)) } \\
+= & \eval (f(\rho)) ~\M{extensions}.
+\end{calc}
+
+
+We now show that $\eval \rho~\M{extensions}$ respects~$f$.  Suppose $f(c.v) =
+f(c'.v')$, so $f(c) = f(c')$ and $f(v) = f(v')$.  Then, using Lemma
+\ref{lem:extendables-f-rho}:
+\[
+\begin{array}{rcl}
+c.v \in \extendables(\rho) &  \iff & f(c.v)  \in \extendables(f(\rho)) \\
+ & \iff & f(c'.v') \in \extendables(f(\rho)) \\
+ & \iff  & c'.v' \in \extendables(\rho).
+\end{array}
+\]
+Suppose both sides of the above implications hold, so $c.v$ and $c'.v'$ are
+both in the domain of $\eval \rho~\M{extensions}$.  We  show 
+\begin{eqnarray*}
+\eval \rho~\M{extensions} (c.v) & = & \eval \rho~\M{extensions} (c'.v'),
+\end{eqnarray*}
+which implies that $\eval \rho~\M{extensions}$ respects~$f$.  If $c$ and~$c'$
+are members of the distinguished type~$t$, then $v = v' = \epsilon$, and both
+sides of the above equation equal $\set\epsilon$.  Otherwise $c = c'$.  Let
+$S$ be such that $\rho(c) = \rho(c')$ is either $\channel S$ or $\dtcons S$.
+Then
+%
+\begin{calc}
+& \eval \rho~\M{extensions} (c.v) \\
+= &  \set{ w \| v.w \in S} \\
+= & \com{%
+  \begin{tabular}{@{}l@{}}
+  $f(v.w) = f(v).f(w) = f(v').f(w) = f(v'.w)$, and $S$ is $T$-invariant, \\
+  so  $v.w \in S \iff v'.w  \in S$, by Lemma \ref{lem:T-invariant-vs-f}
+  \end{tabular}} \\
+ &  \set{ w \| v'.w \in S} \\
+= & \eval \rho~\M{extensions} (c.v),
+\end{calc}
+%
+as required. 
+
+%% Now, $f(v.w) = f(v'.w)$, and $S$ is $T$-invariant, so $v.w \in S \iff v'.w \in
+%% S$, by Lemma \ref{lem:T-invariant-vs-f}.  Hence
+%% \[
+%% \begin{array}{rcl}
+%% \eval \rho~\M{extensions} (c.v) & = & \set{ w \| v.w \in S} \\
+%% & = & \set{ w \| v'.w \in S} \\
+%% & = & \eval \rho~\M{extensions} (c'.v'),
+%% \end{array}
+%% \]
+%% as required.
+
+%% \framebox{*** But also that it respects $f$}
+
+
+%%%%%
+
+The proofs for |productions| follow easily, noting that $\eval \rho~
+\M{productions}$ and $\eval \rho~\M{extensions}$ have the same domains, and,
+for $a$ in that domain,
+\begin{eqnarray*}
+\eval \rho~ \M{productions}(a) & = & 
+  \set{ a.w \| w \in \eval \rho ~ \M{extensions}(a)}.
+\end{eqnarray*}
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% \subparagraph{...}
+
+%% \framebox{???}  Compression functions; relation functions.  |extensions|
+%% |productions|.  
 
 
 %% \begin{lemma}
@@ -324,7 +460,7 @@ Definition~\ref{defn:data-independent}.
 %% = \set{ (f(v), g(f(v))) \| v \in \dom g } 
 %% = \set{ (w, g(w)) \| w \in f(\dom g) } 
 %% = ?? 
-%% f(\eval (f\after\rho) \M{g}) 
+%% f(\eval (f(\rho)) \M{g}) 
 %% \]
 
 %% Note that if $g$ returns results that are independent of~$t$ (on
@@ -344,8 +480,8 @@ Definition~\ref{defn:data-independent}.
 %% & f(\eval \rho ~ (\M{g}(e))) \\
 %% = &  f(g(\eval \rho e)) \\
 %% = & g(f(\eval \rho e)) \\
-%% = & g(\eval (f\after\rho) e) \\
-%% = & \eval (f\after\rho) ~(\M{g}(e)).
+%% = & g(\eval (f(\rho)) e) \\
+%% = & \eval (f(\rho)) ~(\M{g}(e)).
 %% \end{calc}
 %% %
 %% For a binary operator with semantics $\oplus$, we can prove a corresponding

@@ -12,7 +12,7 @@ satisfies the desired result.
 \label{lem:eval-renaming}
 Let $\rename{ren}$ be a renaming.  Then 
 \begin{eqnarray*}
-f(\eval \rho~\rename{ren}) & = & \eval (f\after\rho)~ \rename{ren}.
+f(\eval \rho~\rename{ren}) & = & \eval (f(\rho))~ \rename{ren}.
 \end{eqnarray*}
 \end{lemma}
 %
@@ -33,16 +33,16 @@ e_i'$ is complete, i.e.~it renames an event as opposed to a channel.  Below,
 = & \com{inductive hypothesis} \\
   & \begin{align}
     id_2 \oplus\null \\ 
-    \quad \set{ (\eval (f\after\rho')~e_i, \eval (f\after\rho')~e_i') \|
+    \quad \set{ (\eval (f(\rho'))~e_i, \eval (f(\rho'))~e_i') \|
      \rho' \in \evalStmtsSet \rho~stmts, i \in \set{1,\ldots,k} }
      \end{align} \\
-= & \com{letting $\rho'' = f \after \rho'$} \\ 
+= & \com{letting $\rho'' = f(\rho')$} \\ 
   & id_2 \oplus \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \|
      \rho'' \in f(\evalStmtsSet \rho~stmts), i \in \set{1,\ldots,k} } \\
 = & \com{inductive hypothesis, part~\ref{item:evalStmtsSet}} \\
   & id_2 \oplus \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \|
-     \rho'' \in \evalStmtsSet (f\after\rho)~stmts, i \in \set{1,\ldots,k} } \\
-= & \eval (f\after\rho)
+     \rho'' \in \evalStmtsSet (f(\rho))~stmts, i \in \set{1,\ldots,k} } \\
+= & \eval (f(\rho))
        \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|  stmts}.
 \end{calc}
 
@@ -144,7 +144,7 @@ f(P\rename{R}^{ren}) & = & (f(P))\rename{f(R)}^{ren}.
 
 \begin{proof}
 For each state $(Q,\rho)$ of~$P$, each side of the equation will have a
-state $(Q\rename{ren}, f\after\rho)$.
+state $(Q\rename{ren}, f(\rho))$.
 
 %% On each side, each state $Q$ of $P$ is replaced by $f(Q)$ (here each state $Q$
 %% will be a pair $(QQ\M{[[}ren\M{]]}, \rho)$, where $QQ$ is a syntactic
@@ -154,11 +154,11 @@ state $(Q\rename{ren}, f\after\rho)$.
 Suppose that $P$ contains a transition $(Q,\rho) \trans{e} (Q',\rho')$.  Then
 $P\rename{R}^{ren}$ contains a transition $(Q\rename{ren},\rho) \trans{e'}
 (Q'\rename{ren},\rho')$ for every $(e,e') \in R$; and so the left-hand side
-contains a transition $(Q\rename{ren}, f\after\rho) \trans{f(e')}
-(Q'\rename{ren}, {f\after\rho'})$.  And $f(P)$ contains a transition $(Q,
-f\after\rho) \trans{f(e)} (Q', f\after\rho')$; so the right-hand side contains
-a transition $(Q\rename{ren}, f\after\rho) \trans{e''} (Q'\rename{ren},
-{f\after\rho'})$ for every $e''$ such that $(f(e), e'') \in f(R)$.  We show
+contains a transition $(Q\rename{ren}, f(\rho)) \trans{f(e')}
+(Q'\rename{ren}, {f(\rho')})$.  And $f(P)$ contains a transition $(Q,
+f(\rho)) \trans{f(e)} (Q', f(\rho'))$; so the right-hand side contains
+a transition $(Q\rename{ren}, f(\rho)) \trans{e''} (Q'\rename{ren},
+{f(\rho')})$ for every $e''$ such that $(f(e), e'') \in f(R)$.  We show
 that these transitions correspond.
 %
 \begin{itemize}
@@ -187,6 +187,6 @@ application of~$ren$ to a process~$P$.
 = & \com{Lemma \ref{lem:renaming-f}} \\
   &  (f(\eval \rho~P)) \rename{ f(\eval \rho~ren) }^{ren} \\
 = & \com{inductive hypothesis; Lemma \ref{lem:eval-renaming}} \\
-  &  (\eval (f\after\rho)~P)) \rename{ \eval (f\after\rho)~ren }^{ren} \\
-= & \eval (f\after\rho) (P~\rename{ren}).
+  &  (\eval (f(\rho))~P)) \rename{ \eval (f(\rho))~ren }^{ren} \\
+= & \eval (f(\rho)) (P~\rename{ren}).
 \end{calc}

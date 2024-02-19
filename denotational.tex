@@ -1,0 +1,88 @@
+\section{Denotational semantics}
+
+\begin{lemma}
+\label{lem:f-sim-expr}
+Suppose $f(\rho) = f(\rho')$.  Then for every expression~$e$,\,
+\[
+f(\eval \rho~e) =f(\eval \rho'~e).
+\]
+\end{lemma}
+%
+\begin{proof}
+We have
+\(
+f(\eval \rho~e) = \eval (f(\rho))~e = \eval (f(\rho'))~e = f(\eval \rho'~e)
+\),
+using Proposition~\ref{prop:expressions}.
+\end{proof}
+
+%%%%%%%%%%
+
+Consider, the case of a process expression~$P$.  Recall that $\eval \rho~P$ is
+an ALTS with initial state~$(P,\rho)$; we write $ALTS_{P,\rho}$ for this
+ALTS\@.  The following lemma follows immediately from
+Lemma~\ref{lem:f-sim-expr}.
+%
+\begin{lemma}
+\label{lem:f-sim-proc}
+Suppose $f(\rho) = f(\rho')$.  Then $f(ALTS_{P,\rho}) = f(ALTS_{P,\rho'})$.
+In particular, for every transition 
+\[
+(P,\rho) \trans{a} (Q,\rho_2)  \quad \mbox{in $ALTS_{P,\rho}$}\,,
+\]
+there is a corresponding transition 
+\[
+(P,\rho') \trans{a'} (Q,\rho_2')  \quad \mbox{in $ALTS_{P,\rho'}$}
+\]
+such that $f(a) = f(a')$, and $f(\rho_2) = f(\rho_2')$, and vice versa.
+\end{lemma}
+
+
+%%%%%%%%%%
+
+\begin{lemma}
+Suppose  there is a transition
+\[
+(P, f(\rho)) \trans{a} (Q,\rho_1)  \quad \mbox{in $f(ALTS_{P,\rho})$.}
+\]
+Then there is a transition 
+\[
+(P, \rho) \trans{a'} (Q, \rho') \quad \mbox{in $ALTS_{P,\rho}$}
+\]
+such that $f(a') = a$, and $f(\rho') = \rho_1$.
+\end{lemma}
+
+\begin{proof}
+The transition in $f(ALTS_{P,\rho})$ results from the application of~$f$ to a
+transition in $ALTS_{P,\rho}$; that transition must be of the form
+\[
+(P, \rho') \trans{a''} (Q, \rho'') % \quad \mbox{in $ALTS_{P,\rho}$}
+\]
+such that $f(\rho') = f(\rho)$,\, $f(a'') = a$, and $f(\rho'') = \rho_1$.
+Then Lemma~\ref{lem:f-sim-proc} implies the existence of a transition
+\[
+(P, \rho) \trans{a'} (Q, \rho')  \quad \mbox{in $ALTS_{P,\rho}$}
+\]
+such that $f(a') = f(a'') = a$, and $f(\rho') = f(\rho'') = \rho_1$.
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% Suppose  there is a transition 
+%% \[
+%% (Q_1,\rho_1) \trans{a} (Q_2,\rho_2) \quad \mbox{in $f(ALTS_{P,\rho})$.}
+%% \]
+%% Then there is a transition
+%% \[
+%% (Q_1,\rho_1') \trans{a'} (Q_2,\rho_2') \quad \mbox{in $ALTS_{P,\rho}$}
+%% \]
+%% such that $f(\rho_1') = \rho_1$,\, $f(a') = a$, and $f(\rho_2') = \rho_2$.
+%% Suppose also $f(\rho_1'') = f(\rho_1') = \rho_1$.  Then
+%% there is a transition
+%% \[
+%% (Q_1,\rho_1'') \trans{a''} (Q_2,\rho_2'') \quad \mbox{in $ALTS_{P,\rho}$}
+%% \]
+%% such that $f(a'') = f(a') = a$ and $f(\rho_2'') = f(\rho_2') = \rho_2$.
+
+Not apply induction.

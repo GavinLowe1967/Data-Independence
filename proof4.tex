@@ -2,17 +2,10 @@
 
 We show that for every expression~$e$ in the script,
 \begin{eqnarray*}
-f(\eval \rho ~ e) & = \eval (f \after \rho) e .
+f(\eval \rho ~ e) & = \eval (f(\rho)) e .
 \end{eqnarray*}
 
 \framebox{\ldots}
-
-%% Note:
-%% \begin{eqnarray*}
-%% \eval \rho ~(g(e)) & = & (\eval \rho ~g) (\eval \rho~ e) \\
-%% \eval \rho ~(\lambda x \spot e) & = & 
-%%   \lambda z \spot \eval (\rho \oplus \set{x \mapsto z})~ e.
-%% \end{eqnarray*}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -23,53 +16,24 @@ f(\eval \rho ~ e) & = \eval (f \after \rho) e .
 Consider a name~$x$ bound by the environments, other than a datatype
 constructor or channel name.  Then
 \[
-f(\eval \rho~x) = f(\rho~x) = \eval (f\after\rho)~x.
+f(\eval \rho~x) = f(\rho~x) = \eval (f(\rho))~x.
 \]
 
 Not consider the name~$d$ of a datatype constructor (so both $\rho$ and
-$f\after\rho$ map $c$ to a $\dtcons$ value).  Necessarily, $d$ is not a member
+$f(\rho)$ map $c$ to a $\dtcons$ value).  Necessarily, $d$ is not a member
 of~$t$, given our assumption about values from~$t$ not appearing in the
 script.  Note that $d$ evaluates to itself, regardless of the environment.
 Hence
 \[
-f(\eval \rho~d) = f(d) = d = \eval (f\after\rho)~d.
+f(\eval \rho~d) = f(d) = d = \eval (f(\rho))~d.
 \]
 Note that the middle step would fail to hold for a member of~$t$: this
 justifies our assumption about such values not appearing in the script. 
 
 The case of the name of a channel is identical to the previous case. 
 
-
-
-%% Now consider the name~$c$ of a channel (so both $\rho$ and $f\after\rho$ map
-%% $c$ to a $\channel$ value).  In this case, $c$ evaluates to itself,
-%% regardless of the environment.  Hence
-%% \[
-%% f(\eval \rho~c) = f(c) = c = \eval (f\after\rho)~c.
-%% \]
-
-%% I don't think we need this -- it's dealt with in bindDecls
-%
-%% Now consider the name $d$ of a datatype with constructors $C_1,\ldots,C_k$.
-%% If a constructor $C$ maps to a value $\dtcons S$ in an environment, we write
-%% $C.S$ for the corresponding set of extensions, $\set{C.x \| c \in S}$.
-%% %
-%% \begin{calc}
-%% & f(\eval \rho~d) \\
-%% = & f\Big(\Union\nolimits_{i \in \set{1,\ldots,k}}  
-%%        \Let \dtcons S_i = \rho(C_i) \In S_i \Big) \\ 
-%% = & \Union\nolimits_{i \in \set{1,\ldots,k}} 
-%%        \Let \dtcons S_i = \rho(C_i) \In f(S_i) \\
-%% = & \Union\nolimits_{i \in \set{1,\ldots,k}} 
-%%       \Let \dtcons S_i' = f(\rho(C_i)) \In S_i \\
-%% = & \eval (f\after\rho)~d.
-%% \end{calc}
-
 Names of types *** I don't think this is necessary as a separate case -- dealt
 with in bindDecls.
-
-|Events|
-
 
 
 %%%%%
@@ -78,14 +42,13 @@ with in bindDecls.
 
 For a basic value~$v$ (an integers, boolean or character):
 \[
-f(\eval \rho~v) = f(v) = v = \eval(f\after\rho)~v,
+f(\eval \rho~v) = f(v) = v = \eval(f(\rho))~v,
 \]
 since $v$ is independent of~$t$. 
 
 %%%%%%%%%%
 
 \paragraph{\ldots}
-
 
 
 |Events|
@@ -100,8 +63,8 @@ Case $e_1 . e_2$.
  = & f(\eval \rho~e_1. \eval \rho~e_2) \\
  = & f(\eval \rho~e_1) . f(\eval \rho~e_2) \\
  = & \com{inductive hypothesis} \\
-  & \eval (f\after\rho)~e_1 . \eval (f\after\rho)~e_2 \\
- = & \eval (f\after\rho) (e_1.e_2).
+  & \eval (f(\rho))~e_1 . \eval (f(\rho))~e_2 \\
+ = & \eval (f(\rho)) (e_1.e_2).
 \end{calc}
 
 The case for tuples is very similar.
@@ -117,12 +80,12 @@ The case for local declarations is as follows.
 = & f(\Let \rho' = \bindDecls \rho~decls \In \eval \rho'~e) \\
 = & \Let \rho' = \bindDecls \rho~decls \In f(\eval \rho'~e) \\
 = & \com{inductive hypothesis} \\
- &  \Let \rho' = \bindDecls \rho~decls \In \eval (f\after\rho')~e \\
-= & \com{letting $\rho'' = f\after\rho'$} \\
-& \Let \rho'' = f \after \bindDecls \rho~decls \In \eval \rho''~e \\
+ &  \Let \rho' = \bindDecls \rho~decls \In \eval (f(\rho'))~e \\
+= & \com{letting $\rho'' = f(\rho')$} \\
+& \Let \rho'' = f (\bindDecls \rho~decls \In \eval \rho''~e) \\
 = & \com{inductive hypothesis, clause~\ref{item:bindDecls}} \\
-& \Let \rho'' = \bindDecls (f\after\rho)~decls \In \eval \rho''~e \\
-= & \eval (f\after\rho)~(\M{let}~decls~\M{within}~e).
+& \Let \rho'' = \bindDecls (f(\rho))~decls \In \eval \rho''~e \\
+= & \eval (f(\rho))~(\M{let}~decls~\M{within}~e).
 \end{calc}
 
 The case for if statements is as follows.
@@ -133,9 +96,9 @@ The case for if statements is as follows.
 = & \com{boolean values invariant under~$f$} \\
  & \If f(\eval \rho~b) \Then f(\eval \rho~e_1) \Else f(\eval \rho~e_2) \\
 = & \com{inductive hypothesis} \\
- & \If \eval~(f\after\rho)~b \Then \eval (f\after\rho)~e_1) 
-    \Else \eval(f\after\rho)~e_2 \\
-= & \eval (f\after\rho) (\M{if}~b~\M{then}~e_1~\M{else}~e_2).
+ & \If \eval~(f(\rho))~b \Then \eval (f(\rho))~e_1) 
+    \Else \eval(f(\rho))~e_2 \\
+= & \eval (f(\rho)) (\M{if}~b~\M{then}~e_1~\M{else}~e_2).
 \end{calc}
 
 
@@ -145,22 +108,47 @@ The case for if statements is as follows.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% \paragraph{Function application}
-
-%% \begin{calc}
-%% & f(\eval \rho~(g(e))) \\
-%% = & f((\eval \rho~g)~ (\eval \rho~e)) \\
-%% = & f(\eval \rho~g)~ (f(\eval \rho~e)) \\
-%% = & \eval (f\after\rho)~g ~(\eval (f\after\rho)~e) \\
-%% = & \eval (f\after\rho) (g(e)).
-%% \end{calc}
 
 \subsubsection{Collections}
 \label{sec:collections}
 
-Lists
+\begin{itemize}
+\item
+Case of a set comprehension. Below, the set comprehensions in the first and
+last line are syntax, and the other set comprehensions are semantics. 
+% 
+\begin{calc}
+& f(\eval \rho ~ \set{ e \| stmts }) \\
+= & f(\set{ \eval \rho'~e \| \rho' \in \evalStmtsSet \rho~stmts }) \\
+= & \set{ f(\eval \rho'~e) \| \rho' \in \evalStmtsSet \rho~stmts } \\
+= & \com{inductive hypothesis} \\
+  & \set{ \eval (f(\rho'))~e) \| \rho' \in \evalStmtsSet \rho~stmts } \\
+= & \com{letting $\rho'' = f(\rho')$} \\ 
+  & \set{ \eval \rho''~e) \| \rho'' \in f(\evalStmtsSet \rho~stmts) } \\
+= & \com{clause \ref{item:evalStmts}} \\
+  & \set{ \eval \rho''~e) \| \rho'' \in \evalStmtsSet (f(\rho))~stmts } \\
+= & \eval (f(\rho)) ~ \set{e \| stmts}.
+\end{calc}
 
-Sets, mappings
+\item The case for  a sequence comprehension $\M{<}\, e \| stmts \,\M{>}$ is
+very to that for a set comprehension, except $stmts$ are evaluated using
+$\evalStmts$, which produces a sequence of environments.
+
+\item The cases for a set $\{e_1, \ldots, e_n\}$, ranged integer set
+$\set{e .. e'}$ (where $e$ and~$e'$ evaluate to integers), infinite integer
+set $\set{ e .. }$, sequence $\M{<} e_1, \ldots, e_n \M{>}$, ranged integer
+sequence $\M< e .. e' \M>$, and infinite integer equence $\M< e .. \M>$, are
+straightforward.
+
+\item The case for a map $(\| k_1 => v_1, ..., k_n => v_n \|)$ is also
+straightforward: recall that the domain type of a map mucs be independent
+of~$t$, so eack $k_i$ evaluates to a value that is invariant under~$f$. 
+
+\item extensions sets \framebox{...}
+
+
+\end{itemize}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

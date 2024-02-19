@@ -36,8 +36,8 @@ We then have the following (for syntactic expressions~$P$ and~$Q$):
 = & \com{above result} \\
 & f(\eval \rho~P) \extchoice f(\eval \rho~Q) \\
 = & \com{inductive hypothesis} \\
-& (\eval (f\after\rho)~P) \extchoice (\eval (f\after\rho)~Q) \\
-= & \eval (f\after\rho) (P \; \M{[]} Q).
+& (\eval (f(\rho))~P) \extchoice (\eval (f(\rho))~Q) \\
+= & \eval (f(\rho)) (P \; \M{[]} Q).
 \end{calc}
 
 The proofs for the binary operators nondeterministic choice (\CSPM{_ \|~\|
@@ -121,7 +121,7 @@ correspond to transitions
 The subsequent state is 
 \[
 f(P',\rho_P') \parallel[f(A)] f(Q',\rho_Q') = 
-  (P',f\after\rho_P') \parallel[f(A)] (Q',f\after\rho_Q').
+  (P',f(\rho_P')) \parallel[f(A)] (Q',f(\rho_Q')).
 \]
 If $e_P \ne e_Q$, then consider the first field in which they differ; say $e_p
 = c.\vec{u}.v_P.\vec{w_P}$ and $e_Q = c.\vec{u}.v_Q.\vec{w_Q}$ with $v_P \ne
@@ -134,7 +134,7 @@ without loss of generality, suppose this is~$P$, so $P$ can also perform $e_P'
 $P$'s environment, then this corresponds to the transition
 $(P,\rho_P) \trans{e_P'} (P,\rho_P'')$ where $\rho_P''
 = \rho_P' \oplus \set{x \mapsto v_Q}$.  Note that $f(e_P') = e$ and
-$f\after\rho_P'' = f \after \rho_P'$.
+$f(\rho_P'') = f(\rho_P')$.
 %
 Continuing in this way, we obtain transitions
 \[
@@ -142,8 +142,7 @@ Continuing in this way, we obtain transitions
 (P,\rho_P) \trans{e'} (P',\hat\rho_P) \quad\mbox{and}\quad
 (Q,\rho_Q) \trans{e'} (Q',\hat\rho_Q) \\
 \mbox{with}\quad f(e')  = e, \quad 
-f \after \hat\rho_P = f \after \rho_P', \quad
-f \after \hat\rho_Q = f \after \rho_Q'.
+f(\hat\rho_P) = f(\rho_P'), \quad f(\hat\rho_Q) = f(\rho_Q').
 \end{array}
 \]
 Also, note that $f(e') = e \in f(A)$, so $e' \in A$, by
@@ -196,45 +195,18 @@ We then have the following (for syntactic expressions~$S$ and~$P$):
 = & \com{above result} \\
   & \Extchoice \set{f(\eval \rho' ~P) \| \rho' \in \evalStmtsSet \rho~stmts} \\
 = & \com{inductive hypothesis for~$P$} \\
-  & \Extchoice \set{\eval (f\after\rho')~P \| 
+  & \Extchoice \set{\eval (f(\rho'))~P \| 
       \rho' \in \evalStmtsSet \rho~stmts} \\
-= & \com{letting $\rho'' = f\after\rho'$} \\
+= & \com{letting $\rho'' = f(\rho')$} \\
   & \Extchoice \set{\eval \rho''~P \| 
       \rho'' \in f(\evalStmtsSet \rho~stmts)} \\
 = & \com{inductive hypothesis, part \ref{item:evalStmtsSet}} \\
   & \Extchoice \set{\eval \rho''~P \| 
-      \rho'' \in \evalStmtsSet (f\after\rho)~stmts} \\
-= & \eval (f\after\rho')~ (\M{**[]} stmts \spot P).
+      \rho'' \in \evalStmtsSet (f(\rho))~stmts} \\
+= & \eval (f(\rho'))~ (\M{**[]} stmts \spot P).
 \end{calc}
 
 
-%
-%% \begin{calc}
-%% & f(\eval \rho ~ (\M{**[]} pat \leftarrow S \spot P)) \\
-%% = & f(\Extchoice \set{\eval (\bind \rho ~ pat~ v) ~ P \| 
-%%         v \in \eval \rho~ S, \matches \rho ~ pat ~ v}) \\
-%% = & \com{above result} \\
-%% & \Extchoice \set{f(\eval (\bind \rho ~ pat~ v) ~ P) \| 
-%%         v \in \eval \rho~ S, \matches \rho ~ pat ~ v} \\
-%% = & \com{inductive hypothesis for~$P$} \\
-%% & \Extchoice \set{\eval (f \after \bind \rho ~ pat~ v) ~ P) \| 
-%%         v \in \eval \rho~ S, \matches \rho ~ pat ~ v} \\
-%% = & \com{inductive hypothesis, parts~\ref{item:matches} and~\ref{item:bind}} \\
-%% & \Extchoice 
-%%   \begin{align}
-%%   \set{\eval (\bind (f \after \rho) ~ pat~ (f(v))) ~ P) \| \\
-%%   \qquad   v \in \eval \rho~ S, \matches (f\after\rho) ~ pat ~ (f(v)) }
-%%   \end{align} \\
-%% = & \com{letting $w = f(v)$} \\
-%% & \Extchoice 
-%%   \set{\eval (\bind (f \after \rho) ~ pat~ w) ~ P) \| 
-%%      w \in f(\eval \rho~ S), \matches (f\after\rho) ~ pat ~ w } \\
-%% = & \com{inductive hypothesis for~$S$} \\
-%% & \Extchoice 
-%%   \set{\eval (\bind (f \after \rho) ~ pat~ w) ~ P) \| 
-%%      w \in \eval (f\after\rho)~ S, \matches (f\after\rho) ~ pat ~ w } \\
-%% = & \eval (f\after\rho) ~ (\M{**[]} pat \leftarrow S \spot P).
-%% \end{calc}
 
 The case for a replicated nondeterministic choice is similar.  
 
@@ -257,7 +229,7 @@ two sides of~(\ref{eqn:indexed-parallel}) have the same number of processes.
 
 
 Recall that the indexing statements~$stmt$ are independent of~$t$.  Hence
-$\evalStmts~\rho~stmts$ and $\evalStmts~(f \after\rho)~stmts =
+$\evalStmts~\rho~stmts$ and $\evalStmts~(f(\rho))~stmts =
 f(\evalStmts \rho~stmts)$ have the same cardinality (recall that each is a
 multiset of environments).  \framebox{???????}
 
@@ -269,15 +241,15 @@ multiset of environments).  \framebox{???????}
 & \Parallel \set{ (f(\eval \rho'~P), f(\eval \rho'~A)) \| 
      \rho' \in \evalStmts \rho~stmts}  \\
 = & \com{inductive hypothesis} \\
-& \Parallel \set{ (\eval (f\after\rho')~P, \eval (f\after\rho')~A) \| 
+& \Parallel \set{ (\eval (f(\rho'))~P, \eval (f(\rho'))~A) \| 
     \rho' \in \evalStmts \rho~stmts}  \\
-= & \com{letting $\rho'' = f\after\rho'$} \\
+= & \com{letting $\rho'' = f(\rho')$} \\
 & \Parallel \set{ (\eval \rho''~P, \eval \rho''~A) \| 
     \rho'' \in f(\evalStmts \rho~stmts)}  \\
 = & \com{inductive hypothesis, part~\ref{item:evalStmts}} \\
 & \Parallel \set{ (\eval \rho''~P, \eval \rho''~A) \| 
-    \rho'' \in \evalStmts (f\after\rho)~stmts}  \\
-= & \eval (f\after\rho)~(\M{\|\|} ~ stmts~ \M{@ [} A \M{]}~ P)
+    \rho'' \in \evalStmts (f(\rho))~stmts}  \\
+= & \eval (f(\rho))~(\M{\|\|} ~ stmts~ \M{@ [} A \M{]}~ P)
 \end{calc}
 
 \framebox{Other} replicated parallel operators, replicated sequential

@@ -1,0 +1,62 @@
+\section{On functions}
+\label{sec:functions}
+
+We now consider functions defined and/or applied in the script.
+The representation of a function~$g$ is a set of pairs $(v,w)$ such that $g$
+maps~$v$ to~$w$, with the normal property of being a function, i.e.
+\[
+\forall v, w, w' \spot (v,w) \in g \land (v,w') \in g \implies w=w'.
+\]
+We will use standard notation for function application, writing $g(v)$ for the
+unique $w$ such that $(v,w) \in g$.
+%
+Note that each \CSPm\ function is considered total, although it might map
+certain arguments to one of the special values~$\bottom$ or $error$. 
+
+Applying $f$ to a function~$g$ corresponds to applying $f$ to each element of
+each pair, i.e.~$f(g) = \set{(f(v), f(w)) \| (v,w) \in g}$.  We show below
+that $f(g)$ is a function.  Here and below, if $f: T_1 \fun T_2$, then $g$ is
+a function over a type~$A$ built from~$T_1$, and $f(g)$ is a function over the
+corresponding type $f(A)$ built from~$T_2$.
+
+The following definition will be useful.
+%
+\begin{definition}
+We say that $g$ \emph{respects~$f$} if
+\[
+\forall v, w, v', w' \spot 
+  (v,w) \in g \land (v',w') \in g \land f(v) = f(v') \implies f(w) = f(w'). 
+\]
+Equivalently:
+\[
+\forall v,  v' \spot f(v) = f(v') \implies f(g(v)) = f(g(v')). 
+\]
+\end{definition}
+
+We show that if $g$ respects~$f$ then $f(g)$ is a function.  Later we show
+that all functions that can be defined using \CSPm\ respect~$f$. 
+%
+\begin{lemma}
+\label{lem:function-respects}
+Suppose $g$ respects $f$.  Then $f(g)$ is a function, and $f(g(x)) =
+(f(g))(f(x))$.
+\end{lemma}
+%
+\begin{proof}
+We first show $f(g)$ is a function.  Suppose $(v,w) \in f(g)$ and $(v,w') \in
+f(g)$.  Then for some $v_0, v_0', w_0, w_0'$ we have
+\[
+\begin{align}
+(v_0,w_0) \in g \land f(v_0) = v \land f(w_0) = w \land \\
+(v_0',w_0') \in g \land f(v_0') = v \land f(w_0') = w'.
+\end{align}
+\]
+But $g$ respects~$f$, and $f(v_0) = f(v_0')$, so $f(w_0) = f(w_0')$, and hence
+$w = w'$.
+
+Now suppose $g(v) = w$, i.e.~$(v,w) \in g$.  Then $(f(v),f(w)) \in f(g)$ so
+$(f(g))(f(v)) = f(w) = f(g(v))$, as required.
+\end{proof}
+
+We will show (as part of Proposition~\ref{prop:expressions}) that every
+function defined in the script respects~$f$. 
