@@ -4,9 +4,9 @@ The semantics of a renaming is a set of pairs of events $(e,e')$ indicating
 that~$e$ is renamed to~$e'$.  
 %% We start by considering renamings where each individual renaming \CSPM{e <-
 %% e'} applies to complete events; we then extend to channels.
-We start by showing the renaming itself satisfies the desired result.  Later,
-we use this to show that the application of a renaming to a process also
-satisfies the desired result.  
+We start by showing the renaming itself satisfies clause~\ref{item:eval}.
+Later, we use this to show that the application of a renaming to a process
+also satisfies clause~\ref{item:eval}.
 %
 \begin{lemma}
 \label{lem:eval-renaming}
@@ -28,34 +28,41 @@ e_i'$ is complete, i.e.~it renames an event as opposed to a channel.  Below,
    \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|  stmts}) \\
 = & f(id_1 \oplus \set{ (\eval \rho'~e_i, \eval \rho'~e_i') \|
      \rho' \in \evalStmtsSet \rho~stmts, i \in \set{1,\ldots,k} }) \\
-= & id_2 \oplus \set{ (f(\eval \rho'~e_i), f(\eval \rho'~e_i')) \|
-     \rho' \in \evalStmtsSet \rho~stmts, i \in \set{1,\ldots,k} } \\
+= & id_2 \oplus\null 
+    \begin{align} \set{ (f(\eval \rho'~e_i), f(\eval \rho'~e_i')) \| \\
+    \qquad \rho' \in \evalStmtsSet \rho~stmts, i \in \set{1,\ldots,k} }
+     \end{align} \\
 = & \com{inductive hypothesis} \\
-  & \begin{align}
-    id_2 \oplus\null \\ 
-    \quad \set{ (\eval (f(\rho'))~e_i, \eval (f(\rho'))~e_i') \|
-     \rho' \in \evalStmtsSet \rho~stmts, i \in \set{1,\ldots,k} }
+  & id_2 \oplus\null  
+     \begin{align}
+     \set{ (\eval (f(\rho'))~e_i, \eval (f(\rho'))~e_i') \| \\
+     \qquad \rho' \in \evalStmtsSet \rho~stmts, i \in \set{1,\ldots,k} }
      \end{align} \\
 = & \com{letting $\rho'' = f(\rho')$} \\ 
-  & id_2 \oplus \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \|
-     \rho'' \in f(\evalStmtsSet \rho~stmts), i \in \set{1,\ldots,k} } \\
-= & \com{inductive hypothesis, part~\ref{item:evalStmtsSet}} \\
-  & id_2 \oplus \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \|
-     \rho'' \in \evalStmtsSet (f(\rho))~stmts, i \in \set{1,\ldots,k} } \\
+  & \begin{align}
+    id_2 \oplus \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \| \\
+    \qquad \rho'' \in f(\evalStmtsSet \rho~stmts), i \in \set{1,\ldots,k} }
+    \end{align} \\
+= & \com{inductive hypothesis, clause~\ref{item:evalStmts}} \\
+  & id_2 \oplus\null
+    \begin{align} \set{ (\eval \rho''~e_i, \eval \rho''~e_i') \| \\
+    \qquad  \rho'' \in \evalStmtsSet (f(\rho))~stmts, i \in \set{1,\ldots,k} }
+    \end{align} \\
 = & \eval (f(\rho))
        \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|  stmts}.
 \end{calc}
 
 Finally, if an individual renaming $e_i \lArrow e_i'$ is not complete, we can
 replace it by a complete renaming of the form $e_i.x_1.\ldots.x_k \lArrow
-e_i'.x_1.\ldots.x_k$, with additional generators for $x_1,\ldots,x_k$, and then
-apply the above result.
+e_i'.x_1.\ldots.x_k$, with additional generators for $x_1,\ldots,x_k$ (cf.~the
+proof of Lemma~\ref{lem:invariant}), and then apply the above result.
 \end{proof}
 
 %%%%%
 
 Recall that each renaming satisfies condition~\ref{item:di-renaming} of
-Definition~\ref{defn:data-independent}.  We will need the following lemma,
+Definition~\ref{defn:data-independent}.  We will need the following lemma
+(analogous to Lemma~\ref{lem:invariant}),
 which shows that the value of a renaming is consistent with~$f$.
 %
 \begin{lemma}
@@ -81,7 +88,7 @@ proof of Lemma~\ref{lem:eval-renaming}).
 Suppose $(v,v') \in R$ and $f(v) = f(w)$.  Suppose $(v,v')$ is produced by the
 individual renaming $e_j \lArrow e_j'$.  
 
-Consider the fields $v_1,\ldots,v_k$ in~$v$ of types that depend upon~$t$.  By
+Consider the fields $v_1,\ldots,v_k$ in~$v$ of types that depend upon~|T|.  By
 condition~\ref{item:di-renaming} of Definition~\ref{defn:data-independent},
 these correspond to distinct identifiers $x_1,\ldots,x_k$ in~$e_j$, each of
 which is bound by a generator $x_i \lArrow s_i$ in $stmts$, where $s_i$ is
@@ -98,30 +105,15 @@ Consider a generator $x_i \,\M{<-}\, s_i$.  Let $\rho_i'$ be the
 environment~$\rho$ augmented corresponding to values taken by earlier
 generators.  But, by assumption, $s_i$ uses none of the earlier bound
 variables~$x_1,\ldots,x_{i-1}$, and so $\eval \rho_i'~s_i = \eval \rho_i~s_i =
-S_i$.   And $w_i \in S_i$, since $S_i$ is $T$-invariant, so this generator can
+S_i$.   And $w_i \in S_i$, since $S_i$ is $T_1$-invariant, so this generator can
 indeed produce~$w_i$.  Further, the identifiers $x_1,\ldots,x_k$ do not
 appear in predicates in $stmts$, so each such predicate will still be true
 with this binding.  Then  the individual renaming $e_j \lArrow e_j'$
 produces $(w,w')$ for some $w'$ such that $f(v') = f(w')$.
-%% Consider the fields
-%% $v_1,\ldots,v_k$ in~$v$ of type~$t$.  By condition~\ref{item:di-renaming} of
-%% Definition~\ref{defn:data-independent}, these correspond to distinct
-%% identifiers $x_1,\ldots,x_k$ in~$e_j$, each of which is bound by a generator
-%% $x_i \lArrow t$ in $stmts$.  Let the corresponding fields in~$w$ be
-%% $w_1,\ldots,w_k$, so $f(v_i) = f(w_i)$ for each~$i$.
-%% %
-%% Consider the case where each~$x_i$ is bound to $w_i$, and every other
-%% generator is bound as in the production of $(v,v')$.  These identifiers do not
-%% appear in predicates in $stmts$, so each such predicate will still be true
-%% with this binding.  Then the individual renaming $e_j \lArrow e_j'$
-%% produces $(w,w')$ for some $w'$ such that $f(v') = f(w')$.
 \end{proof}
 
-%% \framebox{Generalise}, like for set comprehensions.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% \framebox{** Partial events?}  Extend to total. 
+ 
 
 Consider a syntactic renaming $\rename{ren}$, which corresponds to a
 semantic renaming $R$ (i.e.~a set of pairs).  When applied to a LTS~$P$, each
@@ -177,9 +169,9 @@ Then $(e,e') \in R$ implies $(f(e),f(e')) \in f(R)$, so the right-hand side
 
 %%%%%
 
-Let $\rename{ren} = \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow e_k' \|
-  stmts}$ be a renaming.  We show the desired result is satisfied for the
-application of~$ren$ to a process~$P$.
+Let $\rename{ren} = \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow
+e_k' \| stmts}$ be a renaming.  We show that clause~\ref{item:eval} is
+satisfied for the application of~$ren$ to a process~$P$.
 %
 \begin{calc}
 & f(\eval \rho ~ (P~\rename{ren})) \\

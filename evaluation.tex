@@ -1,15 +1,24 @@
 \section{Evaluation}
 
-We assume a well-typed script.
+We now describe how \CSPm\ expressions are evaluated.  In
+Section~\ref{sec:values} we define the set of values that an expression can
+represent.  In Section~\ref{sec:lifting-f} we describe how a function $f: T_1
+\fun T_2$ is lifted to apply to other values.  Then in
+Section~\ref{sec:semantics} we describe the functions that define the
+semantics of \CSPm\ expressions.  
+%
+We assume a well-typed script throughout.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Values}
+\label{sec:values}
 
 We begin by defining the set of values associated with expressions in a
 script.  The set $Value$ contains the union of the following. 
 %
 \begin{itemize}
-\item Basic values: integers, booleans, and characters.
+\item Basic values: integers, booleans, characters and strings.
 
 \item Datatype constructors and channel names.
 
@@ -23,8 +32,7 @@ script.  The set $Value$ contains the union of the following.
   $\set{v_1 \mapsto v_1', \ldots, v_n \mapsto v_n'}$, where each $v_i, v_i'$
   is a value.
 
-\item Functions, considered as sets of maplets ($v \mapsto v'$); we sometimes
-  represent functions using lambda abstractions.
+\item Functions, considered as sets of maplets ($v \mapsto v'$).
 
 \item Augmented labelled transition systems (defined below), representing
   processes.
@@ -32,18 +40,18 @@ script.  The set $Value$ contains the union of the following.
 \item For each channel declaration $\CSPMM{channel}~c : e_1\M.\ldots\M.e_n$, a
   channel value $\channel S$, where $S$ is the set of values that can be
   passed on~$c$, i.e.~all values of the form $v_1.\ldots.v_n$ associated with
-  $e_1.\ldots.e_n$.  In the case $n=0$, we use the value
-  $\channel \set\varepsilon$.  
+  $e_1.\ldots.e_n$; in the case $n=0$, we use the value $\channel
+  \set\varepsilon$.
 
 \item For each datatype declaration
 \[
 \CSPMM{datatype}~D = 
   A_1.e_{1,1}.\ldots.e_{1,m_1} \mid \ldots \mid A_n.e_{n,1}.\ldots.e_{n,m_n}
 \]
-datatype constructor values $\dtcons S_i$ corresponding to~$A_i$, for
-$i = 1,\ldots,n$, where $S_i$ is the set of values of the form
-$v_1.\ldots.v_{m_i}$ associated with $e_{i,1}.\ldots.e_{i,m_i}$.  In the case
-$m_i=0$, we use the value $\dtcons\set\varepsilon$.
+datatype constructor values $\dtcons S_i$ corresponding to~$A_i$, for $i =
+1,\ldots,n$, where $S_i$ is the set of values of the form $v_1.\ldots.v_{m_i}$
+associated with $e_{i,1}.\ldots.e_{i,m_i}$; in the case $m_i=0$, we use the
+value $\dtcons\set\varepsilon$.
 
 \item Distinguished values $\error$ representing an error, and $\bottom$
   representing a non-terminating computation.
@@ -56,9 +64,9 @@ element~$\bottom$, and such that all the datatype constructors are continuous.
 %%%%%%%%%%
 
 
-We use an \emph{environment} mapping identifiers (variable names) to values:
+We use an \emph{environment} mapping identifiers (names) to values:
 \[
-Env = Var \pfun Value.
+Env = Name \pfun Value.
 \]
 We write $\rho$, $\rho'$, etc., for environments.  An environment can
 associate top-level names with values, for example corresponding to the
@@ -68,11 +76,11 @@ In addition, an environment can give the value of, for example:
 %
 \begin{itemize}
 \item the name of a datatype or a constructor of a datatype, including the
-  distinguished type~$t$;
+  distinguished type~|T|;
 \item a name that corresponds to a formal parameter of a function;
 \item a name bound by a ``|let| \ldots |within|'' clause;
 \item a name bound by an input or nondeterministic choice in a process;
-\item a name for an indexing variable in an indexed process operator;
+\item a name for an indexing variable in a replicated process operator;
 \item a name bound by a generator in a set comprehension.
 \end{itemize}
 
@@ -97,7 +105,7 @@ More precisely, an ALTS is a tuple $(S,E,s_0)$, where
 \begin{itemize}
 \item $S \subseteq Proc \cross Env$ is a set of states;
 
-\item $E \subseteq S \cross (\Sigma \union \set{\tau.\tick}) \cross S$ is a
+\item $E \subseteq S \cross (\Sigma \union \set{\tau, \tick}) \cross S$ is a
   set of edges, labelled with events;
 
 \item $s_0 \in S$ is the initial state.
@@ -118,18 +126,22 @@ alpha-renaming.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Lifting $f$}
+\label{sec:lifting-f}
 
 Let $f : T_1 \fun T_2$.  We extend $f$ to other
 values in the obvious way.
 \begin{itemize}
-\item For values~$x$ not depending on~$t$ we have $f(x) = x$: this includes
+\item For values~$x$ not depending on~|T| we have $f(x) = x$: this includes
   basic values (e.g.~integers and booleans), names of channels, names of
   datatype constructors other than those in~$T_1$, and the distinguished values
   $\varepsilon$, $\bottom$ and $\error$.
 
 \item We lift $f$ to dotted tuples, including events, by point-wise
-  application: $f(v_1.\ldots.v_n) = f(v_1).\ldots.f(v_n)$.  This is well
-  defined provided \framebox{???} (see below).
+  application: $f(v_1.\ldots.v_n) = f(v_1).\ldots.f(v_n)$.  A consequence of
+  our main result in Section~\ref{sec:main-result} is that if $v_1.\ldots.v_n$
+  is an event on channel~$v_1$ in the script associated with~$T_1$, then
+  $f(v_1).\ldots.f(v_n)$ is an event on channel~$f(v_1)$ in the script
+  associated with~$T_2$, and similarly for elements of datatypes.
 
 \item We lift $f$ to tuples, sets, sequences and maps by point-wise
   application.
@@ -139,14 +151,18 @@ values in the obvious way.
   $f(\dtcons S) = \dtcons (f(S))$.
 
 \item We lift $f$ to functions, considered as sets of maplets, by pointwise
-  application: $f (g) = \set{ f(x) \mapsto f(y) \mid x \mapsto y \in g }$.
+  application: $f (g) = \set{ f(x) \mapsto f(y) \mid x \mapsto y \in g }$.  In
+  Section~\ref{sec:functions} we present conditions on~$g$ for this to be well
+  defined, i.e.~giving a function; and we show that all functions defined in
+  the script satisfy these conditions as part of our main result in
+  Section~\ref{sec:main-result}. 
 
-\item We lift $f$ to environments as for other functions, i.e.~$f(\rho) =
-  \set{f(x) \mapsto f(y) \| x \mapsto y \in \rho}$.  Note that for all
-  names~$x$ other than elements of the distinguished type and the
-  distinguished type itself, $f(x) = x$.  When applied to a name from the
-  distinguished type, the mapping $x \mapsto \dtcons\set\epsilon$ is replaced
-  by $f(x) \mapsto \dtcons\set\epsilon$.  \framebox{Well-defined}.
+\item We lift $f$ to environments as for other functions: $f(\rho) =
+  \set{{f(x) \mapsto f(y)} \| x \mapsto y \in \rho}$.  Note that for all
+  names~$x$ other than elements of the distinguished type, $f(x) = x$.  When
+  applied to a name from the distinguished type, the maplet $x \mapsto
+  \dtcons\set\epsilon$ is replaced by $f(x) \mapsto \dtcons\set\epsilon$; note
+  that this makes $f(\rho)$ well defined, i.e.~a function.
 
 \item We lift $f$ to a state of an ALTS by point-wise application, so
   $f(Q,\rho) = (Q, f(\rho))$.
@@ -155,14 +171,15 @@ values in the obvious way.
   $f(S,a,S') = (f(S), f(a), f(S'))$.
 
 \item We lift $f$ to an ALTS by application of~$f$ to the states and to the
-  events of the transitions.  Note that, as $f$ is not necessarily injective,
-  this might merge some states.
+  transitions of the transitions.  Note that, as $f$ is not necessarily
+  injective, this might merge some states.
 \end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Semantics}
+\label{sec:semantics}
 
 \CSPm\ uses the following syntactic categories.
 %
@@ -177,10 +194,10 @@ values in the obvious way.
   (e.g.~|<x> ^ xs|), and double patterns~(e.g.~\CSPM{pair @@ (x,y)}).
 
 \item The type |Decl| represents  declarations (e.g.~|P = STOP|,\, \CSPM{f(x) =
-  x+1},\, \CSPM{datatype T1 = A \| B}, or |channel c: T1|.
+  x+1},\, \CSPM{datatype T = A \| B}, or |channel c: T|.
 
 \item The type |Stmt| represents statements in set or sequence comprehensions,
-  and indexed operators: either generators (e.g.~|x <- s|), or predicates
+  and replicated operators: either generators (e.g.~|x <- s|), or predicates
   (e.g.~|x < 3|).  Note that in some cases, a statement produces a
   \emph{sequence} (and each generator must range over a sequence): we call
   these \emph{sequence statements}.  And in other cases, a statement produces
@@ -217,7 +234,7 @@ The semantics is defined using the following functions:
   declaration~$decls$.  And $\bindDecls : Env \fun Decl^* \pfun Env$ such that
   $\bindDecls \rho~decls$, updates $\rho$ corresponding to the list of
   declarations $decls$, assuming that all names bound by the declarations are
-  distinct, and that each pattern matches the corresponding expression; the
+  distinct, and that each pattern matches the corresponding expression.  The
   declarations might be mutually recursive, so the semantics is defined as a
   least fixed point:
   \[
@@ -242,37 +259,44 @@ The semantics is defined using the following functions:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Consider two scripts that are identical other than their definitions of the
-distinguished type~$t$, with the two scripts defining $t$ as
-\begin{cspm}
-  datatype t = A£$_1$£ | ... | A£$_m$£
-\end{cspm}
-and 
-\begin{cspm}
-  datatype t = B£$_1$£ | ... | B£$_n$£
-\end{cspm}
-respectively, with $T_1 = \set{\M{A}_1, \ldots, \M{A}_m}$ and $T_2 =
-\set{\M{B}_1, \ldots \M{B}_n}$.  Let $\rho_1$ and $\rho_2$ be the environments
-that result from evaluating just those declarations:
+We now consider the role of the declaration of the distinguished type~|T| in
+a script.
 %
+\begin{definition}
+\label{def:initial-env}
+Consider a script that declares the distinguished type |T| as
+\begin{cspm}
+  datatype T = A£$_1$£ | ... | A£$_m$£
+\end{cspm}
+and let $T = \set{A_1,\ldots, A_m}$.  Then we write $\rho^{T}$ for the
+environment that results from evaluating just that declarations:
 \begin{eqnarray*}
-\rho_1 & = & \set{t \mapsto T_1, \M A_1 \mapsto \dtcons\set\epsilon, \ldots,
-   \M A_m \mapsto \dtcons\set\epsilon}, \\
-\rho_2 & = & \set{t \mapsto T_2, \M B_1 \mapsto \dtcons\set\epsilon, \ldots,
-   \M B_n \mapsto \dtcons\set\epsilon} .
+\rho^T = \set{\M T \mapsto T, \M A_1 \mapsto \dtcons\set\epsilon, \ldots,
+   \M A_m \mapsto \dtcons\set\epsilon}. \\
 \end{eqnarray*}
+\end{definition}
 %
-Then the semantics of the two scripts will be equal to the result of
-evaluating the remainder of the scripts (i.e.~omitting the declarations
-of~$t$) in~$\rho_1$ and $\rho_2$, respectively.
-%
-The following lemma captures a relationship between these environments.
+The semantics of the script is equal to the result of evaluating (using
+$\bindDecls$) the remainder of the declarations in the script in~$\rho^T$.
+
+Now consider two scripts that are identical other than their definitions of the
+distinguished type~|T|.
+The following lemma captures a relationship between the initial environments.
 %
 \begin{lemma}
 \label{lem:distinguished-type-declaration}
-Let $\rho_1$ and $\rho_2$ be as above, and suppose $f: T_1 \fun T_2$ is
-surjective.  Then $f(\rho_1) = \rho_2$.  
+Let $\rho^{T_1}$ and $\rho^{T_2}$ be environments corresponding to
+declarations of~|T| as $T_1$ and $T_2$, respectively.  Suppose $f: T_1 \fun
+T_2$ is surjective.  Then $f(\rho^{T_1}) = \rho^{T_2}$.
 \end{lemma}
+%
+\begin{proof}
+In $f(\rho^{T_1})$, the maplet $\M T \mapsto T_1$ is replaced by $\M T \mapsto
+f(T_1) = \M T \mapsto T_2$ (since $f$ is surjective), matching $\rho^{T_2}$.
+And each maplet $A \mapsto \dtcons\set\epsilon$, for $A \in T_1$, is replaced
+by a maplet $f(A) \mapsto \dtcons\set\epsilon$; but these match the
+corresponding maplets in $\rho^{T_2}$ (again, because $f$ is surjective).
+\end{proof}
 
 We show below that other values defined in the two scripts, including all
 subsequent environments, are likewise related by~$f$.
@@ -288,11 +312,18 @@ case that $e$ is a process expression, this will allow us to deduce
 equations~(\ref{eqn:traces})--(\ref{eqn:fd}), concerning the denotational
 semantics of that process.
 
-But first, we need some additional results.  In Section~\ref{sec:invariance}
-we show that top-level sets defined in the script satisfy a particular
-property \framebox{\ldots}; in particular, this includes the alphabet of all
-channels.  In Section~\ref{sec:functions} we identify a particular property of
-each function defined in the script, which implies that applying~$f$ to that
+But first, we need some additional results.  
+
+Recall that we assume that set expressions that appear in particular places
+satisfy the property of invariance (Definition~\ref{def:invariant}).  In
+Section~\ref{sec:invariance} we show that the sets defined by those
+expressions satisfy a corresponding semantic property, informally that
+elements of the distinguished type are interchangable; in particular, this
+includes the alphabet of all channels.  This result will be useful
+subsequently. 
+
+In Section~\ref{sec:functions} we identify a particular property of each
+function defined in the script, which implies that applying~$f$ to that
 function returns a function; part of Proposition~\ref{prop:expressions} shows
 that all functions defined by the script do indeed satisfy this property.
 

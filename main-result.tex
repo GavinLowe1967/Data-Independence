@@ -1,16 +1,15 @@
 \section{Main result}
+\label{sec:main-result}
 
-
-The following is the main result of this section.
+We are now ready to present the main result.
 %
 \begin{prop}
 \label{prop:expressions}
-Suppose a script is data-independent for~$t$.  Let $T_1$ and~$T_2$ be two
-instantiations of~$t$, and let $f : T_1 \fun T_2$ be surjective.  Let $\rho:
-Var \fun Value$ be an environment corresponding to the script for $T_1$ (so
-$\rho$ is $T_1$-invariant). 
-Then:
-
+Suppose a script is data-independent for~|T|.  Let $T_1$ and~$T_2$ be two
+instantiations of~|T|, and let $f : T_1 \fun T_2$ be surjective.  Let $\rho:
+Name \fun Value$ be an environment corresponding to the script for $T_1$ (so
+$\rho$ is $T_1$-invariant, by Corollary~\ref{cor:invariant}).  
+%
 \begin{enumerate}
 \item\label{item:matches} Let $pat$ be a pattern, and $v$ a value; then
 \begin{eqnarray*}
@@ -27,20 +26,6 @@ and hence
 f  (\bind \rho~pat~v) & = & \bind (f(\rho))~pat~(f(v)).
 \end{eqnarray*}
 
-\item\label{item:bindDecls} Suppose $decls$ is a list of declarations of
-  values, channels and datatypes, with disjoint names.  Then
-  \begin{eqnarray*}
-  f (\bindDecl \rho~decl) & = & \bindDecl (f(\rho))~decl.
-  \end{eqnarray*}
-  and hence
-  \begin{eqnarray*}
-  f (\bindDecls \rho~decls) & = & \bindDecls (f(\rho))~decls.
-  \end{eqnarray*}
-%
-Further, if $decl$ represents a function declaration, then $\bindDecl
-\rho~decl$ binds the relevant name to a function~$g$ that respects~$f$.  Hence
-the same is true for each declaration in~$decls$. 
-
 %%%%%
 
 \item\label{item:eval} For every expression~$e$ in the script,
@@ -49,6 +34,27 @@ f(\eval \rho ~ e) & = \eval (f(\rho)) ~e .
 \end{eqnarray*}
 
 Further, if $\eval \rho ~ e$ gives a function~$g$, then $g$ respects~$f$. 
+
+%%%%%
+
+\item\label{item:bindDecls} Suppose $decl$ is a declaration of a value,
+  channel or datatype, and $decls$ is a list of such declarations with
+  disjoint names.  Then
+  \begin{eqnarray*}
+  f (\bindDecl \rho~decl) & = & \bindDecl (f(\rho))~decl, \\
+  %% \end{eqnarray*}
+  %% and hence
+  %% \begin{eqnarray*}
+  f (\bindDecls \rho~decls) & = & \bindDecls (f(\rho))~decls.
+  \end{eqnarray*}
+%
+Further, if a name is bound to a function~$g$, then $g$ respects~$f$. 
+%% if $decl$ represents a function declaration, then $\bindDecl \rho~decl$
+%% binds the relevant name to a function~$g$ that respects~$f$.  Hence the
+%% same is true for each function declaration bound by $\bindDecls
+%% \rho~decls$.
+
+%%%%%
 
 \item\label{item:evalStmts} For every sequence statement~$stmt$, and list
   of sequence statements~$stmts$, and every environment~$\rho$:
@@ -63,20 +69,9 @@ And similarly for set statements:
 f (\evalStmtSet \rho ~ stmt) & = & \evalStmtSet (f(\rho))~stmt, \\
 f (\evalStmtsSet \rho ~ stmts) & = & \evalStmtsSet (f(\rho))~stmts.
 \end{eqnarray*}
-%
-%% \framebox{***} As sets, but not as sequences. 
-
-%% \item \label{item:evalStmts}
-%% Under some circumstances, the previous also holds for sequences and
-%% multisets. 
 \end{enumerate}
-
 \end{prop}
-%%  for
-%% every expression~$e$ in the script
-%% \begin{eqnarray*}
-%% f(\eval \rho ~ e) & = \eval (f(\rho)) e .
-%% \end{eqnarray*}
 %
-The proof is in Appendix~\ref{sec:proof}.
+The proof is in Appendix~\ref{sec:proof}: it proceeds by a (rather long)
+structural induction over \CSPm\ syntax.  
 

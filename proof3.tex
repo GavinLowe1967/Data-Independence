@@ -13,6 +13,8 @@ We start with $\bindDecl$, and show
 \begin{eqnarray*}
   f(\bindDecl \rho~decl) & = & \bindDecl (\frho)~decl.
 \end{eqnarray*}
+%
+We proceed by a case analysis over~$decl$.  
 
 \paragraph{Case $pat = e$.}
 
@@ -44,7 +46,7 @@ We have
         \Then \bind_0 (\frho)~pat~w
         \Else \error
       \end{align}  \\
-  = & \com{part~\ref{item:eval}} \\
+  = & \com{clause~\ref{item:eval}} \\
     & \begin{align}
       \Let w = \eval (\frho)~e \In \\
       \If \matches (\frho)~pat ~w \Then \bind_0 (\frho)~pat~w
@@ -85,7 +87,7 @@ corresponding results for these generalised versions.
 
 Suppose $g$ in environment~$\rho$ evaluates to a function over type~$A$; then
 $g$ in environment~$\frho$ evaluates to a function over~$f(A)$.
-
+%
 We proceed as follows.
 %
 \begin{calc}
@@ -145,7 +147,7 @@ We proceed as follows.
     \end{align} \\
   \quad \vec{v} \in A} }
   \end{align} \\
-= & \com{letting $\vec{w} = f(\vec{w})$} \\
+= & \com{letting $\vec{w} = f(\vec{v})$} \\
 & \set{g \mapsto
   \begin{align}
   \set{\vec{w} \mapsto 
@@ -179,22 +181,22 @@ Then
 \begin{calc}
   & f(\bindDecl \rho~ (\CSPMM{channel}~ c : e_1.\ldots.e_n)) \\
   = & f(\set{c \mapsto 
-         \dtcons\set{v_1.\ldots.v_n \mid 
+         \channel\set{v_1.\ldots.v_n \mid 
             v_1 \in \eval \rho~e_1, \ldots, v_n \in\eval \rho~e_n}}) \\
-  = & \set{c \mapsto \dtcons \set{
+  = & \set{c \mapsto \channel \set{
         \begin{align}
         f(v_1).\ldots.f(v_n) \mid \\
         \quad    v_1 \in \eval \rho~e_1, \ldots, v_n \in\eval \rho~e_n}}
         \end{align} \\
   = & \com{letting $w_i = f(v_i)$} \\
-    & \set{c \mapsto \dtcons\set{
+    & \set{c \mapsto \channel\set{
         \begin{align}
         w_1.\ldots.w_n \mid \\
         \quad w_1 \in f(\eval \rho~e_1), \ldots, 
            w_n \in f(\eval \rho~e_n)}}
         \end{align} \\
   = & \com{clause~\ref{item:eval}} \\
-    & \set{c \mapsto \dtcons\set{
+    & \set{c \mapsto \channel\set{
         \begin{align}
         w_1.\ldots.w_n \mid \\
         \quad w_1 \in \eval (\frho)~e_1, \ldots,
@@ -204,20 +206,24 @@ Then
 \end{calc}%
 %
 Note, in particular, that $v_1.\ldots.v_n$ is a complete value if and only if
-$w_1.\ldots.w_n$ is a complete value, by Lemma~\ref{lem:complete}.
+$w_1.\ldots.w_n = f(v_1.\ldots.v_n$ is a complete value, by
+Lemma~\ref{lem:complete}.
 
 %%%%%%%%%%
 
 \paragraph{Case of a datatype declaration.}
 
-The case of the declaration of the distinguished type~$t$ was dealt with
+The case of the declaration of the distinguished type~|T| was dealt with
 in Lemma~\ref{lem:distinguished-type-declaration}.
 
-Let $decl$ be the following declaration, not of the distinguished type~$t$:
+Let $decl$ be the following declaration, not of the distinguished type~|T|:
 \[
 \CSPMM{datatype}~D = 
 A_1.e_{1,1}.\ldots.e_{1,m_1} \mid \ldots \mid A_n.e_{n,1}.\ldots.e_{n,m_n} \;.
-\]Then
+\]
+Then we calculate as follows, writing $S_i$ for the set of values associated
+with constructor $A_i$:
+%
 \begin{calc}
 &  f(\bindDecl \rho~decl) \\
 = & 
@@ -238,13 +244,15 @@ A_1.e_{1,1}.\ldots.e_{1,m_1} \mid \ldots \mid A_n.e_{n,1}.\ldots.e_{n,m_n} \;.
          v_{i,j} \in \eval \rho ~ e_{i,j},\, j  = 1,\ldots, m_i},\\
   \qquad\qquad\qquad \mbox{for $i = 1,\ldots, n$}      \In    \\
   \begin{align}
-    \set{A_i \mapsto \dtcons f(S_i) \mid i \in \set{1,\ldots,n}} \union \null \\
+    \set{f(A_i) \mapsto \dtcons f(S_i) \mid i \in \set{1,\ldots,n}} 
+    \union\null \\
     \set{D \mapsto 
-      \set{A_i.f(v_i) \mid i \in \set{1,\ldots,n},  v_i \in S_i } } )
+      \set{f(A_i).f(v_i) \mid i \in \set{1,\ldots,n},  v_i \in S_i } } )
     \end{align}
   \end{align} 
 \\
-= & \com{letting $w_i = f(v_i)$} 
+= & \com{$f(A_i) = A_i$ since this is not the distinguished type; 
+      letting $w_i = f(v_i)$} 
 \\
 & \begin{align}
   \Let S_i = \set{v_{i,1}.\ldots.v_{i,m_i} \mid 
@@ -306,8 +314,8 @@ Recall that we need to show that if a declaration, based on~$\rho$, binds a
 name~$h$ to a function~$g$, then $g$ respects~$f$.
 
 Consider the case of a point-free declaration of the form $h = e$, for example
-where $e$ is a lambda abstraction.  By clause~\ref{item:eval} of the inductive
-hypothesis, $g = \eval \rho~e$ respects~$f$, as required.
+where $e$ is a lambda abstraction.  But clause~\ref{item:eval} of the inductive
+hypothesis shows that $g = \eval \rho~e$ respects~$f$, as required.
 
 %% Suppose the environment~$\rho$ binds a name~$h$ to a function~$g$.  We require
 %% that $g$ respects~$f$.  We prove this as an extension of the proof in
@@ -346,7 +354,6 @@ Section~\ref{sssec:function-decl}.
 %% The proof extends to curried functions in a straightforward (but notationally
 %% messy) way.
 
-\framebox{Forward ref - reorder?} 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -364,27 +371,12 @@ variables.  Recall that
 where $\rho^\bottom$ extends $\rho$ by mapping all names bound by $decls$
 to~$\bottom$. 
 
-Recall that the proof of Proposition~\ref{prop:initial-env-invariant} showed
-that each $F^n(\rho^\bottom)$ is $T$-invariant, under the assumption that
-$\rho$ is. 
+%% Recall that the proof of Proposition~\ref{prop:initial-env-invariant} showed
+%% that each $F^n(\rho^\bottom)$ is $T_1$-invariant, under the assumption that
+%% $\rho$ is. 
+%% $T_1$-invariant
 
-%% These may be mutually recursive, so their semantics is defined as
-%% a fixed point.  One step of the iteration corresponding to that fixed point is
-%% given by the following function: 
-%% \begin{eqnarray*}
-%% F(\rho) & = & \rho \oplus \Union 
-%%                   \set{\bindDecl \rho ~decl \mid decl \in decls} .
-%% \end{eqnarray*}
-%% %
-%% Given an environment~$\rho$ and a set of declarations~$decls$, we write
-%% $\rho^\bottom$ for the extension of~$\rho$ that maps the variables bound
-%% by~$decls$ to~$\bottom$.  Then the semantics of $decls$ is defined as the
-%% least fixed point of~$F$:
-%% \begin{eqnarray*}
-%% \bindDecls \rho~ decls & = & \bigsqcup_{n \in \nat}  F^n(\rho^\bottom) .
-%% \end{eqnarray*}
-
-We have, for $T$-invariant environment~$\rho_1$:
+We have, for  environment~$\rho_1$:
 %
 \begin{calc}
 & f(F (\rho_1)) \\

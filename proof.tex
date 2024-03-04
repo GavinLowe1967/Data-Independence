@@ -1,70 +1,14 @@
 \section{Main proposition}
 \label{sec:proof}
 
-%% \begin{prop}
-%% \label{prop:expressions-1}
-%% Suppose a script is data-independent for~$t$.  Let $T_1$ and~$T_2$ be two
-%% instantiations of~$t$, let $\rho: Var \fun T_1$ be an environment
-%% corresponding to the script (so $\rho$ is $T_1$-invariant), and let $f : T_1
-%% \fun T_2$ be surjective.  Then:
-%% %
-%% \begin{enumerate}
-%% \item\label{item:matches} Let $pat$ be a pattern, and $v$ a value; then
-%% \begin{eqnarray*}
-%%   \matches \rho~ pat~v & \iff & \matches (f(\rho)) ~ pat~(f(v)).
-%% \end{eqnarray*}
-
-%% \item\label{item:bind}
-%% Let $pat$ be a pattern, and $v$ a value; then
-%% \begin{eqnarray*}
-%% f  (\bind_0 \rho~pat~v) &  = & \bind_0 (f(\rho))~pat~(f(v)),
-%% \end{eqnarray*}
-%% and hence
-%% \begin{eqnarray*}
-%% f  (\bind \rho~pat~v) & = & \bind (f(\rho))~pat~(f(v)).
-%% \end{eqnarray*}
-
-%% \item\label{item:bindDecls} Suppose $decls$ is a list of declarations of
-%%   values, channels and datatypes, with disjoint names.  Then
-%%   \begin{eqnarray*}
-%%   f (\bindDecl \rho~decls) & = & \bindDecl (f(\rho))~decls.
-%%   \end{eqnarray*}
-%%   and hence
-%%   \begin{eqnarray*}
-%%   f (\bindDecls \rho~decls) & = & \bindDecls (f(\rho))~decls.
-%%   \end{eqnarray*}
-
-%% Also every function produced respects~$f$. 
-
-%% \item\label{item:eval} For every expression~$e$ in the script,
-%% \begin{eqnarray*}
-%% f(\eval \rho ~ e) & = \eval (f(\rho)) ~e .
-%% \end{eqnarray*}
-
-%% \item\label{item:evalStmtsSet}
-%% For every sequence~$stmts$ of statements (generators or qualifiers), and every
-%% environment~$\rho$\,  
-%% \begin{eqnarray*}
-%% f (\evalStmtsSet \rho ~ stmts) & = & \evalStmtsSet (f(\rho))~stmts.
-%% \end{eqnarray*}
-%% %
-%% \framebox{***} As sets, but not as sequences. 
-
-%% \item \label{item:evalStmts}
-%% Under some circumstances, the previous also holds for sequences and
-%% multisets. 
-%% \begin{eqnarray*}
-%% f (\evalStmts \rho ~ stmts) & = & \evalStmts (f(\rho))~stmts.
-%% \end{eqnarray*}
-
-%% \end{enumerate}
-%% \end{prop}
-
 %%%%%%%%%%
 
 In this appendix, we prove Proposition~\ref{prop:expressions}, by induction
 over the syntax of \CSPm.  The proof is split over the following subsections.
 Several cases are as in~\cite{symmetry-TR}, but we include them for
 completeness.
+
+Recall that we assume $f: T_1 \fun T_2$, and the environment~$\rho$ is
+$T_1$-invariant. 
 
 %%%%%%%%%%

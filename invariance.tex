@@ -5,11 +5,12 @@ Recall from the introduction that we place a restriction, \emph{invariance}
 (Definition~\ref{def:invariant}), on expressions that define sets, mainly
 concerning the use of bound variables in set comprehensions.  In this section,
 we present a corresponding semantic condition, \emph{$T$-invariance}, on the
-set produced, and show that it is implied by invariance.  We then show that
-the sets associated with channels and datatype constructors are
-$T$-invariant in all environments resulting from the script. 
+set produced when the distinguished type~|T| is instantiated with the set~$T$.
+We then show that $T$-invariance is implied by invariance.  Further, we show
+that the sets associated with channels and datatype constructors are
+$T$-invariant in all environments resulting from the script.
 
-Informally, we want to say that, for each instantiation~$T$ of~$t$, if a value
+Informally, we want to say that, for each instantiation~$T$ of~|T|, if a value
 $A \in T$ can appear in a particular place in a channel or datatype value,
 then replacing that instance of~$A$ by a different value~$B \in T$ also gives
 a valid channel or datatype value.  
@@ -19,7 +20,7 @@ a valid channel or datatype value.
 The following definition captures this formally.
 %
 \begin{definition}
-Let $T$ be an instantiation of~$t$, let $\unit$ be a fresh value, and let
+Let $T$ be an instantiation of~|T|, let $\unit$ be a fresh value, and let
 $\unitf : T \fun \set{\unit}$ be the function that maps each element of~$T$
 to~$\unit$. Extend~$\unitf$ to other values in the normal way.  Then a set $S$
 is \emph{$T$-invariant} if
@@ -44,10 +45,10 @@ However, recall the declaration (which is not invariant, and so forbidden by
 our assumptions)
 %
 \begin{cspm}
-channel two : union({Two.x.x.true | x <- t}, {Two.x.y.false | x <- t, y <- t})
+channel two : union({Two.x.x.true | x <- T}, {Two.x.y.false | x <- T, y <- T})
 \end{cspm}
 %
-The set represented by \CSPM{\{Two.x.x.true \| x <- t\}} is not
+The set represented by \CSPM{\{Two.x.x.true \| x <- T\}} is not
 $\set{A,B}$-invariant: it includes |two.Two.A.A.true|, but not
 |two.Two.A.B.true|; and
 \[
@@ -60,7 +61,7 @@ $\set{A,B}$~invariant.
 
 %%%%%
 
-Fix an instantiation $T$ of $t$.
+Fix an instantiation $T$ of |T|.
 The following definition captures that channel identifiers, datatype
 constructors or identifiers representing sets are either mapped to
 $T$-invariant values, or to improper values, $\bottom$ or~$error$; our main
@@ -78,24 +79,24 @@ An environment~$\rho$ is \emph{$T$-invariant} if
   error}$, or $\rho(C) = \dtcons S$ for a set~$S$ that is $T$-invariant.
 \end{itemize}
 %
-An environment~$\rho$ is \emph{strongly $T$-invariant} if, in addition,
-%
-\begin{itemize}
-\item For every name~$x$ that represents a set, either $\rho(x) \in
-  \set{\bottom, error}$ or $\rho(x)$ is $T$-invariant.
-\end{itemize}
+%% An environment~$\rho$ is \emph{strongly $T$-invariant} if, in addition,
+%% %
+%% \begin{itemize}
+%% \item For every name~$x$ that represents a set, either $\rho(x) \in
+%%   \set{\bottom, error}$ or $\rho(x)$ is $T$-invariant.
+%% \end{itemize}
 \end{definition}
 
 We will show that the top-level environment corresponding to a
-data-independent script is strongly $T$-invariant, and hence that each
+data-independent script is  $T$-invariant, and hence that each
 subsequent environment is $T$-invariant.  The following lemma will be crucial:
 it shows that the syntactic property of invariance implies the semantic
 property of $T$-invariance.
 %
 \begin{lemma}
 \label{lem:invariant}
-Let $T$ be an instantiation of~$t$.  Let $\rho$ be a strongly $T$-invariant
-environment such that $\rho(t) = T$.
+Let $T$ be an instantiation of~|T|.  Let $\rho$ be a  $T$-invariant
+environment such that $\rho(\M T) = T$.
 %
 Consider a particular expression~$s$ that defines a set and is invariant.
 Then $\eval \rho~s$ is $T$-invariant.
@@ -110,13 +111,17 @@ Consider a set comprehension $s = \M\{ e ~ \M\| stmts \M\}$.  Suppose $s$
 evaluates correctly to a set $S = \eval \rho~s$ (so $\rho$ binds identifiers
 used in~$s$ to proper values, and errors do not occur).  Suppose $w \in S$ and
 $\unitf(w) = \unitf(w')$.  Consider the identifiers $x_1,\ldots,x_k$ in~$e$
-that depend on~$t$, and let $w_1,\ldots,w_k$ be the corresponding fields
+that depend on~|T|, and let $w_1,\ldots,w_k$ be the corresponding fields
 in~$w$.  By the assumption of invariance, the identifiers $x_1,\ldots,x_k$
-each appears only once in~$e$, and each is bound by a generator $x_i
-\,\M{<-}\, s_i$ in $stmts$, where $s_i$ is itself invariant.  Let $S_i = \eval
-\rho_i~s_i$, where $\rho_i$ is the environment~$\rho$ augmented corresponding
-to values taken by earlier generators in the production of~$w$; so $w_i \in
-S_i$.  By induction, $S_i$ is $T$-invariant.
+each appears only once in~$e$, and each is bound by a generator 
+%
+$x_i \,\M{<-}\, s_i$ in $stmts$, where $s_i$ is itself invariant.  Let $S_i =
+\eval \rho_i~s_i$, where $\rho_i$ is the environment~$\rho$ augmented
+corresponding to values taken by earlier generators in the production of~$w$;
+so $w_i \in S_i$.  
+%% But $s_i$ uses no identifier bound by an earlier generator,
+%% so we also have $S_i = \eval \rho~s_i$.
+By induction, $S_i$ is $T$-invariant.
 
 Let $w_1',\ldots,w_k'$ be the corresponding fields in~$w'$.  We show that the
 identifiers $x_1,\ldots,x_k$ could also be bound to $w_1',\ldots,w_k'$ by the
@@ -139,8 +144,8 @@ Now consider a productions set comprehension $\M{\{\|} e ~ \M\| stmts
 partial value from a datatype.  This expression represents the same set as a
 set comprehension where the ``missing'' fields are added with extra
 generators; for example, the expression \CSPM{\{\|c2o\|\}} defines the same
-set as \CSPM{\{c2o.x.y \| x <- t, y <- Option\}}.  By the assumption that
-$\rho$ is strongly $T$-invariant, the generators range over sets that are
+set as \CSPM{\{c2o.x.y \| x <- T, y <- Option\}}.  By the assumption that
+$\rho$ is  $T$-invariant, the generators range over sets that are
 themselves $T$-invariant.  Hence we can apply the result for standard set
 comprehensions to deduce the result for the productions set comprehension.
 
@@ -151,9 +156,9 @@ Other cases from Definition~\ref{def:invariant} are straightforward.
 
 
 Consider a data-independent script with top-level declarations $decls$.
-Lemma~\ref{lem:invariant} had a premise that the environment is strongly
+Lemma~\ref{lem:invariant} had a premise that the environment is 
 $T$-invariant.  We now use this to show that the environment~$\rho_1$ formed
-from $decls$ is strongly $T$-invariant.  Recall that $\rho_1$ is defined as a
+from $decls$ is $T$-invariant.  Recall that $\rho_1$ is defined as a
 least fixed point:
 \[
 \begin{align}
@@ -186,14 +191,18 @@ other identifier).
 
 \begin{prop}
 \label{prop:initial-env-invariant}
-The initial environment~$\rho_1$ is strongly $T$-invariant.
+The initial environment~$\rho_1$ is  $T$-invariant.
 \end{prop}
 
 \begin{proof}
-Clearly $\rho^\bottom$ is strongly $T$-invariant.  
+We define an environment~$\rho$ to be \emph{strongly $T$-invariant} if it is
+$T$-invariant, and for every identifier~$x$ that maps to a set, $\rho(x)$ is
+$T$-invariant.  We show that $\rho_1$ is strongly $T$-invariant. 
 
-Suppose $\rho$ is strongly invariant, and consider a top-level declaration $x
-= s$.  Now,  $s$ is invariant, by item~\ref{item:di-invariant} of
+Clearly $\rho^\bottom$ is strongly  $T$-invariant.  
+
+Suppose $\rho$ is strongly $T$-invariant, and consider a top-level declaration
+$x = s$.  Now, $s$ is invariant, by item~\ref{item:di-invariant} of
 Definition~\ref{defn:data-independent}.  Hence Lemma~\ref{lem:invariant} shows
 that $\eval \rho~s$ is $T$-invariant, so
 \begin{eqnarray*}
@@ -204,7 +213,7 @@ declarations.  Hence if $\rho$ is strongly $T$-invariant, then so is $F(\rho)$.
 
 Then a straightforward induction shows that $F^n(\rho^\bottom)$ is strongly
 $T$-invariant, for all~$n$.  It follows that $\rho_1$ is strongly
-$T$-invariant.
+$T$-invariant, and hence $T$-invariant.
 \end{proof}
 
 %%%%%
@@ -231,8 +240,11 @@ From now on, we will assume the result of the above corollary for all
 environments subsequent to the initial environment. 
 
 
-Consider a function $f: T \fun T'$.  The following lemma relates values that
-are identified by~$f$ to a $T$-invariant set. 
+Consider a function $f: T \fun T'$.  We give a series of useful lemmas
+concerning the effect of~$f$ on a $T$-invariant set.  
+
+%% The following lemma relates values that are identified by~$f$ to a
+%% $T$-invariant set.
 
 %% \begin{lemma}
 %% \label{lem:f_vs_unitf}
@@ -300,7 +312,7 @@ be used to show this.
 %
 \begin{corollary}
 \label{cor:channel-types}
-Consider a script instantiating~$t$ with $T$.  Consider a channel
+Consider a script instantiating~|T| with $T$.  Consider a channel
 identifier~$c$ and environment~$\rho$, and suppose $\rho(c) = \channel S$.
 Then for each value~$v$,
 \begin{eqnarray*}
@@ -317,10 +329,11 @@ result then follows from Lemma~\ref{lem:T-invariant-inclusion}.
 
 %%%%%%%%%%
 
-Values may be either \emph{incomplete} or \emph{complete}, depending on
-whether additional fields may be added to them using the dot ($.$) operator.
-For example, with the declarations of Figure~\ref{fig:t-allowed}, the values
-|c2| and |c2.A| are incomplete, but |c2.A.B| is complete.  
+Values using channels or datatype constructors may be either \emph{incomplete}
+or \emph{complete}, depending on whether additional fields may be added to
+them using the dot ($.$) operator.  For example, with the declarations of
+Figure~\ref{fig:t-allowed}, the values |c2| and |c2.A| are incomplete, but
+|c2.A.B| is complete.
 
 \begin{lemma}
 \label{lem:complete}
@@ -333,5 +346,7 @@ Suppose $v$ is an event on channel~$c$, so $v = c.w$ for some $w \in S$ where
 $\rho(c) = \channel S$.  Then $(f(\rho))(c) = \channel f(S)$, and $S$ is
 $T$-invariant, by Corollary~\ref{cor:invariant}.  Hence $f(w) \in f(S)$ by
 Corollary~\ref{cor:channel-types}, and so $f(v) = c.f(w)$ is a complete
-value. 
+value.  
+
+An identical argument applies for values built from a datatype constructor. 
 \end{proof}

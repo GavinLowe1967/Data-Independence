@@ -1,22 +1,25 @@
-\paragraph{Prefixing.}  Consider $e_c ~ f_1 \ldots f_n \then P$, where $e_c$
+\subsubsection{Prefixing}  
+\label{sec:prefixing}
+
+Consider the prefixing expression $e_c ~ f_1 \ldots f_n \then P$, where $e_c$
 is an expression that should evaluate to a possibly incomplete event (i.e.~a
 channel name with zero or more fields supplied), $n \ge 0$, and each~$f_i$ is
 a field of one of the following forms:
   %
   \begin{itemize}
-  \item $? pat$, where $pat$ is a pattern; this offers an external choice
+  \item $? pat$, where $pat$ is a pattern: this offers an external choice
     between all values matching $pat$ and consistent with the channel type. 
 
   \item $?pat : E$, where $pat$ is a pattern, and $E$ should evaluate to a
-    set; this is like the previous case, but restricts values to elements
+    set: this is like the previous case, but restricts values to elements
     of~$E$. 
 
-  \item $!e$, where $e$ is an expression; this matches only the value of~$e$. 
+  \item $!e$, where $e$ is an expression: this matches only the value of~$e$. 
 
-  \item $\$ pat$; this performs an internal choice between all values matching
+  \item $\$ pat$: this performs an internal choice between all values matching
     $pat$ and consistent with the channel type.
  
-  \item $\$ pat : E$; this is like the previous case, but restricts values to
+  \item $\$ pat : E$: this is like the previous case, but restricts values to
     elements of~$E$.
   \end{itemize}
   %
@@ -27,7 +30,7 @@ a field of one of the following forms:
   event $c.1.2.3$, binding $x$ to~$1$, and $y$ to~$2.3$.
 
   If there are one or more \$-fields, then the process has initial
-  $\tau$-transitions to resolve the internal choices; each such field is
+  $\tau$-transitions to resolve the internal choices; each \$-field is
   replaced by a field $!x$, where $x$ is a fresh variable bound in the
   environment to the value chosen; also the environment is updated
   corresponding to any other variables bound in the field.  The definition of
@@ -43,7 +46,7 @@ a field of one of the following forms:
 
   %%%%%%%%%%
 
-\subparagraph{Case of no \$-fields.} 
+\paragraph{Case of no \$-fields.} 
 
 Consider first a prefixing construct of the form ${e_c~{\it fields} \then P}$
 that contains no $\$$-fields.  We define the semantics of prefixing using a
@@ -82,7 +85,7 @@ We perform a case analysis on~$field$.
   &  f (\evalField \rho~last~(c.v)~(!e)) \\
   = & f(\Let w = \eval \rho~e \In 
         \If v.w \le \rho(c) \Then \set{(w, \rho)} \Else error) \\
-  = & \com{Corollary \ref{cor:channel-types}} \\
+  = & \com{Lemma~\ref{lem:invariant-prefix}} \\
   & \begin{align}
     \Let w = \eval \rho~e \In \\
     \If f(v).f(w) \le f(\rho(c)) \Then \set{(f(w), f(\rho))} \Else f(error)
@@ -114,7 +117,7 @@ We perform a case analysis on~$field$.
     \Let W = 
       \begin{align}
       \If last \Then \set{w \mid v.w \in \rho(c)} \\
-      \Else \set{w \mid v.w.u \in \rho(c), arity(pat) = arity(w)} 
+      \Else \set{w \mid v.w \prefix \rho(c), arity(pat) = arity(w)} 
       \end{align} \\
     \In 
     \set{(w, \bind \rho~pat~w) \mid w \in W, \matches \rho~pat~w})
@@ -124,7 +127,7 @@ We perform a case analysis on~$field$.
     \Let W = 
       \begin{align}
       \If last \Then \set{w \mid v.w \in \rho(c)} \\
-      \Else \set{w \mid v.w.u \in \rho(c), arity(pat) = arity(w)} 
+      \Else \set{w \mid v.w \prefix \rho(c), arity(pat) = arity(w)} 
       \end{align} \\
     \In 
     \set{(f(w), f(\bind \rho~pat~w)) \mid  w \in W, \matches \rho~pat~w}
@@ -135,7 +138,7 @@ We perform a case analysis on~$field$.
     \Let W = 
       \begin{align}
       \If last \Then \set{w \mid v.w \in \rho(c)} \\
-      \Else \set{w \mid v.w.u \in \rho(c), arity(pat) = arity(w)} 
+      \Else \set{w \mid v.w \prefix \rho(c), arity(pat) = arity(w)} 
       \end{align} \\
     \In 
     \set{(f(w), \bind (f(\rho))~pat~(f(w))) \mid \\
@@ -149,7 +152,7 @@ We perform a case analysis on~$field$.
       \If last \Then \set{f(w) \mid v.w \in \rho(c)} \\
       \Else \set{f(w) \mid 
          \begin{align}
-         v.w.u \in \rho(c), 
+         v.w \prefix \rho(c), 
          arity(pat) = arity(w)} 
          \end{align}
       \end{align} \\
@@ -158,14 +161,14 @@ We perform a case analysis on~$field$.
        w' \in W', \matches (f(\rho))~pat~w'}
     \end{align} 
   \\
-  = & \com{Corollary \ref{cor:channel-types}} \\
+  = & \com{Lemma~\ref{lem:invariant-prefix}} \\
   & \begin{align}
     \Let W' = 
       \begin{align}
       \If last \Then \set{f(w) \mid f(v).f(w) \in (f(\rho))(c)} \\
       \Else \set{f(w) \mid 
          \begin{align}
-         f(v).f(w).f(u) \in (f(\rho))(c), \\
+         f(v).f(w) \prefix (f(\rho))(c), \\
          arity(pat) = arity(w)} 
          \end{align}
       \end{align} \\
@@ -174,15 +177,14 @@ We perform a case analysis on~$field$.
       w' \in W', \matches (f(\rho))~pat~w'}
     \end{align} 
   \\
-  = & \com{letting $w' = f(w)$,\, $u' = f(u)$; % \\
-          $arity(w) = arity(f(w))$} \\
+  = & \com{letting $w' = f(w)$; $arity(w) = arity(f(w))$} \\
   & \begin{align}
     \Let W' = 
       \begin{align}
       \If last \Then \set{w' \mid f(v).w' \in (f(\rho))(c)} \\
       \Else \set{w' \mid 
          \begin{align}
-         f(v).w'.u' \in (f(\rho))(c), \\
+         f(v).w' \prefix (f(\rho))(c), 
          arity(pat) = arity(w')} 
          \end{align}
       \end{align} \\
@@ -252,15 +254,13 @@ f(\evalFields \rho~(c.v)~fs) & = &
   \evalFields (f(\rho))~(c.f(v))~fs ,
 \end{eqnarray*}
 %
-by an induction on $fs$ (identical to the corresponding proof
-in~\cite{symmetry-reduction}). 
+by an induction on $fs$ (the proof is identical to the corresponding proof
+in~\cite{symmetry-reduction}).
 
 %%%%%%%%%%
 
-We now consider the process $e_c~ fs \then P$.  
-Let $c.v = \eval \rho~e_c$.  Then
-$\eval (f(\rho))~e_c = c.f(v)$, by the inductive hypothesis. 
-Let
+We now consider the process $e_c~ fs \then P$.  Let $c.v = \eval \rho~e_c$.
+Then $\eval (f(\rho))~e_c = c.f(v)$, by the inductive hypothesis.  Let
 %
 \begin{eqnarray*}
 L & = & \eval \rho~ (e_c~ fs \then P), \\
@@ -271,8 +271,8 @@ S' & = & \evalFields (f(\rho))~(c.f(v))~fs.
 %
 The above result shows $f(S) = S'$.  We need to show $f(L) = L'$.
 
-If $S = error$ then $L = error$ and $f(L) = error$.  But then $S' = error$,
-so $L' = error$, as required. 
+If $S = error$ then $S' = error$, and vice versa; but then each of $L$, $f(L)$
+and $L'$ equal error, so $f(L) = L'$, as required. 
 
 Otherwise, $L$ is an LTS as follows.
 %
@@ -292,8 +292,8 @@ Then $f(L)$ is an  LTS as follows.
 \item The initial state is $(e_c~fs \then P, f(\rho))$.
   This is the same as the initial state of~$L'$.
 
-\item For each $(a, \rho') \in S$, there is a transition labelled with $f(a)$
-  from the initial state.  Letting $a' = f(a)$ and $\rho'' = f(\rho')$,
+\item From the initial state, for each $(a, \rho') \in S$, there is a
+transition labelled with $f(a)$.  Letting $a' = f(a)$ and $\rho'' = f(\rho')$,
   this is equivalent to saying that for every $(a',\rho'') \in f(S) = S'$,
   there is a transition labelled with~$a'$ from the initial state.  This is
   the same as the initial transitions of~$L'$.
@@ -310,7 +310,7 @@ Hence $f(L) = L'$, as required.
 
 %%%%%%%%%%
 
-\subparagraph{Case of at least one \$-field.}
+\paragraph{Case of at least one \$-field.}
 
 Now suppose that the prefixing construct contains at least one $\$$-field.
 We define the semantics using a function 
@@ -333,8 +333,7 @@ We can prove the following, for $field$ a \$-field:
   f (\evalDollarField \rho~last~(c.v)~field)  = 
     \evalDollarField (f(\rho))~last~(c.f(v))~field .
 \] % end{equation}
-The proof is almost identical to the cases for ?-fields in the proof of
-equation~(\ref{eqn:evalField}), and so is omitted. 
+The proof is almost identical to the cases for ?-fields, and so is omitted. 
 
 We now define a function that, given an environment~$\rho$, an incomplete
 event~$c.v$, and a list of fields~$fs$, gives a set of pairs $(fs', \rho')$
@@ -388,12 +387,11 @@ L' & = & \eval (f(\rho))~ (e_c~fs \then P), \\
 S' & = & \evalDollarFields (f(\rho)) ~(c.f(v)) ~fs .
 \end{eqnarray*}%
 %
-The above result shows
-$f(S) =  S'$.
-We need to show $f(L) = L'$.
+The above result shows $f(S) = S'$.  We need to show $f(L) = L'$.
 
-If $S = \set{}$ then $L = error$ and $f(L) = error$.  But then $S' =
-\set{}$, so $L' = error$, as required. 
+If $S = \set{}$ then $S' = \set{}$, and vice versa.   But then each of $L$,
+$f(L)$ and~$L'$ equals $error$, so $f(L) = L'$, as required.  The case where
+$S$ and~$S'$ equal $error$ is similar.
 
 Otherwise, $L$ is an augmented LTS as follows.
 \begin{itemize}

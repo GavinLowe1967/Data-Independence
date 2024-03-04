@@ -1,9 +1,9 @@
 \subsubsection{Functions}
 \label{sssec:function-decl}
 
-We show that a function application~$g(e)$ satisfies clause~\ref{item:eval}.
-Note that we can assume inductively that $g$ evaluates to a function that
-respects~$f$. 
+We now consider functions.  We first show that a function application~$g(e)$
+satisfies clause~\ref{item:eval}.  Note that we can assume inductively that
+$g$ evaluates to a function that respects~$f$.
 %
 \begin{calc}
 & f(\eval \rho~(g(e))) \\
@@ -23,8 +23,9 @@ clause~\ref{item:eval}.  The following sections discharge these requirements.
 
 \paragraph{Lambda abstractions.}
 
-Consider the expression $\lambda pat \spot e$.  Let $g = \eval \rho (\lambda
-pat \spot e)$.  Suppose this function takes arguments of type~$A$.  Then
+Consider the lambda abstraction $\lambda pat \spot e$.  Let $g = \eval \rho
+(\lambda pat \spot e)$.  Suppose this function takes arguments of type~$A$;
+then
 %
 \begin{eqnarray*}
 g & = & 
@@ -33,10 +34,10 @@ g & = &
     v \in A}.
 \end{eqnarray*}
 %
-We show that $g$ respects~$f$.  Suppose $(v,w), (v',w') \in g$ and $f(v) =
-f(v')$.  Then
+We show that $g$ respects~$f$.  Suppose $f(v) = f(v')$.  Then
 \begin{calc}
-& f(w) \\
+& f(g(v)) \\
+= & f(\If \matches \rho~pat~v \Then \eval(\bind \rho~pat~v)~e \Else error) \\
 = & \If \matches \rho~pat~v \Then  f(\eval(\bind \rho~pat~v)~e)
     \Else f(error) \\
 = & \com{inductive hypothesis, clauses \ref{item:matches} and \ref{item:eval};
@@ -52,8 +53,8 @@ f(v')$.  Then
 & \If \matches (f(\rho))~pat~(f(v'))
        \Then \eval(\bind (f(\rho))~pat~(f(v')))~e 
     \Else error \\
-= & \com{as above} \\
-& f(w'),
+= & \com{as above, in reverse} \\
+& f(g(v')),
 \end{calc}
 %
 as required. 
@@ -89,26 +90,24 @@ We prove the lambda extraction satisfies clause~\ref{item:eval} as follows.
 
 \paragraph{Bound function names.}
 
-Consider a name~$h$ declared as a function in the script, and suppose $\rho$
-maps~$h$ to a function~$g$.  By clause~\ref{item:bindDecls} of the inductive
-hypothesis, $g$ respects~$f$.  Further
+Consider a name~$h$ declared as a function in the script, and suppose $\rho(h)
+= g$.  By clause~\ref{item:bindDecls} of the inductive hypothesis, $g$
+respects~$f$.  Further
 \[
-f(\eval \rho~h) = f(g) = \eval (f(\rho))~h.
+f(\eval \rho~h) = f(\rho(h)) = \eval (f(\rho))~h.
 \]
 
 %%%%%%%%%%
 
 \paragraph{Built-in functions.}
 
-Consider a built-in function~|g|.  Let $f: T_1 \fun T_2$, and suppose the
-semantics of~|g| over types built from~$T_1$ is a function~$g_1$, and  the
+Consider a built-in function~|g|.  Recall that $f: T_1 \fun T_2$.  Suppose the
+semantics of~|g| over types built from~$T_1$ is a function~$g_1$, and the
 semantics of~|g| over types built from~$T_2$ is a function~$g_2$.  We seek to
 show $g_2 = f(g_1)$.  Note that we need to distinguish between $g_1$ and $g_2$
-to ensure correct typing.  
-
-%
-%% We consider which built-in functions~$g$ respect~$f$, i.e.~if $f(v) = f(v')$
-%% then $f(g(v)) = f(g(v'))$.  The following lemma will be useful.
+to ensure correct typing.  We will use the following  lemma to discharge our
+requirements for nearly all built-in functions (we deal with the |extensions|
+and |productions| functions separately).
 %
 \begin{lemma}
 \label{lem:built-in-functions}
@@ -135,52 +134,54 @@ We prove $f(g_1) = g_2$ as follows.
 
 %%%%%
 
-Under the condition $f(g_1) = g_2$, we can proof condition~\ref{item:eval}
+Under the condition $f(g_1) = g_2$, we can prove condition~\ref{item:eval}
 holds for the built-in function~|g|:
 \[
 f(\eval \rho ~ \M{g}) = f(g_1) = g_2 = \eval (f(\rho)) ~ \M{g}.
 \]
-
 It remains to consider which built-in functions satisfy the premises of
-Lemma~\ref{lem:built-in-functions}.  The condition $\dom g_2 = f(\dom g_1)$
-holds for all built-in functions.  For non-polymorphic functions, $g_1$
-and~$g_2$ are the same functions, operating over values independent of~$t$,
-and $f$ is the identity on the resulting values.  For polymorphic functions,
-the functions are defined over \emph{all} types with the relevant type
-constraint (e.g.~$Set~t$ for types whose members can be included in sets), and
-corresponding types built from~$T_1$ and~$T_2$ satisfy the same type
-constraints.
+Lemma~\ref{lem:built-in-functions}.  
 
-If a function |g| (or infix binary operator) can be applied only to values
-that do not use $t$, and so necessarily returns a result that it independent
-of~$t$, then its semantics is independent of the underlying types, i.e.~$g_1 =
-g_2$.  Further, composing it with~$f$ has no effect.  Hence $f \circ g_1 = g_1
-= g_2 = g_2 \circ f$.  Examples include operators over integers
-(e.g.~$+$,~$<=$) or booleans~(e.g.~|and|,~|!|).  The same is true for
-instances of polymorphic functions that are independent of~$t$.  Examples
-include equality or inequality tests over values independent of $t$; or
+The condition $\dom g_2 = f(\dom g_1)$ holds for all built-in functions.  For
+non-polymorphic functions, $g_1$ and~$g_2$ are the same functions, operating
+over values independent of~|T|, and $f$ is the identity on the resulting
+values.  For polymorphic functions, the functions are defined over \emph{all}
+types with the relevant type constraint (e.g.~$Set~a$ for types whose members
+can be included in sets), and corresponding types built from~$T_1$ and~$T_2$
+satisfy the same type constraints.
+
+Consider a function (or infix binary operator) |g| that can be applied only to
+values that do not use~|T|, and so necessarily returns a result that it
+independent of~|T|.  Then |g|'s semantics is independent of the underlying
+types, i.e.~$g_1 = g_2$.  Further, composing it with~$f$ has no effect.  Hence
+$f \circ g_1 = g_1 = g_2 = g_2 \circ f$.  Examples include operators over
+integers (e.g.~$+$,~$<=$) or booleans~(e.g.~|and|,~|!|).  The same is true for
+instances of polymorphic functions that are independent of~|T|.  Examples
+include equality or inequality tests over values independent of |T|; or
 application of the set operators to sets of values that are independent
-of~$t$.
+of~|T|.
 
 It is straightforward to show that each of the following polymorphic built-in
 functions satisfies the condition $f \circ g_1 = g_2 \circ f$.
 %
 \begin{itemize}
-\item the set functions |empty|, |union|, |Union|, |Set| and |Seq|;
+\item the set functions |empty|, |union|, |Union|, |Set|, and |Seq|;
 
 \item the sequence functions \CSPM{^} (concatenation), \CSPM{#} (length),
-  |concat|, |head|, |length|, |null|, |set| and~|tail|;
+  |concat|, |head|, |length|, |null|, |set|, and~|tail|;
 
 \item the map functions |emptyMap|, |mapDelete|, |mapFromList|, |mapLookup|,
-  |mapMember|, |mapUpdate|, |mapUpdateMultiple| and~|Map| (recall that we
-  assume that the domain type of each map is independent of~$t$);
+  |mapMember|, |mapUpdate|, |mapUpdateMultiple|, and~|Map| (recall that we
+  assume that the domain type of each map is independent of~|T|);
 
 \item the relation functions \CSPM{relational_image},
-  \CSPM{relational_inverse_image}, and \CSPM{transpose}.
+  \CSPM{relational_inverse_image}, and \CSPM{trans}\-\CSPM{pose}.
+
+%% \item the process-creating functions |RUN| and |CHAOS|. 
 \end{itemize}
 
-However, the condition $f \circ g_1 = g_2 \circ f$ does not hold for all
-polymorphic built-in functions when applied to arguments of type~$t$.  For
+However, the condition $f \circ g_1 = g_2 \circ f$ does not hold for some other
+polymorphic built-in functions when applied to arguments of type~|T|.  For
 example, it does not hold for the set-cardinality functions (denoted $\#_1$,
 $\#_2$) corresponding to the built-in function |card|; if $f(A) = f(B) = C$
 then:
@@ -199,18 +200,6 @@ All the built-in functions for which the condition does not hold were
 disallowed by condition~\ref{item:built-in-functions} of
 Definition~\ref{defn:data-independent}.
 
-%% But not
-%% \begin{itemize}
-%% \item the set functions |card|, |diff|, |inter|, |Inter|, |member| and |seq|;
-%%   or the subset relations |<=|, |<|, |>=| and |>|;
-
-%% \item the sequence function |elem|;
-
-%% \item the map function |mapToList|;
-
-%% \item the function~|show|.
-%% \end{itemize}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subparagraph{{\cspmInlineStyle extensions} and {\cspmInlineStyle productions}.}
@@ -220,7 +209,7 @@ channel or datatype value~$a$, gives all values~$v$ such that $a.v$ is a
 complete event or datatype value (here $a$ and $v$ might be dotted values).
 Given an environment~$\rho$, we write $\extendables(\rho)$ for all the
 extendable values in~$\rho$, i.e.~partially constructed channels or datatype
-values.\footnote{Here we use ``$\prefix$'' to denote the prefix relation over
+values.\footnote{We use ``$\prefix$'' to denote the prefix relation over
   dotted tuples.}
 %
 \begin{eqnarray*}
@@ -228,7 +217,7 @@ values.\footnote{Here we use ``$\prefix$'' to denote the prefix relation over
   \set{ c.v \|
     \exists S \spot 
       \begin{align}
-      (\rho(c) = \channel S \lor \rho(c) = \dtcons(S)) \land \\
+      (\rho(c) = \channel S \lor \rho(c) = \dtcons S) \land \\
       \exists w \in S \spot v \prefix w }.
       \end{align}
 \end{eqnarray*}
@@ -287,14 +276,35 @@ environment~$\rho$ is then the function:
 %%   \extendables(\rho)$ and $f(v) = f(v')$.  Hence there is some $w' \in S$ such
 %%   that $v' \prefix w'$.  Let $u$ be such that $w' = v'.u$, and let $w = v.u$.
 %%   Then $f(w) = f(v).f(u) = f(v').f(u) = f(v'.u) = f(w')$.  But $S$ is
-%%   $T$-invariant, so $w \in S$, by Lemma~\ref{lem:T-invariant-vs-f}.  And $v
+%%   $T_1$-invariant, so $w \in S$, by Lemma~\ref{lem:T-invariant-vs-f}.  And $v
 %%   \prefix w$, so $c.v \in \extendables(\rho)$, as required.
 %% \end{itemize}
 %% \end{proof}
 
 %%%%%%%%%%
 
-We will need the following lemma.
+The following lemma will be useful for reasoning about prefixes.
+%
+\begin{lemma}
+\label{lem:invariant-prefix}
+Let $S$ be a $T_1$-invariant set, and $v$ a value.  Then
+\begin{eqnarray*}
+\exists w \in S \spot v \prefix w & \iff & 
+  \exists w' \in f(S) \spot f(v) \prefix w'.
+\end{eqnarray*}
+\end{lemma}
+%
+\begin{proof}
+The left-to-right implication is immediate.  For the right-to-left
+implication, suppose $w' \in f(S)$ and $f(v) \prefix w'$.  Then $w'$ is of the
+form $f(v).f(u)$ for some $u$.  Let $w = v.u$, so $v \prefix w$.  But $w' =
+f(w) \in f(S)$, so $w \in S$ by Lemma~\ref{lem:T-invariant-inclusion}.
+\end{proof}
+%
+In particular, the above lemma will apply to the set~$S$ associated with a
+channel or datatype constructor. 
+
+We will need the following lemma about $\extendables$.  
 %
 \begin{lemma}\label{lem:extendables-f-rho}
 $c.v \in \extendables(\rho) \iff f(c).f(v) \in \extendables(f(\rho))$.
@@ -318,27 +328,16 @@ For the right-to-left direction, suppose $f(c).f(v) \in
 \item Otherwise, $f(c) = c$.  Let $S$ be such that $\rho(c)$ is either
   $\channel S$ or $\dtcons S$.  Hence $f(\rho)(c)$ is either $\channel (f(S))$
   or $\dtcons (f(S))$, and there is some $w' \in f(S)$ such that $f(v) \prefix
-  w'$.  Let $u$ be such that $w' = f(v).f(u) = f(v.u)$, and let $w = v.u$.
-  But $S$ is $T$-invariant, so $w \in S$, by Lemma~\ref{lem:T-invariant-vs-f}.
-  And $v \prefix w$, so $c.v \in \extendables(\rho)$, as required.
+  w'$.  But $S$ is $T_1$-invariant, so by Lemma~\ref{lem:invariant-prefix},
+  there is some $w \in S$ such that $v \prefix w$.
+%% Let $u$ be such that $w' = f(v).f(u) = f(v.u)$, and let $w = v.u$.
+%%   But $S$ is $T_1$-invariant, and $f(w) = w' \in f(S)$; so $w \in S$, by
+%%   Lemma~\ref{lem:T-invariant-vs-f}.  And $v \prefix w$, so 
+  Hence $c.v \in \extendables(\rho)$, as required.
 \end{itemize}
 \end{proof}
 
-
-%% Then $f(w') \in f(S)$, and so ..........
-
-%%  Then $\extendables(\rho)$
-%% contains a value $d.v'$ such that $f(c) = f(d)$ and $f(v) = f(v')$.  
-%% \begin{itemize}
-%% \item If $d$ is a member of the distinguished datatype, then so is~$c$, and
-%%   vice versa.  And then $v = v' = \epsilon$, and $c.v = c \in
-%%   \extendables(\rho)$.
-
-%% \item Otherwise, $c = d = f(c) = f(d)$.  Let $S$ be such that $\rho(c)$ is
-%%   either $\channel S$ or $\dtcons S$.  Then, since $d.v' = c.v' \in
-%%   \extendables(\rho)$,\, $S$ contains a value $w'$ such that $v' \prefix w'$.
-%%   Let $w' = v'.u'$.  
-%% \end{itemize}
+%%%%%
  
 We can now prove clause~\ref{item:eval} for the |extensions| function.
 %
@@ -375,40 +374,27 @@ c.v \in \extendables(\rho) &  \iff & f(c.v)  \in \extendables(f(\rho)) \\
 Suppose both sides of the above implications hold, so $c.v$ and $c'.v'$ are
 both in the domain of $\eval \rho~\M{extensions}$.  We  show 
 \begin{eqnarray*}
-\eval \rho~\M{extensions} (c.v) & = & \eval \rho~\M{extensions} (c'.v'),
+(\eval \rho~\M{extensions}) (c.v) & = & (\eval \rho~\M{extensions}) (c'.v'),
 \end{eqnarray*}
 which implies that $\eval \rho~\M{extensions}$ respects~$f$.  If $c$ and~$c'$
-are members of the distinguished type~$t$, then $v = v' = \epsilon$, and both
+are members of the distinguished type~|T|, then $v = v' = \epsilon$, and both
 sides of the above equation equal $\set\epsilon$.  Otherwise $c = c'$.  Let
 $S$ be such that $\rho(c) = \rho(c')$ is either $\channel S$ or $\dtcons S$.
 Then
 %
 \begin{calc}
-& \eval \rho~\M{extensions} (c.v) \\
+& (\eval \rho~\M{extensions}) (c.v) \\
 = &  \set{ w \| v.w \in S} \\
 = & \com{%
   \begin{tabular}{@{}l@{}}
-  $f(v.w) = f(v).f(w) = f(v').f(w) = f(v'.w)$, and $S$ is $T$-invariant, \\
+  $f(v.w) = f(v).f(w) = f(v').f(w) = f(v'.w)$, and $S$ is $T_1$-invariant, \\
   so  $v.w \in S \iff v'.w  \in S$, by Lemma \ref{lem:T-invariant-vs-f}
   \end{tabular}} \\
  &  \set{ w \| v'.w \in S} \\
-= & \eval \rho~\M{extensions} (c.v),
+= & (\eval \rho~\M{extensions}) (c.v),
 \end{calc}
 %
 as required. 
-
-%% Now, $f(v.w) = f(v'.w)$, and $S$ is $T$-invariant, so $v.w \in S \iff v'.w \in
-%% S$, by Lemma \ref{lem:T-invariant-vs-f}.  Hence
-%% \[
-%% \begin{array}{rcl}
-%% \eval \rho~\M{extensions} (c.v) & = & \set{ w \| v.w \in S} \\
-%% & = & \set{ w \| v'.w \in S} \\
-%% & = & \eval \rho~\M{extensions} (c'.v'),
-%% \end{array}
-%% \]
-%% as required.
-
-%% \framebox{*** But also that it respects $f$}
 
 
 %%%%%
@@ -417,73 +403,7 @@ The proofs for |productions| follow easily, noting that $\eval \rho~
 \M{productions}$ and $\eval \rho~\M{extensions}$ have the same domains, and,
 for $a$ in that domain,
 \begin{eqnarray*}
-\eval \rho~ \M{productions}(a) & = & 
-  \set{ a.w \| w \in \eval \rho ~ \M{extensions}(a)}.
+(\eval \rho~ \M{productions})(a) & = & 
+  \set{ a.w \| w \in (\eval \rho ~ \M{extensions})(a)}.
 \end{eqnarray*}
 %
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% \subparagraph{...}
-
-%% \framebox{???}  Compression functions; relation functions.  |extensions|
-%% |productions|.  
-
-
-%% \begin{lemma}
-%% If $\dom g_2 = f(\dom g_1)$ and  $f \circ g_1 = g_2 \circ f$, then
-%% $f(g_1) = g_2$.
-%% \end{lemma}
-
-%% \begin{proof}
-%% \begin{calc}
-%% & f(g_1) \\ 
-%% = & \set{ (f(v), f(g_1(v))) \| v \in \dom g_1 } \\ 
-%% = & \set{ (f(v), g_2(f(v))) \| v \in \dom g_1 } \\
-%% = & \com{letting $w = f(v)$} \\ 
-%% & \set{ (w, g_2(w)) \| w \in f(\dom g_1) }  \\
-%% = & \set{ (w, g_2(w)) \| w \in \dom g_2 } \\
-%% = & g_2.
-%% \end{calc}
-%% \end{proof}
-%
-%% The converse does not hold.  Indeed, if $f : T_1 \fun T_2$ (suitably lifted),
-%% and $g : T_1 \fun T_1$, then $g \circ f$ might not even be well-typed.  The
-%% above lemma requires $g$ to be suitably polymorphic --- as is the case with
-%% most built-in functions.
-
-%% Further, if a built in function with name~|g| has denotation~$g$, then
-%% \[
-%% f(\eval \rho \M{g}) 
-%% = f(g) 
-%% = \set{ (f(v), f(g(v))) \| v \in \dom g } 
-%% = \set{ (f(v), g(f(v))) \| v \in \dom g } 
-%% = \set{ (w, g(w)) \| w \in f(\dom g) } 
-%% = ?? 
-%% f(\eval (f(\rho)) \M{g}) 
-%% \]
-
-%% Note that if $g$ returns results that are independent of~$t$ (on
-%% which values $f$ is the identity), the consequent is equivalent $g(v) =
-%% g(v')$.  
-%% For a binary operator with denotation~$\oplus$, the required
-%% condition can be stated as $f(v \oplus v') = f(v) \oplus f(v')$. 
-%% : if $f(v) = f(v')$ and $f(w) = f(w')$ then
-%% $f(v \oplus w) = f(v' \oplus w')$.
-
-
-%% Consider a built-in function |g| with semantics~$g$ such that $f(g(x)) =
-%% g(f(x))$ for all~$x$.  Then  clause~\ref{item:eval} holds for an application
-%% of~|g|: 
-%% %
-%% \begin{calc}
-%% & f(\eval \rho ~ (\M{g}(e))) \\
-%% = &  f(g(\eval \rho e)) \\
-%% = & g(f(\eval \rho e)) \\
-%% = & g(\eval (f(\rho)) e) \\
-%% = & \eval (f(\rho)) ~(\M{g}(e)).
-%% \end{calc}
-%% %
-%% For a binary operator with semantics $\oplus$, we can prove a corresponding
-%% result provided $f(x \oplus x') = f(x) \oplus f(x')$, for all $x, x'$. 
-

@@ -5,58 +5,68 @@ We show that for every expression~$e$ in the script,
 f(\eval \rho ~ e) & = \eval (f(\rho)) e .
 \end{eqnarray*}
 
-\framebox{\ldots}
+We structure the proof as follows.  We start with non-process expressions.  In
+Section~\ref{sec:atomic} we consider atomic values.  In
+Section~\ref{sec:tuples} we consider tuples and dotted tuples.  In
+Section~\ref{sec:structural} we consider structural operators (local
+definitions and |if| statements).  In Section~\ref{sssec:function-decl} we
+consider functions: function applications, functions defined as lambda
+abstractions, functions bound to names, and built-in functions (restricted as
+in item~\ref{item:built-in-functions} of
+Definition~\ref{defn:data-independent}); we also show that each such function
+respects~$f$.  In Section~\ref{sec:collections} we consider collections: sets,
+sequences and maps.
+
+We then move on to process expressions.  In Section~\ref{sec:basic-procs} we
+consider basic processes, and in Section~\ref{sec:prefixing} we consider the
+prefixing construct.  In Section~\ref{sec:sequential-procs} we consider
+non-replicated sequential operators; in Section~\ref{sec:parallel} we consider
+non-replicated parallel operators; and in Section~\ref{sec:replicated} we
+consider replicated operators.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Atomic values}
+\label{sec:atomic}
 
 \paragraph{Names.}
 
-Consider a name~$x$ bound by the environments, other than a datatype
-constructor or channel name.  Then
+Consider a name~$x$ bound by the environment, other than a datatype
+constructor or channel name (but including the name of a type).  Then
 \[
 f(\eval \rho~x) = f(\rho~x) = \eval (f(\rho))~x.
 \]
 
-Not consider the name~$d$ of a datatype constructor (so both $\rho$ and
+Now consider the name~$d$ of a datatype constructor (so both $\rho$ and
 $f(\rho)$ map $c$ to a $\dtcons$ value).  Necessarily, $d$ is not a member
-of~$t$, given our assumption about values from~$t$ not appearing in the
+of~|T|, given our assumption about values from~|T| not appearing in the
 script.  Note that $d$ evaluates to itself, regardless of the environment.
 Hence
 \[
 f(\eval \rho~d) = f(d) = d = \eval (f(\rho))~d.
 \]
-Note that the middle step would fail to hold for a member of~$t$: this
+Note that the middle step would fail to hold for a member of~|T|: this
 justifies our assumption about such values not appearing in the script. 
-
-The case of the name of a channel is identical to the previous case. 
-
-Names of types *** I don't think this is necessary as a separate case -- dealt
-with in bindDecls.
-
-
-%%%%%
-
-\paragraph{Basic values.}
-
-For a basic value~$v$ (an integers, boolean or character):
-\[
-f(\eval \rho~v) = f(v) = v = \eval(f(\rho))~v,
-\]
-since $v$ is independent of~$t$. 
+%
+The case of the name of a channel is identical. 
 
 %%%%%%%%%%
 
-\paragraph{\ldots}
+\paragraph{Basic values.}
 
+For a basic value~$v$ (an integer, boolean, character or string):
+\[
+f(\eval \rho~v) = f(v) = v = \eval(f(\rho))~v,
+\]
+since $v$ is independent of~|T|. 
 
-|Events|
-
+%%%%%%%%%%%%%%%
 
 \subsubsection{Composite values}
+\label{sec:tuples}
 
-Case $e_1 . e_2$.
+Consider a dotted pair $e_1 . e_2$.
 %
 \begin{calc}
 & f(\eval \rho ~(e_1.e_2)) \\
@@ -72,6 +82,7 @@ The case for tuples is very similar.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Structural operators}
+\label{sec:structural}
 
 The case for local declarations is as follows.
 %
@@ -82,18 +93,18 @@ The case for local declarations is as follows.
 = & \com{inductive hypothesis} \\
  &  \Let \rho' = \bindDecls \rho~decls \In \eval (f(\rho'))~e \\
 = & \com{letting $\rho'' = f(\rho')$} \\
-& \Let \rho'' = f (\bindDecls \rho~decls \In \eval \rho''~e) \\
+& \Let \rho'' = f (\bindDecls \rho~decls) \In \eval \rho''~e \\
 = & \com{inductive hypothesis, clause~\ref{item:bindDecls}} \\
 & \Let \rho'' = \bindDecls (f(\rho))~decls \In \eval \rho''~e \\
 = & \eval (f(\rho))~(\M{let}~decls~\M{within}~e).
 \end{calc}
 
-The case for if statements is as follows.
+The case for |if| statements is as follows.
 %
 \begin{calc}
 & f(\eval \rho~(\M{if}~b~\M{then}~e_1~\M{else}~e_2)) \\
 = & f(\If \eval \rho~b \Then \eval \rho~e_1 \Else \eval \rho~e_2) \\
-= & \com{boolean values invariant under~$f$} \\
+= & \com{boolean values are invariant under~$f$} \\
  & \If f(\eval \rho~b) \Then f(\eval \rho~e_1) \Else f(\eval \rho~e_2) \\
 = & \com{inductive hypothesis} \\
  & \If \eval~(f(\rho))~b \Then \eval (f(\rho))~e_1) 
@@ -112,6 +123,11 @@ The case for if statements is as follows.
 \subsubsection{Collections}
 \label{sec:collections}
 
+We now consider collections: sets, sequences and maps.  Various functions that
+operate over such collections were considered in
+Section~\ref{sssec:function-decl}: here we consider direct methods of defining
+collections.
+%
 \begin{itemize}
 \item
 Case of a set comprehension. Below, the set comprehensions in the first and
@@ -131,8 +147,8 @@ last line are syntax, and the other set comprehensions are semantics.
 \end{calc}
 
 \item The case for  a sequence comprehension $\M{<}\, e \| stmts \,\M{>}$ is
-very to that for a set comprehension, except $stmts$ are evaluated using
-$\evalStmts$, which produces a sequence of environments.
+very similar to that for a set comprehension, except $stmts$ are evaluated
+using $\evalStmts$, which produces a sequence of environments.
 
 \item The cases for a set $\{e_1, \ldots, e_n\}$, ranged integer set
 $\set{e .. e'}$ (where $e$ and~$e'$ evaluate to integers), infinite integer
@@ -140,22 +156,30 @@ set $\set{ e .. }$, sequence $\M{<} e_1, \ldots, e_n \M{>}$, ranged integer
 sequence $\M< e .. e' \M>$, and infinite integer equence $\M< e .. \M>$, are
 straightforward.
 
+\item The cases for extensions sets $\M{\{\|}\, e \| stmts \M{\|\}}$ and
+$\M{\{\|}\, e_1, \ldots, e_n \M{\|\}}$ follow from the cases for sets, since
+each could be replaced by a set expression, with extra generators for the
+``missing'' fields (cf.~the proof of Lemma~\ref{lem:invariant}).
+
 \item The case for a map $(\| k_1 => v_1, ..., k_n => v_n \|)$ is also
-straightforward: recall that the domain type of a map mucs be independent
-of~$t$, so eack $k_i$ evaluates to a value that is invariant under~$f$. 
+straightforward: recall that the domain type of a map must be independent
+of~|T|, so each~$k_i$ evaluates to a value that is invariant under~$f$. 
 
-\item extensions sets \framebox{...}
-
-
+\item
+For the name |Events|, representing the set of all events, the case is as
+follows; note that for a channel name~$c$,\, $f(c) = c$. 
+%
+\begin{calc}
+& f(\eval \rho ~\M{Events}) \\
+= & f(\set{ c.v \| c \mapsto \channel S \in \rho,\, v \in S }) \\
+= & \set{ c.f(v) \| c \mapsto \channel S \in \rho,\, v \in S }) \\
+= & \com{letting $v' = f(v)$} \\
+ & \set{ c.v' \| c \mapsto \channel S \in \rho,\, v' \in f(S) }) \\
+= & \com{letting  $s' = f(S)$} \\
+ & \set{ c.v' \| c \mapsto \channel S' \in f(\rho),\, v' \in S' }) \\
+= & \eval (f(\rho)) ~\M{Events}.
+\end{calc}
 \end{itemize}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsubsection{Other stuff.}
-
-Case |extensions|, |productions|,
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

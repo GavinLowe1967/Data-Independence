@@ -1,29 +1,384 @@
 \section{Defining data independence}  
 
+In this section we formalise our assumptions about data independence.  We
+present a number of examples that illustrate that we need to place
+restrictions on the use of values from type~|T|. 
+
+Values from type |T| can be part of compound values.  The following definition
+presents this formally. 
+%
+\begin{definition}
+A value \emph{uses}~|T| if:
+\begin{itemize}
+\item It is an element of~|T|;
+
+\item It is a tuple $(v_1,\ldots,v_k)$ or dotted term $v_1.\ldots.v_k$ and at
+least one of the components uses~|T|;
+
+\item It is a set, sequence or mapping, and at least one of the elements
+uses~|T|.
+\end{itemize}
+
+Similarly, we say that a type is \emph{built from~\CSPM{T}} if it contains
+values that use~|T|.  And we say that a channel is \emph{uses~\CSPM{T}} if
+its type is built from~|T|, so it contains events that use~|T|.
+\end{definition}
+
+Figure~\ref{fig:t-allowed} gives some examples of types built from~|T|, and
+channels and sets that use~|T|.  We use these definitions in examples below.
+
+\begin{figure}[th]
+\begin{cspm}
+datatype Option = Some.T | None
+channel in, c : T
+channel c1 : T . Z -- Z some other set, independent of T
+channel c2 : T . T
+channel c2o : T . Option
+Y = {| in |}
+T1 = { x.z | x <- T, z <- Z } -- Z some other set
+\end{cspm}
+\caption{Allowable uses of the data independent type {\cspmstyle
+    T}. \label{fig:t-allowed}}
+\end{figure}
+
+What can we do with a value~$v$ built from~|T|?  A process can: receive a
+value over a channel and store it; nondeterministically choose a value and
+store it; build a new value (possibly using stored values) and store it; or
+send a stored value.  However, no operation can be performed on the value~$v$
+that restricts the type of~|T|: in effect, |T|~is a free polymorphic type.
+
+We do not allow the script to contain any constant from~|T|, other than within
+the definition of the instantiation of~|T|.  
+\begin{example}
+Suppose channel~$c$ has type~|T|, and consider $P = c.A \then STOP$.
+Let $T_1$ and $T_2$ be two instantiations of~|T|, with $A \in T_1$.  Then 
+$\trace{c.A} \in traces(P[T_1])$.  However, if $A \nin T_2$, the process
+$P[T_2]$ is erroneous, since then $A$ is not a valid value to be passed
+on~$c$.  Even if $A \in T_2$, if $f(A) = B \ne A$, then $f\trace{c.A}  =
+\trace{c.B} \nin traces(P[T_2])$.
+\end{example}
+
+\framebox{**} Re-visit this?
+%%  I think it would be ok to allow constants as long as all instantiations
+%% contain those constants, and we restrict to functions that are the identity
+%% on each constant.
+
+%% We will need to place various related restrictions on the use of certain
+%% functions from the \CSPm\ API\@.  
+%% Also not functions like \CSPM{seq} \framebox{\ldots}
+
+We also do not allow any equality or inequality tests over values of type~|T|.
+%
+\begin{example}
+Consider the process
+\begin{cspm}
+c?x -> c?y -> if x = y then a -> STOP else b -> STOP.
+\end{cspm}
+%
+This does not satisfy equation~(\ref{eqn:traces}).  Let $A$ and~$B$ be
+distinct elements of~$T_1$; then $tr = \trace{c.A, c.B, b} \in
+traces(P[T_1])$.  But consider $f: T_1 \fun T_2$ such that $f(A) = f(B) = C$;
+then the corresponding trace $f(tr) = \trace{c.C, c.C, b}$ is not a trace of
+$P[T_2]$.
+\end{example}
+%
+If remapping by~$f$ unifies two values, then equality tests can affect
+the path followed by a process: this we do not allow equality tests. 
+
+We also need to place various restrictions to prevent definitions that
+simulate equality tests.  For example, we do not allow the function |inter|
+(set intersection) to be applied to sets built from~|T| because it can be used
+to simulate equality tests: the expression |empty(inter({x}, {y}))| is
+equivalent to |x != y|.  Clause~\ref{item:built-in-functions} of
+Definition~\ref{defn:data-independent} disallows various similar functions. 
+
+When two processes synchronise on a channel built
+from~|T|, we require that, for each field from~|T| in the corresponding
+events, at least one of the processes is willing to accept an arbitrary value
+whenever it is willing to accept any value.  For example, we allow
+\begin{cspm}
+c!x -> STOP [| {|c|} |] c?y -> STOP.
+\end{cspm}
+However, we do not allow 
+\begin{cspm}
+c!x -> STOP [| {|c|} |] c!y -> STOP
+\end{cspm}
+for that corresponds to an equality test between~|x| and~|y|. 
+
+We give further, related restrictions below.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% We now discuss the restrictions we need to place on the usage of~|T|, and of
+%% elements of~|T|, in order to obtain these results.  First, what can we do with
+%% the type |T| itself?  Figure~\ref{fig:t-allowed} gives some examples.  (We use
+%% these definitions in examples below.)
+%% \framebox{\ldots} 
+
+%% \begin{definition}
+%% We say that a set or type is \emph{built from~|T|} if
+%% %
+%% \begin{itemize}
+%% \item It is |T| itself;
+
+%% \item It is declared as a \CSPM{datatype}, and one of the branches uses a set
+%%   built from |T|;
+
+%% \item It is defined using a set comprehension, and one of the generators is
+%%   over a set built from~|T|;
+
+%% \item It is defined as a productions set (\CSPM{\{\|...\|\}}) where the
+%% extensions (i.e.~the missing fields)  are built from~|T|.
+%% \end{itemize}
+%% %
+%% A channel is \emph{built from~|T|} if its type uses a type built from~|T|.
+%% \end{definition}
+ 
+%%%%%
+
+
+
+
+We allow replicated operators that are indexing over sets that are independent
+of~|T|.  However, we do not allow most replicated operators to be indexed over
+a set built from~|T|.  For example, we don't allow a process such as \CSPM{P =
+**||| x <- T @ Q(x)}:  different values of |T| would lead to different numbers
+of processes would be interleaved, and so the behaviours would not be related
+as we require.  
+
+By contrast, we do allow external choices and nondeterministic
+choices to be indexed over a set built from~|T|, for example~\CSPM{**|~| x <-
+T @ Q(x)}.  The reason we can allow this is that external and nondeterministic
+choices are idempotent: if $f(x) = f(x')$, then including both $\M{Q}(f(x))$
+and $\M{Q}(f(x'))$ in the choice is the same as including just one of them. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Restricting sets}
+
+We need to place various restrictions upon how sets based on~|T| are defined,
+in particular on the use of set comprehensions.  The examples below
+investigate this.  In each of these examples, we let 
+\[
+T_1 = \set{A,B}, \quad T_2 = \set{C}, \quad f(A) = f(B) =  C.
+\]
+We will formalise the restrictions on sets in Definitions~\ref{def:invariant}
+and~\ref{defn:data-independent}. 
+
+We need to restrict the set of events hidden by the hiding operator.  
+%
+\begin{example}
+Consider the following process.
+\begin{cspm}
+P = (in?x1 -> in?x2 -> c2.x1.x2 -> STOP) \ {c2.x.x | x <- T}
+\end{cspm}
+%% Let
+%% \[
+%% T_1 = \set{A,B}, \quad T_2 = \set{C}, \quad f(A) = f(B) =  C.
+%% \]
+Then $P[T_2]$ has trace $\seq{\M{in}.A, \M{in}.B, \M{c2}.A.B}$, but $P[T_1]$
+doesn't have the corresponding trace $\seq{\M{in}.C, \M{in}.C, \M{c2}.C.C}$,
+contrary to equation~(\ref{eqn:traces}), because the final event would be
+hidden.  In effect, the definition of the set of hidden events introduces an
+equality test between the two data values.
+\end{example}
+
+%%%%%
+
+To avoid situations like this, we will require that in each hidden set defined
+by a set comprehension $\{ e \| stmts\}$, each identifier $x$ that appears in
+$e$ and that depends on~|T| occurs at most once in~$e$.  This would ban the
+expression \CSPM{\{c2.x.x \| x <- T\}} that caused problems above, because~|x|
+appears twice in the term~|c2.x.x|.
+
+Similar examples show that we need to restrict, in the same way, the sets
+used for alphabets or synchronisation sets in parallel compositions, and the
+set of thrown events for the exception operator.
+
+We need the same restrictions on the types of channels.  
+%
+\begin{example}
+Consider the following.
+\begin{cspm}
+datatype PairB = Two.T.T.Bool
+channel two : union({Two.x.x.true | x <- T}, {Two.x.y.false | x <- T, y <- T})
+P = in?x -> in?y -> two.Two.x.y?b -> STOP
+\end{cspm}
+%
+The definition of the type of the channel~|two| means that two identical data
+values can be tagged with either |true| or |false|, but two different values
+can be tagged only with~|true|\footnote{The use of the {\cspmfont PairB} type
+  and {\cspmfont Two} type constructor is necessary to meet FDR's requirements
+  that the alphabet of each channel is rectangular, i.e.~the cartesian product
+  of sets of complete values; they aren't otherwise important for this
+  example.}.  
+%
+The $P$ processes do not satisfy equation~(\ref{eqn:failures}), in general.
+Let $T_1$, $T_2$ and~$f$ be as above.  Then $P[T_1]$ has a failure
+\[
+(\trace{\M{in}.A, \M{in}.B},\; 
+  \set{\M{two.Two}.x.y.\M{true} \| x \in \set{A,B}, y \in \set{A,B}}),
+\]
+because, after that trace, the ``|?b|'' ranges over $\set{\M{false}}$.  
+However,  $P[T_2]$ does not have the corresponding failure
+\[
+(\trace{\M{in}.C, \M{in}.C},\; \set{\M{two.Two}.C.C.\M{true}}),
+\]
+because, after that trace, the ``|?b|'' ranges over $\set{\M{true,false}}$.
+In effect, the declaration of the type of~|two| has introduced an implicit
+equality test: the ``|?b|'' is equivalent to ``\CSPM{?b:(if x==y
+then \{true,false\} else \{false\})}''.
+\end{example}
+
+%%%%%
+
+We avoid this problem by imposing the same restriction as for hiding: we do
+not allow an identifier to appear twice in the term defining the events, which
+bans the expression \CSPM{\{Two.x.x.true \| x <- T\}}.
+
+%%%%%
+
+Perhaps surprisingly, we don't need a similar restriction for selective inputs
+in prefixes.  For example we allow a prefixing construct such
+as \CSPM{c2?pair:\{x.x \| x <- T\}}.  Indeed, that construct is equivalent
+to \CSPM{c2?x!x}.  Of course, when used in a parallel composition, any
+synchronising process would have to accept an arbitrary value for the second
+field to prevent implicit equality tests in that process.
+
+%%%%%
+
+The following definition describes syntactic conditions on set expressions
+that avoid the problems identified above.  We will impose this restriction as
+clause~\ref{item:di-invariant} of Definition~\ref{defn:data-independent}.
+%
+\begin{definition}
+\label{def:invariant}
+We say that a definition of a set is \emph{invariant} if it is of one of the
+following forms:
+%
+\begin{enumerate}
+\item A definition that is independent of~|T|.
+
+\item\label{item:invariant-2} A set comprehension $\M\{ e \,\M\| stmts \M\}$
+or a productions set comprehension $\M{\{\|} e \,\M\| stmts \M{\|\}}$, such
+that for every identifier $x$ that appears in $e$ and that depends on~|T|:
+  % 
+  \begin{itemize}
+  \item $x$~is bound by a generator $x \,\M{<-}\, s_x$ in $stmts$, where $s_x$ is
+  itself invariant: 
+  \item $x$~occurs only once in~$e$; and
+  \item $x$ is not used in any predicate in $stmts$, or in the set~$s$ used in
+  any subsequent generator $pat \,\M{<-} s$ (whether or not $pat$ uses values of
+  type~|T|). 
+  \end{itemize}
+
+\item The name of a datatype (including |T|). 
+
+\item A name $y$ that is bound by a declaration $y = S$, where $S$ is itself
+invariant. 
+
+\item \CSPM{union(S1, S2)} where |S1| and |S2| are each invariant. 
+\end{enumerate}
+\end{definition}
+
+%%%%%%%%%%
+
+For example, the set comprehension 
+\begin{cspm}
+{ c2o.x.sy | x <- T, sy <- {Some.y | y <- T} }
+\end{cspm}
+is invariant.
+
+Note that the cases of a set comprehension or a productions set comprehension
+allow the statements $stmts$ to be empty, corresponding to a simple expression
+$\M\{ e \M\}$ or $\M{\{\|} e \M{\|\}}$.  In such cases, the expression~$e$ may
+contain no identifier that depends on~|T|. 
+
+We included a restriction that the set of a generator doesn't use an earlier
+bound variable.  In fact, this restriction is implied by the other parts of
+the definition; but we make it explicit for clarity.  This prevents
+expressions such as
+\CSPM{\{c2.x.y \| x <- T, y <- \{x\}\}}, which would produce a set that we
+want to disallow.   
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Renamings.}
+
+We need a similar restriction for renamings.  
+\begin{example}
+Consider
+%
+\begin{cspm}
+channel d
+P = (in?x -> in?y -> c2.x.y -> STOP)[[ c2.x.x <- d | x <- T ]]
+\end{cspm}
+%
+Let $T_1$, $T_2$ and $f$ be as earlier.  Then $P[T_1]$ has trace
+$\trace{\M{in}.A, \M{in}.B, \M{c2}.A.B}$.  But $P[T_2]$ does not have the
+corresponding trace $\trace{\M{in}.C, \M{in}.C, \M{c2}.C.C}$, since the final
+event would get renamed to~|d|.  
+\end{example}
+%
+We prevent renamings such as ``\CSPM{c2.x.x <- d}'', which contains an
+implicit equality test.  (We define the restriction as
+item~\ref{item:di-renaming} of Definition~\ref{defn:data-independent}.)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Mappings.}  
+
+When a process using a map from the \CSPm\ API, we will require the domain
+type of that map to be independent of~|T|.  The following example shows why.
+%
+\begin{example}
+Consider the following process, which maintains a map |m| from~|T| to the set
+|{1,2,3}|, allowing it to be read or updated.
+\begin{cspm}
+channel get, set : T.{1,2,3}
+P(m) = 
+  get?k!mapLookup(k)-> P(m)
+  [] set?k?v -> P(mapUpdate(m, k, v))
+\end{cspm}
+Then $P[T_1]$ has trace $\trace{\M{set.A.1}, \M{set.B.2}, \M{get.A.1}}$, but
+$P[T_2]$ does not have the corresponding trace $\trace{\M{set.C.1},
+  \M{set.C.2}, \M{get.C.1}}$, as the final event should be |get.C.2|.
+\end{example}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Formal definition}
+
 The following definition captures our main assumption about the CSP script.
 %
 \begin{definition}
 \label{defn:data-independent}
-A CSP script is \emph{data-independent} for~$t$ if
+A CSP script is \emph{data-independent} for~|T| if
 \begin{enumerate}
-\item The only constants from~$t$ that appear are within the declaration
-  of the instantiation of~$t$.
+\item The only constants from~|T| that appear are within the declaration
+  of the instantiation of~|T|.
 
-\item There are no equality or inequality tests over values built from~$t$.
+\item There are no equality or inequality tests over values built from~|T|.
 
 \item\label{item:sync} When two processes synchronise on a channel built
-  from~$t$, for each field from~$t$ in the corresponding events, at least one
+  from~|T|, for each field from~|T| in the corresponding events, at least one
   of the processes is willing to accept an arbitrary value.
 
 \item\label{item:di-invariant} Every expression that produces a set is
   invariant (Definition~\ref{def:invariant}) for: (1) top-level declarations
   (which includes declarations used for channels and datatypes); (2) sets used
   in alphabets and synchronisation sets for parallel composition, the
-  exception operator, and hiding.
+  exception operator,  hiding, and projection.
 
-\item\label{item:di-renaming} For each renaming $\rename{e_1 \lArrow e_1',
-  \ldots, e_k \lArrow e_k' ~ \M\| stmts}$, for each~$i \in \set{1,\ldots,k}$,
-  and for each identifier~$x$ that appears in $e_i$ and that depends on~$t$:
+\item\label{item:di-renaming} For each renaming 
+  \( \rename{e_1 \lArrow e_1', \ldots, e_k \lArrow e_k' ~ \M\| stmts} \),
+  for each~$i \in \set{1,\ldots,k}$, and for each identifier~$x$ that appears
+  in $e_i$ and that depends on~|T|:
 %
   \begin{itemize}
   \item $x$ is bound by a generator $x \,\M{<-}\, s_x$ in $stmts$, where $s_x$
@@ -35,12 +390,18 @@ A CSP script is \emph{data-independent} for~$t$ if
   \item $x$ is not used in any predicate in $stmts$, or in the set~$s$ used in
   any subsequent generator $pat \,\M{<-} s$.
   \end{itemize}
+%
+  The same requirements hold for each instance of the link parallel operator,
+  \( [ e_1 \,\M{<->} e_1', \ldots, e_k \,\M{<->} e_k' ~ \M\| stmts ], \)
+  except the requirements must hold for every identifier~$x$ that appears in
+  either~$e_i$ or~$e_i'$, and $x$ must occur at most once in each of~$e_i$
+  and~$e_i'$.
 
 \item\label{item:indexing} For each use of the replicated parallel operators
   (replicated alphabetised parallel, replicated generalised parallel,
   replicated interleaving, and replicated link parallel), and for replicated
   sequential composition, the statements that generate the component processes
-  make no use of~$t$. 
+  make no use of~|T|. 
 
 
 \item\label{item:built-in-functions} The script does not apply any of the
@@ -53,12 +414,10 @@ A CSP script is \emph{data-independent} for~$t$ if
 
     \item the map function |mapToList|;
 
+    \item the relation function |mstransclose|;
+
     \item the function |show|.
   \end{itemize}
-  %%  \CSPM{member}, \CSPM{card}, \CSPM{inter}, \CSPM{diff}, \CSPM{seq},
-  %% \CSPM{mapToList},
-  \CSPM{mtransclose} or \CSPM{show} to a value built from~$t$.
-  \framebox{\ldots -- as in functions section}. 
 
 \item The script makes no use of any compression function.
   %% s \CSPM{deter},

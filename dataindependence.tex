@@ -33,6 +33,7 @@
 \def\semanticRename#1{{[\![}#1{]\!]}} % semantics
 \def\CSPm{CSP$_M$}
 \def\banana#1{\mathord{(\!\|} #1 \mathord{\|\!)}}
+\def\mset#1{\mathord{\{\!\|} #1 \mathord{\|\!\}}}
 \def\Let{{\mathrm{let}\ }}
 \def\unit{u}
 \def\unitf{\Pi}
@@ -94,15 +95,15 @@
 
 Constants.  Suppose we have a script that uses a type
 \begin{cspm}
-datatype t = A | B | C
+datatype T = A | B | C
 \end{cspm}
 and where |A| is used as a constant.
 Can transform into a script 
 \begin{cspm}
-datatype t = B | C
-datatype tt = A | Simple.t
+datatype T = B | C
+datatype TT = A | Simple.T
 \end{cspm}
-and using |tt| in place of |t|.
+and using |TT| in place of |T|.
 
 %%%%%
 
@@ -112,8 +113,8 @@ and using |tt| in place of |t|.
 \input{proof}
 \input{proof1}
 \input{proof2}
-\input{proof3} % bindDecls
 \input{proof4} % imports: proof4-functions; proof4-processes -> proof4-prefix,
                % proof4-renaming
+\input{proof3} % bindDecls
 \input{proof5}
 \end{document}

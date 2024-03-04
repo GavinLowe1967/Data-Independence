@@ -34,12 +34,12 @@ via a case analysis.
 \begin{calc}
 & f(\evalStmt \rho ~pred) \\
 = & f(\If \eval \rho~pred \Then \seq{\rho} \Else \seq{}) \\
-= & \com{$\eval \rho~pred = f(\eval \rho~pred)$, since it is independent of~$t$}
-\\
+= & \com{$\eval \rho~pred = f(\eval \rho~pred)$, since it is independent
+  of~\CSPM{T}} \\
  & \If f(\eval \rho~pred) \Then f(\seq{\rho}) \Else f(\seq{}) \\
 = & \com{clause \ref{item:eval}} \\
 & \If \eval (f(\rho)~pred \Then \seq{f(\rho)} \Else \seq{} \\
-& = \evalStmt (f(\rho)) ~ pred.
+= & \evalStmt (f(\rho)) ~ pred.
 \end{calc}
 \end{itemize}
 
@@ -75,39 +75,7 @@ inductive case:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% We show that $f(\evalStmtSet \rho ~stmt) = \evalStmtSet (f(\rho))~stmt$.
 
-%% Case $pat \lArrow e$.
-%% %
-%% \begin{calc}
-%% & f(\evalStmtSet \rho ~(pat \lArrow e)) \\
-%% = & f(\set{ \bind \rho ~pat~v \| v \in \eval \rho~e,\, \matches \rho~pat~v}) \\
-%% = & \set{ f(\bind \rho ~pat~v) \| v \in \eval \rho~e,\, \matches \rho~pat~v} \\
-%% = & \com{clauses~\ref{item:matches} and~\ref{item:bind}} \\
-%% & \set{ \bind (f(\rho)) ~pat~(f(v)) \| v \in \eval \rho~e,\,
-%%     \matches (f(\rho))~pat~f(v) } \\
-%% = & \com{letting $w = f(v)$} \\
-%% & \set{ \bind (f(\rho) ~pat~w \| w \in f(\eval \rho~e),\,
-%%     \matches (f(\rho))~pat~w} \\
-%% = & \com{clause \ref{item:eval}} \\
-%% & \set{ \bind (f(\rho) ~pat~w \| w \in \eval (f(\rho)~e,\,
-%%     \matches (f(\rho))~pat~w } \\
-%% = & \evalStmtSet (f(\rho)) ~(pat \lArrow e)).
-%% \end{calc}
-
-%% Case a predicate $pred$.
-%% %
-%% \begin{calc}
-%% & f(\evalStmtSet \rho ~pred) \\
-%% = & f(\If \eval \rho~pred \Then \set{\rho} \Else \set{}) \\
-%% = & \com{$\eval \rho~pred = f(\eval \rho~pred)$, since it is independent of~$t$}
-%% \\
-%%  & \If f(\eval \rho~pred) \Then f(\set{\rho}) \Else f(\set{}) \\
-%% = & \com{clause \ref{item:eval}} \\
-%% & \If \eval (f(\rho)~pred \Then \set{f(\rho)} \Else \set{} \\
-%% & = \evalStmtSet (f(\rho)) ~ pred.
-%% \end{calc}
-
-The proofs for set-generating statements are almost identical. 
+The proofs for set-generating statements are essentially identical. 
 
 
