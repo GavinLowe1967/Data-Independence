@@ -114,71 +114,136 @@ produces $(w,w')$ for some $w'$ such that $f(v') = f(w')$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  
-
 Consider a syntactic renaming $\rename{ren}$, which corresponds to a
-semantic renaming $R$ (i.e.~a set of pairs).  When applied to a LTS~$P$, each
-state $(Q,\rho)$ of~$P$ is replaced by $(Q\M{[[}ren\M{]]}, \rho)$, and the
-transitions renamed according to~$R$.  We denote this renamed LTS
-$P\rename{R}^{ren}$.
+semantic renaming $R$ (i.e.~a set of pairs).  When applied to an ALTS~$L$, each
+state $(Q,\rho)$ of~$L$ is replaced by $(Q\M{[[}ren\M{]]}, \rho)$, and the
+transitions renamed according to~$R$.  We denote this renamed ALTS
+$L\rename{R}^{ren}$.
+
+We then have
+\[
+\eval \rho~(P\rename{ren}) = (\eval \rho~ P)\rename{R}^{ren} 
+  \quad \mbox{where $R = \eval \rho ~\rename{ren}$}.
+\]
+But $\eval (f(\rho)) ~\rename{ren} = f(\eval \rho ~\rename{ren}) = f(R)$, by
+Lemma~\ref{lem:eval-renaming}.  Hence
+\[
+\eval (f(\rho))~(P\rename{ren}) = (\eval (f(\rho))~ P)\rename{f(R)}^{ren}.
+\]
+
+We show that $\eval \rho~(P\rename{ren}) \bisim_f \eval
+(f(\rho))~(P\rename{ren})$.
 %
-\begin{lemma}
-\label{lem:renaming-f}
-Let $P$ be an LTS, $\rename{ren}$ a syntactic renaming, and $R$ the
-corresponding renaming relation.  Then
-%
-\begin{eqnarray*}
-f(P\rename{R}^{ren}) & = & (f(P))\rename{f(R)}^{ren}.
-\end{eqnarray*}
-%
-\end{lemma}
+\begin{enumerate}
+\item Suppose, in $\eval \rho~(P\rename{ren})$, there is a transition
+\[
+(Q\rename{ren}, \rho_0) \trans{a'}_{T_1} (Q'\rename{ren}, \rho').
+\]
+Then in $\eval \rho~ P$ there is a transition
+\[
+(Q, \rho_0) \trans{a}_{T_1} (Q', \rho'), \quad \mbox{such that $(a,a') \in R$}.
+\]
+So by the inductive hypothesis, in $\eval (f(\rho)) P$, there is a transition 
+\[
+(Q, f(\rho_0)) \trans{f(a)}_{T_2} (Q', f(\rho')).
+\]
+But $(f(a), f(a')) \in f(R)$, so, in 
+% \eval (f(\rho))~(P\rename{ren}) = 
+$(\eval (f(\rho))~ P)\rename{f(R)}^{ren}$, there is a transition
+\[
+(Q\rename{ren}, f(\rho_0)) \trans{f(a')}_{T_2} (Q'\rename{ren}, f(\rho')).
+\]
 
-%%%%%
+\item Suppose, in $(\eval (f(\rho))~ P)\rename{f(R)}^{ren}$, there is a
+transition 
+\[
+(Q\rename{ren}, f(\rho_0)) \trans{b'}_{T_2} (Q'\rename{ren}, f(\rho')).
+\]
+Then, in $\eval (f(\rho))~ P$, there is a transition
+\[
+(Q, f(\rho_0)) \trans{b}_{T_2} (Q', f(\rho')), 
+  \quad \mbox{such that $(b,b') \in f(R)$}.
+\]
+Then by the inductive hypothesis, in $\eval \rho~P$, there is a transition
+\[
+(Q, \rho_0) \trans{a}_{T_1} (Q', \rho''), 
+  \quad \mbox{such that $f(a) = b$ and $f(\rho'') = \rho'$}.
+\]
+Now, $(b,b') \in f(R)$, so there exists $(v,v') \in R$ such that $f(v) = b$
+and $f(v') = b'$.  But then $f(v) = b =  f(a)$, so by
+Lemma~\ref{lem:renaming-invariant}, there exists $c$ such that $(a,c) \in R$
+and $f(v') = f(c)$.  Then, in $\eval \rho~(P\rename{ren})$, there is a
+transition 
+\[
+(Q\rename{ren}, \rho_0) \trans{c}_{T_1} (Q'\rename{ren}, \rho''), 
+  % \quad \mbox{such that $f(c) = b'$}.
+\]
+with $f(c) = f(v') = b'$.
+\end{enumerate}
 
-\begin{proof}
-For each state $(Q,\rho)$ of~$P$, each side of the equation will have a
-state $(Q\rename{ren}, f(\rho))$.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% On each side, each state $Q$ of $P$ is replaced by $f(Q)$ (here each state $Q$
-%% will be a pair $(QQ\M{[[}ren\M{]]}, \rho)$, where $QQ$ is a syntactic
-%% process, \M{[[}ren\M{]]} is a syntactic renaming, and $\rho$ is an
-%% environment). 
+%% \subsection{Cut?}
 
-Suppose that $P$ contains a transition $(Q,\rho) \trans{e} (Q',\rho')$.  Then
-$P\rename{R}^{ren}$ contains a transition $(Q\rename{ren},\rho) \trans{e'}
-(Q'\rename{ren},\rho')$ for every $(e,e') \in R$; and so the left-hand side
-contains a transition $(Q\rename{ren}, f(\rho)) \trans{f(e')}
-(Q'\rename{ren}, {f(\rho')})$.  And $f(P)$ contains a transition $(Q,
-f(\rho)) \trans{f(e)} (Q', f(\rho'))$; so the right-hand side contains
-a transition $(Q\rename{ren}, f(\rho)) \trans{e''} (Q'\rename{ren},
-{f(\rho')})$ for every $e''$ such that $(f(e), e'') \in f(R)$.  We show
-that these transitions correspond.
-%
-\begin{itemize}
-\item Consider such a transition of the left-hand side labelled with~$f(e')$.
-Then $(e,e') \in R$ implies $(f(e),f(e')) \in f(R)$, so the right-hand side
-  has a corresponding transition.
+%% %
+%% \begin{lemma}
+%% \label{lem:renaming-f}
+%% Let $P$ be an LTS, $\rename{ren}$ a syntactic renaming, and $R$ the
+%% corresponding renaming relation.  Then
+%% %
+%% \begin{eqnarray*}
+%% f(P\rename{R}^{ren}) & = & (f(P))\rename{f(R)}^{ren}.
+%% \end{eqnarray*}
+%% %
+%% \end{lemma}
 
-\item Consider such a transition of the right-hand side labelled with~$e''$.
-  If $(f(e), e'') \in f(R)$ then there is some $(e_1,e_2) \in R$ such that
-  $f(e) = f(e_1)$ and $e'' = f(e_2)$.  But then
-  Lemma~\ref{lem:renaming-invariant} implies $(e,e_3) \in R$ for some $e_3$
-  such that $f(e_3) = f(e_2) = e''$.  Hence the left-hand side has a
-  corresponding transition labelled with $f(e_3) = e''$.
-\end{itemize}
-\end{proof}
+%% %%%%%
 
-%%%%%
+%% \begin{proof}
+%% For each state $(Q,\rho)$ of~$P$, each side of the equation will have a
+%% state $(Q\rename{ren}, f(\rho))$.
 
-Let $\rename{ren} = \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow
-e_k' \| stmts}$ be a renaming.  We show that clause~\ref{item:eval} is
-satisfied for the application of~$ren$ to a process~$P$.
-%
-\begin{calc}
-& f(\eval \rho ~ (P~\rename{ren})) \\
-= & f( (\eval \rho~P) \rename{ \eval \rho~ren }^{ren} ) \\
-= & \com{Lemma \ref{lem:renaming-f}} \\
-  &  (f(\eval \rho~P)) \rename{ f(\eval \rho~ren) }^{ren} \\
-= & \com{inductive hypothesis; Lemma \ref{lem:eval-renaming}} \\
-  &  (\eval (f(\rho))~P)) \rename{ \eval (f(\rho))~ren }^{ren} \\
-= & \eval (f(\rho)) (P~\rename{ren}).
-\end{calc}
+%% %% On each side, each state $Q$ of $P$ is replaced by $f(Q)$ (here each state $Q$
+%% %% will be a pair $(QQ\M{[[}ren\M{]]}, \rho)$, where $QQ$ is a syntactic
+%% %% process, \M{[[}ren\M{]]} is a syntactic renaming, and $\rho$ is an
+%% %% environment). 
+
+%% Suppose that $P$ contains a transition $(Q,\rho) \trans{e} (Q',\rho')$.  Then
+%% $P\rename{R}^{ren}$ contains a transition $(Q\rename{ren},\rho) \trans{e'}
+%% (Q'\rename{ren},\rho')$ for every $(e,e') \in R$; and so the left-hand side
+%% contains a transition $(Q\rename{ren}, f(\rho)) \trans{f(e')}
+%% (Q'\rename{ren}, {f(\rho')})$.  And $f(P)$ contains a transition $(Q,
+%% f(\rho)) \trans{f(e)} (Q', f(\rho'))$; so the right-hand side contains
+%% a transition $(Q\rename{ren}, f(\rho)) \trans{e''} (Q'\rename{ren},
+%% {f(\rho')})$ for every $e''$ such that $(f(e), e'') \in f(R)$.  We show
+%% that these transitions correspond.
+%% %
+%% \begin{itemize}
+%% \item Consider such a transition of the left-hand side labelled with~$f(e')$.
+%% Then $(e,e') \in R$ implies $(f(e),f(e')) \in f(R)$, so the right-hand side
+%%   has a corresponding transition.
+
+%% \item Consider such a transition of the right-hand side labelled with~$e''$.
+%%   If $(f(e), e'') \in f(R)$ then there is some $(e_1,e_2) \in R$ such that
+%%   $f(e) = f(e_1)$ and $e'' = f(e_2)$.  But then
+%%   Lemma~\ref{lem:renaming-invariant} implies $(e,e_3) \in R$ for some $e_3$
+%%   such that $f(e_3) = f(e_2) = e''$.  Hence the left-hand side has a
+%%   corresponding transition labelled with $f(e_3) = e''$.
+%% \end{itemize}
+%% \end{proof}
+
+%% %%%%%
+
+%% Let $\rename{ren} = \rename{ e_1 \leftarrow e_1', \ldots, e_k \leftarrow
+%% e_k' \| stmts}$ be a renaming.  We show that clause~\ref{item:eval} is
+%% satisfied for the application of~$ren$ to a process~$P$.
+%% %
+%% \begin{calc}
+%% & f(\eval \rho ~ (P~\rename{ren})) \\
+%% = & f( (\eval \rho~P) \rename{ \eval \rho~ren }^{ren} ) \\
+%% = & \com{Lemma \ref{lem:renaming-f}} \\
+%%   &  (f(\eval \rho~P)) \rename{ f(\eval \rho~ren) }^{ren} \\
+%% = & \com{inductive hypothesis; Lemma \ref{lem:eval-renaming}} \\
+%%   &  (\eval (f(\rho))~P)) \rename{ \eval (f(\rho))~ren }^{ren} \\
+%% = & \eval (f(\rho)) (P~\rename{ren}).
+%% \end{calc}

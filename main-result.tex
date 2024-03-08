@@ -1,6 +1,159 @@
 \section{Main result}
 \label{sec:main-result}
 
+%% \framebox{Words}.  We write $\trans{}_{T_1}$ and $\trans{}_{T_2}$ for the
+%% transition systems built using types~$T_1$ and~$T_2$, respectively. 
+
+%% \begin{definition}
+%% \label{def:ALTS-respects-f}
+%% Given ALTSs $L_1$ and $L_2$ over~$T_1$ and~$T_2$, respectively, we say $L_1$
+%% and~$L_2$ are \emph{$f$-bisimilar}, written $L_1 \bisim_f L_2$ if
+%% %We say that $(P,\rho)$ \emph{respects~$f$} if:
+%% %
+%% \begin{enumerate}
+%% \item For every transition $(P, \rho) \trans{a}_{T_1} (P', \rho')$ in~$L_1$,
+%%   there is a transition $(P, f(\rho)) \trans{f(a)}_{T_2} (P', f(\rho'))$
+%%   in~$L_2$;
+
+%% \item For every transition $(P, f(\rho)) \trans{b}_{T_2} (P', \rho')$
+%%   in~$L_2$, there is a transition $(P, \rho) \trans{a}_{T_1} (P', \rho'')$
+%%   in~$L_1$ such that $f(a) = b$ and $f(\rho'') = \rho'$.
+%% %% \[
+%% %% \exists a, \rho'' \spot
+%% %%   (P, \rho) \trans{a}_{T_1} (P', \rho'') \land f(a) = b \land f(\rho'') = \rho'.
+%% %% \]
+
+%% \item if $s_1$ and $s_2$ are the initial states of $L_1$ and $L_2$,
+%%    then $f(s_1) = s_2$. 
+%% \end{enumerate}
+%% %We say that an ALTS respects~$f$ if every state respects~$f$. 
+%% \end{definition}
+
+%% We will show that $\eval \rho~P \bisim_f \eval (f(\rho))~P$ for all process
+%% expressions~$P$.  Note that clause~3 holds immediately: the two initial states
+%% are $(P,\rho)$ and $(P,f(\rho))$, respectively.  \framebox{words}  
+
+%% The following lemma shows that if two ALTSs are $f$-bisimilar, there is an
+%% obvious correspondence between the states.  Recall that we assume the ALTSs
+%% are connected: every state is reachable from the initial state.
+%% %
+%% \begin{lemma}
+%% \label{lem:f-bisim-implies-states}
+%% If $L_1 \bisim_f L_2$ then
+%% %
+%% \begin{enumerate}
+%% \item For each state $(Q,\rho)$ in $L_1$, there is a state $(Q,f(\rho))$
+%%   in~$L_2$;
+
+%% \item For each state $(Q,\rho')$ in $L_2$, there is a state $(Q,\rho)$
+%%   in~$L_1$ such that $\rho' = f(\rho)$.
+%% \end{enumerate}
+%% \end{lemma}
+%% %
+%% \begin{proof}
+%% Each clause can be proven by induction over the length of the path leading to
+%% the presumed state, and constructing a corresponding path to the required
+%% state in the other ALTS. 
+%% \end{proof}
+
+
+%% %%%%%%%%%%
+
+%% \begin{lemma}
+%% \label{lem:ALTS-respects-f-implication}
+%% If $\eval \rho~P \bisim_f \eval (f(\rho))~P$, then $f(\eval \rho~P) = \eval
+%% (f(\rho))~P$.
+%% \end{lemma}
+
+%% Note: the former is built using~$T_1$ then renamed; the latter is built
+%% using~$T_2$. 
+
+%% \begin{proof}
+%% Each of $f(\eval \rho~P)$ and $\eval (f(\rho))~P$ has initial state
+%% $(P,f(\rho))$.  We show that the transitions of the ALTSs match, and hence the
+%% subsequent states match.
+
+%% Suppose in  $f(\eval \rho~P)$ there is a transition $(Q,\rho_1)
+%% \trans{b} (Q',\rho_1')$.  Then in $\eval \rho~P$ there is a transition
+%% $(Q,\rho_0) \trans{a}_{T_1} (Q',\rho_0')$ such that $f(a) = b$,\, $f(\rho_0) =
+%% \rho_1$ and $f(\rho_0') = \rho_1'$.  But $\eval \rho~P \bisim_f \eval
+%% (f(\rho))~P$
+%% % $(Q,\rho_0)$ respects~$f$ 
+%% so $(Q, f(\rho_0)) \trans{f(a)}_{T_2} (Q',f(\rho_0'))$, i.e.~$(Q,\rho_1)
+%% \trans{b}_{T_2} (Q',\rho_1')$.
+
+%% Now suppose in $\eval (f(\rho))~P$ there is a transition $(Q,\rho_1)
+%% \trans{b}_{T_2} (Q',\rho_1')$.  By Lemma~\ref{lem:f-bisim-implies-states},
+%% there is a  state $(Q,\rho_0)$ in $\eval \rho~P$ such that $\rho_1 =
+%% f(\rho_0)$.  But $\eval \rho~P \bisim_f \eval (f(\rho))~P$,
+%% % $(Q,\rho_0)$ respects $f$,
+%% so there is a transition $(Q,\rho_0) \trans{a}_{T_1} (Q',\rho_0')$ such that
+%% $f(a) = b$ and $f(\rho_0') = \rho'$.  So $f(\eval \rho~P)$ has a transition
+%% $(Q,f(\rho_0)) \trans{f(a)} (Q',f(\rho_0'))$, i.e., $(Q,\rho_1) \trans{b}
+%% (Q',\rho_1')$.
+%% \end{proof}
+
+%% %%%%%
+
+%% The following example shows that the converse of the above lemma doesn't hold
+%% in general.  It considers a process~$P$ that satisfies $f(\eval \rho~P) =
+%% \eval (f(\rho))~P$, but $\eval \rho~P \not\bisim_f \eval (f(\rho))~P$.  The
+%% example considers a process that does not satisfy our assumptions of
+%% Definition~\ref{defn:data-independent}: this is necessary since part of
+%% Proposition~\ref{prop:expressions} shows that for every process~$P$ that
+%% satisfies Definition~\ref{defn:data-independent} is such that $\eval \rho~P
+%% \bisim_f \eval (f(\rho))~P$.
+%% %
+%% \begin{example}
+%% Consider the process 
+%% \begin{eqnarray*}
+%% P = in?x?y \then \If x = y \Then a \then STOP \Else STOP,
+%% \end{eqnarray*}
+%% and let $T_1 = \set{A,B}$, and $f(A) = f(B) = C$.  
+%% %
+%% Consider the state $(Q,\rho_1)$, for~$T_1$, where
+%% %
+%% \begin{eqnarray*}
+%% Q & = & \If x = y \Then a \then STOP \Else STOP, \\
+%% \rho_1 & =  & \set{x \mapsto A, y \mapsto B}.
+%% \end{eqnarray*}
+%% %
+%% Then the state $(Q, \rho_1)$ has no transition to match the transition
+%% \[
+%% (Q, f(\rho_1)) = (Q, \set{x \mapsto C, y \mapsto C}) \trans{a}_{T_2} 
+%%   (STOP, \set{x \mapsto C, y \mapsto C}),
+%% \]
+%% so  $\eval \rho~P \not\bisim_f \eval (f(\rho))~P$.
+
+%% Nevertheless, $f(\eval \rho~P) = \eval (f(\rho))~P$.  For example, applying
+%% $f$ to the ALTS merges the two states, $(Q,\rho_1)$ and $(Q,\rho_2)$, where
+%% $\rho_2 = \set{x \mapsto A,\linebreak[1] {y \mapsto A}}$, since $f(\rho_1) =
+%% f(\rho_2)$: this gives a state with a transition 
+%% \[
+%% (Q, \set{{x \mapsto C}, y \mapsto C}) \trans{a}
+%%    (STOP, \set{x \mapsto C, y \mapsto C}),
+%% \]
+%% matching the transition in $\eval (f(\rho))~P$.
+%% \end{example}
+
+%% We have
+%% \[
+%% (Q, \rho_1) \trans{a} STOP \qquad\mbox{but}\qquad   (Q, \rho_2) \not \trans{a} .
+%% \]
+%% Let $f(A) = f(B) = C$.  Then applying $f$ to the ALTS merges these two states,
+%% since $f(\rho_1) = f(\rho_2)$, 
+%% and gives a state with a transition
+%% \[
+%% (Q, \set{x \mapsto C, y \mapsto C}) \trans{a} STOP ,
+%% \]
+%% matching a corresponding transition for $\eval (f(\rho))~P)$.  However, the
+%% state $(Q, \rho_2)$ does not respect~$f$, but it has no transition to
+%% transition $(Q, f(\rho_2)) \trans{a}_{T_2} STOP$.
+%% \rho_2 & = & \set{x \mapsto A, y \mapsto A}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 We are now ready to present the main result.
 %
 \begin{prop}
@@ -32,8 +185,14 @@ f  (\bind \rho~pat~v) & = & \bind (f(\rho))~pat~(f(v)).
 \begin{eqnarray*}
 f(\eval \rho ~ e) & = \eval (f(\rho)) ~e .
 \end{eqnarray*}
+%
+Further:
+\begin{itemize}
+\item If $\eval \rho~e$ gives an ALTS, then $\eval \rho~e \bisim_f \eval
+  (f(\rho)) ~e$. 
 
-Further, if $\eval \rho ~ e$ gives a function~$g$, then $g$ respects~$f$. 
+\item If $\eval \rho ~ e$ gives a function~$g$, then $g$ respects~$f$. 
+\end{itemize}
 
 %%%%%
 

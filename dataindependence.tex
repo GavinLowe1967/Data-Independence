@@ -44,6 +44,8 @@
 \def\rename#1{\M{[[} #1 \M{]]}\!}
 \def\lArrow{\mathbin{\M{<-}}}
 \def\throw#1{\mathbin{[\|#1\|\rangle}} % ]
+\def\parallel#1{\mathbin{{[\|} #1 {\|]}}}
+\def\synPar#1{\mathbin{\M{[\|} #1 \M{\|]}}}
 %% Semantics 
 \def\channel{\mathop{\it channel}}
 \def\dtcons{\mathop{\it dtcons}}
@@ -52,6 +54,7 @@
 \def\traces{\mathop{\it traces}}
 \def\failures{\mathop{\it failures}}
 \def\divergences{\mathop{\it divergences}}
+\def\bisim{\sim}
 %% Semantic functions
 \def\eval{\mathop{\sf eval}}
 \def\evalField{\mathop{\sf evalField}}

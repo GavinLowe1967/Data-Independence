@@ -2,7 +2,7 @@
 
 We show that for every expression~$e$ in the script,
 \begin{eqnarray*}
-f(\eval \rho ~ e) & = \eval (f(\rho)) e .
+f(\eval \rho ~ e) & = & \eval (f(\rho)) e .
 \end{eqnarray*}
 
 We structure the proof as follows.  We start with non-process expressions.  In
@@ -17,12 +17,22 @@ Definition~\ref{defn:data-independent}); we also show that each such function
 respects~$f$.  In Section~\ref{sec:collections} we consider collections: sets,
 sequences and maps.
 
-We then move on to process expressions.  In Section~\ref{sec:basic-procs} we
-consider basic processes, and in Section~\ref{sec:prefixing} we consider the
-prefixing construct.  In Section~\ref{sec:sequential-procs} we consider
-non-replicated sequential operators; in Section~\ref{sec:parallel} we consider
-non-replicated parallel operators; and in Section~\ref{sec:replicated} we
-consider replicated operators.
+We then move on to process expressions.  Recall that we show 
+\begin{eqnarray*}
+\eval \rho ~ P & \bisim_f & \eval (f(\rho)) ~P
+\end{eqnarray*}
+%
+for each process expression~$P$, which implies $f(\eval \rho ~ P) = \eval
+(f(\rho)) P$.  Note that clause~3 of Definition~\ref{def:f-bisim} holds
+immediately: the two initial states are $(P,\rho)$ and $(P,f(\rho))$,
+respectively; our proofs concentrate on showing that the transitions match.
+%
+In Section~\ref{sec:basic-procs} we consider basic processes, and in
+Section~\ref{sec:prefixing} we consider the prefixing construct.  In
+Section~\ref{sec:sequential-procs} we consider non-replicated sequential
+operators; in Section~\ref{sec:parallel} we consider non-replicated parallel
+operators; and in Section~\ref{sec:replicated} we consider replicated
+operators.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,10 +1,10 @@
 \subsubsection{Prefixing}  
 \label{sec:prefixing}
 
-Consider the prefixing expression $e_c ~ f_1 \ldots f_n \then P$, where $e_c$
-is an expression that should evaluate to a possibly incomplete event (i.e.~a
-channel name with zero or more fields supplied), $n \ge 0$, and each~$f_i$ is
-a field of one of the following forms:
+Consider the prefixing expression $P = e_c ~ f_1 \ldots f_n \then Q$, where
+$e_c$ is an expression that should evaluate to a possibly incomplete event
+(i.e.~a channel name with zero or more fields supplied), $n \ge 0$, and
+each~$f_i$ is a field of one of the following forms:
   %
   \begin{itemize}
   \item $? pat$, where $pat$ is a pattern: this offers an external choice
@@ -48,7 +48,7 @@ a field of one of the following forms:
 
 \paragraph{Case of no \$-fields.} 
 
-Consider first a prefixing construct of the form ${e_c~{\it fields} \then P}$
+Consider first a prefixing construct of the form ${e_c~{\it fields} \then Q}$
 that contains no $\$$-fields.  We define the semantics of prefixing using a
 function
 \[
@@ -259,54 +259,77 @@ in~\cite{symmetry-reduction}).
 
 %%%%%%%%%%
 
-We now consider the process $e_c~ fs \then P$.  Let $c.v = \eval \rho~e_c$.
-Then $\eval (f(\rho))~e_c = c.f(v)$, by the inductive hypothesis.  Let
+We now consider the process $P = e_c~ fs \then Q$.  Let $c.v
+= \eval \rho~e_c$.  Then $\eval (f(\rho))~e_c = c.f(v)$, by the inductive
+hypothesis.  Let
 %
 \begin{eqnarray*}
-L & = & \eval \rho~ (e_c~ fs \then P), \\
+L & = & \eval \rho~ P, \\
 S & = & \evalFields \rho~(c.v)~fs, \\
-L' & = &  \eval (f(\rho))~ (e_c~fs \then P), \\
+L' & = &  \eval (f(\rho))~ P, \\
 S' & = & \evalFields (f(\rho))~(c.f(v))~fs.
 \end{eqnarray*}%
 %
-The above result shows $f(S) = S'$.  We need to show $f(L) = L'$.
+The above result shows $f(S) = S'$.  We need to show $f(L) = L'$, and that if
+$L$ is an ALTS then $L \bisim_f L'$.
+
+%  $f(L) = L'$.
 
 If $S = error$ then $S' = error$, and vice versa; but then each of $L$, $f(L)$
 and $L'$ equal error, so $f(L) = L'$, as required. 
 
-Otherwise, $L$ is an LTS as follows.
+Otherwise, $L$ is an ALTS\@.  We show $L \bisim_f L'$ which implies $f(L) =
+L'$ by Lemma~\ref{lem:ALTS-respects-f-implication}.  We can assume, by
+induction, that $\eval \rho'~ Q \bisim_f \eval (f(\rho'))~Q$, for
+each~$\rho'$, so it is enough to consider the initial transitions.  We follow
+Definition~\ref{def:f-bisim} (recall that clause~3 of that definition
+holds trivially):
 %
-\begin{itemize}
-\item The initial state is $(e_c~ fs \then P, \rho)$.
+\begin{enumerate}
+\item The initial transitions of $(P,\rho)$ are of the form
+$(P, \rho) \trans{a}_{T_1} (Q, \rho')$ with $(a,\rho') \in S$.  But then
+$(f(a), f(\rho')) \in f(S) = S'$, and so $(P, f(\rho)) \trans{f(a)}_{T_2} (Q,
+f(\rho'))$.
 
-\item For each $(a, \rho') \in S$, there is a transition labelled with $a$
-  from the initial state.  %  to $(P, \rho')$.
+\item The initial transitions of $(P, f(\rho))$ are of the form $(P,
+f(\rho)) \trans{b}_{T_2} (Q, \rho')$ with $(b,\rho') \in S' = f(S)$.  Then
+there exists $(a,\rho'') \in S$ such that $f(a) = b$ and $f(\rho'') = \rho'$,
+and so $(P,\rho) \trans{a}_{T_1} (Q,\rho'')$.
+\end{enumerate}
 
-\item For each $(a, \rho') \in S$, the sub-LTS following the transition of
-  the previous item equals $\eval \rho'~ P$.
-\end{itemize}
-%
-Then $f(L)$ is an  LTS as follows.
-%
-\begin{itemize}
-\item The initial state is $(e_c~fs \then P, f(\rho))$.
-  This is the same as the initial state of~$L'$.
+%%  as follows.
+%% %
+%% \begin{itemize}
+%% \item The initial state is $(e_c~ fs \then Q, \rho)$.
 
-\item From the initial state, for each $(a, \rho') \in S$, there is a
-transition labelled with $f(a)$.  Letting $a' = f(a)$ and $\rho'' = f(\rho')$,
-  this is equivalent to saying that for every $(a',\rho'') \in f(S) = S'$,
-  there is a transition labelled with~$a'$ from the initial state.  This is
-  the same as the initial transitions of~$L'$.
+%% \item For each $(a, \rho') \in S$, there is a transition labelled with $a$
+%%   from the initial state.  %  to $(Q, \rho')$.
 
-\item For each $(a, \rho') \in S$, the sub-LTS after the transition of the
-  previous item equals $f(\eval \rho'~ P)$.  But this equals $\eval
-  (f(\rho'))~P$, by the inductive hypothesis.  Letting $a' = f(a)$ and
-  $\rho'' = f(\rho')$, this is equivalent to saying that for every
-  $(a',\rho'') \in f(S) = S'$, the sub-LTS after this transition equals $\eval
-  \rho''~P$.  This is the same as for~$L'$.
-\end{itemize} 
-%
-Hence $f(L) = L'$, as required. 
+%% \item For each $(a, \rho') \in S$, the sub-LTS following the transition of
+%%   the previous item equals $\eval \rho'~ Q$.
+%% \end{itemize}
+%% %
+%% Then $f(L)$ is an  LTS as follows.
+%% %
+%% \begin{itemize}
+%% \item The initial state is $(e_c~fs \then Q, f(\rho))$.
+%%   This is the same as the initial state of~$L'$.
+
+%% \item From the initial state, for each $(a, \rho') \in S$, there is a
+%% transition labelled with $f(a)$.  Letting $a' = f(a)$ and $\rho'' = f(\rho')$,
+%%   this is equivalent to saying that for every $(a',\rho'') \in f(S) = S'$,
+%%   there is a transition labelled with~$a'$ from the initial state.  This is
+%%   the same as the initial transitions of~$L'$.
+
+%% \item For each $(a, \rho') \in S$, the sub-LTS after the transition of the
+%%   previous item equals $f(\eval \rho'~ Q)$.  But this equals $\eval
+%%   (f(\rho'))~Q$, by the inductive hypothesis.  Letting $a' = f(a)$ and
+%%   $\rho'' = f(\rho')$, this is equivalent to saying that for every
+%%   $(a',\rho'') \in f(S) = S'$, the sub-LTS after this transition equals $\eval
+%%   \rho''~Q$.  This is the same as for~$L'$.
+%% \end{itemize} 
+%% %
+%% Hence $f(L) = L'$, as required. 
 
 %%%%%%%%%%
 
@@ -376,68 +399,90 @@ f (\evalDollarFields \rho~(c.v)~fs) & = &
 by an induction on $fs$ (again, identical to the corresponding proof
 in~\cite{symmetry-reduction}).
 
-We now consider the process $e_c~ fs \then P$; recall we are assuming there is
+We now consider the process $e_c~ fs \then Q$; recall we are assuming there is
 at least one \$-field.  Let $c.v = \eval \rho~e_c$.  So $\eval
 (f(\rho))~e_c = f (\eval \rho~e_c) = c.f(v)$, using the inductive
 hypothesis.  So let
 \begin{eqnarray*}
-L & = & \eval \rho ~ (e_c~fs \then P), \\
+L & = & \eval \rho ~ (e_c~fs \then Q), \\
 S & = & \evalDollarFields \rho ~(c.v)~ fs, \\
-L' & = & \eval (f(\rho))~ (e_c~fs \then P), \\
+L' & = & \eval (f(\rho))~ (e_c~fs \then Q), \\
 S' & = & \evalDollarFields (f(\rho)) ~(c.f(v)) ~fs .
 \end{eqnarray*}%
 %
-The above result shows $f(S) = S'$.  We need to show $f(L) = L'$.
+The above result shows $f(S) = S'$.  We need to show $f(L) = L'$, and that if
+$L$ is an ALTS then $L \bisim_f L'$.
 
 If $S = \set{}$ then $S' = \set{}$, and vice versa.   But then each of $L$,
 $f(L)$ and~$L'$ equals $error$, so $f(L) = L'$, as required.  The case where
 $S$ and~$S'$ equal $error$ is similar.
 
-Otherwise, $L$ is an augmented LTS as follows.
-\begin{itemize}
-\item The initial state is $(e_c~fs \then P, \rho)$.
-
-\item From the initial state, for each $(fs',\rho') \in S$, there is a
-  $\tau$-transition to $(e_c~fs' \then P, \rho')$.
-
-\item For each $(fs',\rho') \in S$, the sub-LTS rooted at
-  $(e_c~fs' \then P, \rho')$ equals $\eval~\rho'~(e_c~fs' \then P)$.
-\end{itemize}
-
+Otherwise, $L$ is an ALTS\@.  We show $L \bisim_f L'$.  It is enough to
+consider the initial $\tau$-transitions; the cases for the subsequent visible
+transitions corresponding to the prefix are as in the case of no \$-fields;
+the cases for the transitions in~$Q$ again hold by induction.  Following
+Definition~\ref{def:f-bisim}:
 %
-Then $f(L)$ is an augmented LTS as follows.
-\begin{itemize}
-\item The initial state is
-  $(e_c~fs \then P, f(\rho))$.  This is the
-  same as the initial state of~$L'$.
+\begin{enumerate}
+\item The initial transitions of $(P,\rho)$ are of the form
+$(P,\rho) \trans{\tau}_{T_1} ({e_c~fs' \then Q}, \rho')$ with $(fs',\rho') \in
+S$.  But then $(fs', f(\rho')) \in f(S) = S'$, and so
+$(P,f(\rho)) \trans{\tau}_{T_2} (e_c~fs' \then Q, f(\rho'))$.
 
-\item From this initial state, for each $(fs',\rho') \in S$, there is a
-  $\tau$-transition to
-  \(
-  (e_c~fs' \then P, f(\rho')). 
-  \)
-  %since the only constants from~$\T$ must appear in~$fs'$ and~$v$.  
-  Letting $\rho'' = f(\rho')$, this is equivalent to
-  saying that for each $(fs',\rho'') \in f(S) = S'$, there is a
-  $\tau$-transition to $(e_c~fs' \then P,\linebreak[1] \rho'')$.
-  This is the same as the initial transitions of~$L'$.
+\item The initial transitions of $(P, f(\rho))$ are of the form $(P,
+f(\rho)) \trans{\tau}_{T_2} ({e_c~fs' \then Q}, \rho')$ with $(fs',\rho') \in
+S' = f(S)$.  Then there exists $(fs',\rho'') \in S$ such that $f(\rho'')
+= \rho'$, and so $(P,\rho) \trans{\tau}_{T_1} ({e_c~fs' \then Q}, \rho'')$.
+\end{enumerate}
 
-\item For each $(fs',\rho') \in S$, the sub-LTS rooted at
-  $(e_c~fs' \then  P,\linebreak[2]
-    {f(\rho')})$ is 
-  equal to 
-  \( f(\eval~\rho'~(e_c~fs' \then P)) . \)
-  But this equals $\eval~{(f(\rho'))} ~ (e_c~fs' \then P)$
-  using the result for the case that there are no \$-fields.
-  % (equation~(\ref{eqn:prefix-no-dollar})).  
-  Letting 
-  $\rho'' = f(\rho')$, this is equivalent to saying that for each
-  $(fs',\rho'') \in f(S) = S'$, the sub-LTS rooted at
-  $(e_c~fs' \then P, \linebreak[2] \rho'')$ is equal to
-  $\eval~\rho''~(e_c~fs' \then P)$.  This is the same as for~$L'$.
-\end{itemize}
-%
-Hence $f(L) = L'$, as required.
+
+
+
+%% Otherwise, $L$ is an augmented LTS as follows.
+%% \begin{itemize}
+%% \item The initial state is $(e_c~fs \then Q, \rho)$.
+
+%% \item From the initial state, for each $(fs',\rho') \in S$, there is a
+%%   $\tau$-transition to $(e_c~fs' \then Q, \rho')$.
+
+%% \item For each $(fs',\rho') \in S$, the sub-LTS rooted at
+%%   $(e_c~fs' \then Q, \rho')$ equals $\eval~\rho'~(e_c~fs' \then Q)$.
+%% \end{itemize}
+
+%% %
+%% Then $f(L)$ is an augmented LTS as follows.
+%% \begin{itemize}
+%% \item The initial state is
+%%   $(e_c~fs \then Q, f(\rho))$.  This is the
+%%   same as the initial state of~$L'$.
+
+%% \item From this initial state, for each $(fs',\rho') \in S$, there is a
+%%   $\tau$-transition to
+%%   \(
+%%   (e_c~fs' \then Q, f(\rho')). 
+%%   \)
+%%   %since the only constants from~$\T$ must appear in~$fs'$ and~$v$.  
+%%   Letting $\rho'' = f(\rho')$, this is equivalent to
+%%   saying that for each $(fs',\rho'') \in f(S) = S'$, there is a
+%%   $\tau$-transition to $(e_c~fs' \then Q,\linebreak[1] \rho'')$.
+%%   This is the same as the initial transitions of~$L'$.
+
+%% \item For each $(fs',\rho') \in S$, the sub-LTS rooted at
+%%   $(e_c~fs' \then  Q,\linebreak[2]
+%%     {f(\rho')})$ is 
+%%   equal to 
+%%   \( f(\eval~\rho'~(e_c~fs' \then Q)) . \)
+%%   But this equals $\eval~{(f(\rho'))} ~ (e_c~fs' \then Q)$
+%%   using the result for the case that there are no \$-fields.
+%%   % (equation~(\ref{eqn:prefix-no-dollar})).  
+%%   Letting 
+%%   $\rho'' = f(\rho')$, this is equivalent to saying that for each
+%%   $(fs',\rho'') \in f(S) = S'$, the sub-LTS rooted at
+%%   $(e_c~fs' \then Q, \linebreak[2] \rho'')$ is equal to
+%%   $\eval~\rho''~(e_c~fs' \then Q)$.  This is the same as for~$L'$.
+%% \end{itemize}
+%% %
+%% Hence $f(L) = L'$, as required.
 
 
 

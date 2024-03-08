@@ -27,55 +27,126 @@ We now consider non-replicated sequential operators.
 
 We start with external choice.
 %
-Below we write $\extchoice$ for a semantic operator: ``${P \extchoice Q}$''
-represents an external choice between~$P$ and~$Q$, each of which is an LTS\@.
-We show that
-%
-\begin{eqnarray*}
-f(P \extchoice Q) & = & f(P) \extchoice f(Q).
-\end{eqnarray*}
-%
-For every transition $P \trans{e} P'$, the initial state of each of the above
-processes has a transition labelled $f(e)$ to~$f(P')$; and similarly for
-transitions of~$Q$.
+Below we write $\extchoice$ for a semantic operator that takes two ALTSs and
+forms an external choice over them.  
+%% : ``${P \extchoice Q}$''
+%% represents an external choice between~$P$ and~$Q$, each of which is an LTS\@.
+So $\eval \rho~(P\; \M{[]} Q) = (\eval \rho~P) \extchoice (\eval \rho~Q)$,
+where the first ``$\M{[]}$'' is the syntactic operator, and the second
+$\extchoice$ is the semantic operator.  
 
-We then have the following (for syntactic expressions~$P$ and~$Q$; in the
-first and last lines, ``\CSPM{[]}'' is syntax; in other lines, it is the
-semantic operator):
+By induction, we can assume that $\eval \rho~P \bisim_f \eval (f(\rho))~ P$,
+and similarly for~$Q$.  We show that $\eval \rho~(P \;\M{[]} Q) \bisim_f \eval
+(f(\rho))~ (P \;\M{[]} Q)$, following Definition~\ref{def:f-bisim}.  It
+is enough to consider transitions up to the resolution of the choice.
 %
-\begin{calc}
-& f(\eval \rho ~ (P \; \M{[]} Q) \\
-= & f((\eval \rho~P) \extchoice (\eval \rho~Q)) \\
-= & \com{above result} \\
-& f(\eval \rho~P) \extchoice f(\eval \rho~Q) \\
-= & \com{inductive hypothesis} \\
-& (\eval (f(\rho))~P) \extchoice (\eval (f(\rho))~Q) \\
-= & \eval (f(\rho)) (P \; \M{[]} Q).
-\end{calc}
+\begin{enumerate}
+\item Consider a transition $(P\; \M{[]} Q, \rho) \trans{a}_{T_1}
+(P', \rho')$ corresponding to a transition $(P, \rho) \trans{a}_{T_1}
+(P',\rho')$ with $a \ne \tau$.  Then by induction, $(P,
+f(\rho)) \trans{f(a)}_{T_2} (P', f(\rho'))$, and so $(P\; \M{[]} Q,
+f(\rho)) \trans{f(a)}_{T_2} (P', f(\rho'))$.
+
+The cases for transitions of~$Q$ and $\tau$-transitions are very similar. 
+
+\item Consider a transition $(P\; \M{[]} Q, f(\rho)) \trans{b}_{T_2}
+(P', \rho')$ corresponding to a transition $(P, f(\rho)) \trans{b}_{T_2}
+(P', \rho')$ with $b \ne \tau$.  But then by induction, there is some $a$
+and~$\rho''$ such that $(P, \rho) \trans{a}_{T_1} (P', \rho'')$ with $f(a) =
+b$ (so $a \ne \tau$) and $f(\rho'') = \rho'$.  But then $(P\; \M{[]}
+Q, \rho) \trans{a}_{T_1} (P', \rho'')$.
+
+Again, the cases for transitions of~$Q$ and $\tau$-transitions are very
+similar.
+\end{enumerate}
+
+%% Hence $f(\eval \rho ~ (P \; \M{[]} Q)) = \eval (f(\rho)) (P \; \M{[]} Q)$ by
+%% Lemma~\ref{lem:ALTS-respects-f-implication}. 
+
+%% We show that
+%% %
+%% \begin{eqnarray*}
+%% f(P \extchoice Q) & = & f(P) \extchoice f(Q).
+%% \end{eqnarray*}
+%% %
+%% For every transition $P \trans{e} P'$, the initial state of each of the above
+%% processes has a transition labelled $f(e)$ to~$f(P')$; and similarly for
+%% transitions of~$Q$.
+
+%% We then have the following (for syntactic expressions~$P$ and~$Q$; in the
+%% first and last lines, ``\CSPM{[]}'' is syntax; in other lines, it is the
+%% semantic operator):
+%% %
+%% \begin{calc}
+%% & f(\eval \rho ~ (P \; \M{[]} Q) \\
+%% = & f((\eval \rho~P) \extchoice (\eval \rho~Q)) \\
+%% = & \com{above result} \\
+%% & f(\eval \rho~P) \extchoice f(\eval \rho~Q) \\
+%% = & \com{inductive hypothesis} \\
+%% & (\eval (f(\rho))~P) \extchoice (\eval (f(\rho))~Q) \\
+%% = & \eval (f(\rho)) (P \; \M{[]} Q).
+%% \end{calc}
+
+%%%%%
 
 The proofs for the binary operators nondeterministic choice (\CSPM{_ \|~\|
 _}), sliding choice (\CSPM{_ [> _}), interrupt (\CSPM{_ /\\ _}), and
 sequential composition (\CSPM{_ ; _}) are very similar.
 
+%%%%%
+
+
 For the exception operator (\CSPM{_ [\| E \|> _}), recall that we assume that
 |E| is invariant (item~\ref{item:di-invariant} of
 Definition~\ref{defn:data-independent}).  Hence $\eval \rho~E$ is
-$T_1$-invariant, by Lemma~\ref{lem:invariant}.
-%  
-We write $\_ \throw{A} \_$ for the corresponding semantic operator.  We show
-that if $A$ is $T_1$-invariant then
-\begin{eqnarray*}
-f(P \throw{A} Q) & = & f(P) \throw{f(A)} f(Q).
-\end{eqnarray*}
+$T_1$-invariant, by Lemma~\ref{lem:invariant}, so $a \in \eval \rho~E \iff
+f(a) \in f(\eval \rho~E) = \eval (f(\rho))~E$ by
+Lemma~\ref{lem:T-invariant-inclusion}.
+
+We assume, by induction, that $\eval \rho~P \bisim_f \eval (f(\rho))~P$, and
+similarly for~$Q$.  We show that $\eval \rho~(P \throw{E} Q) \bisim_f \eval
+(f(\rho)) (P \throw{E} Q)$.  It is enough to consider transitions up to the
+resolution of the exception operator; we write $P'$ for the corresponding
+state of~$P$.
 %
-On the left-hand side, every transition of~$P$ on an event from~$A$ is replace
-by a transition to the initial state of~$Q$, and then all events are renamed
-by~$f$.  On the right-hand side, the events are renamed first, and then every
-transition from $f(P)$ on an event from~$f(e) \in f(A)$ is replaced by a
-transition to the initial state of~$f(Q)$.  But if $f(e) \in f(A)$ then $e \in
-A$, by Lemma~\ref{lem:T-invariant-inclusion}, so there is a corresponding
-transition on the left-hand side.  The rest of the proof is then as for
-external choice.
+\begin{enumerate}
+\item Consider a transition $(P' \throw{E} Q, \rho) \trans{a}_{T_1}
+(P'' \throw{E} Q, \rho')$ corresponding to a transition
+$(P', \rho) \trans{a}_{T_1} (P'', \rho')$, with $a \nin \eval \rho~E$.  Then
+by induction, $(P', f(\rho)) \trans{f(a)}_{T_2} (P'', f(\rho'))$.  Also,
+$f(a) \nin f(\eval \rho~E)$, by $T_1$-invariance.  Hence $(P' \throw{E} Q,
+f(\rho)) \trans{f(a)}_{T_2} (P'' \throw{E} Q, f(\rho'))$.
+
+The case of $a \in \eval \rho~E$ is very similar: then $f(a) \in
+f(\eval \rho~E)$, and both transitions of $P' \throw{E} Q$ produce~$Q$.
+
+\item Consider a transition $(P' \throw{E} Q, f(\rho)) \trans{b}_{T_2}
+(P'' \throw{E} Q, \rho')$ corresponding to a transition $(P',
+f(\rho)) \trans{b}_{T_2} (P'', \rho')$, with $b \nin \eval (f(\rho))~E$.  Then
+by induction, there is some~$a$ and $\rho''$ such that
+$(P', \rho) \trans{a}_{T_1} (P'', \rho'')$ with $f(a) = b$ and $f(\rho'')
+= \rho'$.  But then $a \nin \eval \rho~E$, by $T_1$-invariance.  Hence
+$(P' \throw{E} Q, \rho) \trans{a}_{T_1} (P'' \throw{E} Q, \rho'')$.
+
+The case of $b \in \eval (f(\rho))~E$ is again very similar.
+\end{enumerate}
+
+
+%% %  
+%% We write $\_ \throw{A} \_$ for the corresponding semantic operator.  We show
+%% that if $A$ is $T_1$-invariant then
+%% \begin{eqnarray*}
+%% f(P \throw{A} Q) & = & f(P) \throw{f(A)} f(Q).
+%% \end{eqnarray*}
+%% %
+%% On the left-hand side, every transition of~$P$ on an event from~$A$ is replace
+%% by a transition to the initial state of~$Q$, and then all events are renamed
+%% by~$f$.  On the right-hand side, the events are renamed first, and then every
+%% transition from $f(P)$ on an event from~$f(e) \in f(A)$ is replaced by a
+%% transition to the initial state of~$f(Q)$.  But if $f(e) \in f(A)$ then $e \in
+%% A$, by Lemma~\ref{lem:T-invariant-inclusion}, so there is a corresponding
+%% transition on the left-hand side.  The rest of the proof is then as for
+%% external choice.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -110,85 +181,170 @@ P ~ \M{else STOP}$.  The result follows from the result for |if| statements.
 \label{sec:parallel}
 
 We now consider the binary parallel operators.  We start with the generalised
-parallel operator $\_ \;\M{[\|} e_A \M{\|]} \; \_$\,.  Recall that we assume
-that the expression~$e_A$ defining the synchronisation set is invariant, and
-hence the value of that set is $T_1$-invariant.
+parallel operator $\_ \synPar{e_A}  \_$\,.  
 
-We write $\_ \parallel[A] \_$ for a semantic operator that forms the parallel
-composition of LTSs, synchronising on events from~$A$.  
-Recall that we assume
-that the identifiers bound by the two components of the parallel composition
-are disjoint; this means that we can restrict a ``global'' environment to the
-identifiers of each component, or form the union of the environments of the
-two components.  For example, if $(P, \rho_P) \trans{e} (P', \rho_P')$ and
-$(Q, \rho_Q) \trans{e} (Q',
-\rho_Q')$ with $e \in A$, and $\rho_P$ and~$\rho_Q$ agree on common
-identifiers, then $(P \parallel[A] Q, \rho_P \union \rho_Q) \trans{e} (P'
-\parallel[A] Q', \rho_P' \union \rho_Q')$: the resulting environments
+We write $\_ \parallel{A}^{e_A} \_$ for a semantic operator that forms the
+parallel composition of LTSs, synchronising on events from~$A$, corresponding
+to the syntactic expression~$e_A$.  Recall that we assume that the identifiers
+bound by the two components of the parallel composition are disjoint; this
+means that we can restrict a ``global'' environment to the identifiers of each
+component, or form the union of the environments of the two components.  For
+example, if in LTS~$L_P$ there is a transition $(P, \rho_P) \trans{e}
+(P', \rho_P')$, and in LTS~$L_Q$ there is a transition $(Q, \rho_Q) \trans{e}
+(Q', \rho_Q')$, with $e \in A$, and $\rho_P$ and~$\rho_Q$ agree on common
+identifiers, then in LTS $L_P \parallel{A}^{e_A} L_Q$ there is a transition
+$(P \synPar{e_A} Q, \rho_P \union \rho_Q) \trans{e} (P'
+\synPar{e_A} Q', \rho_P' \union \rho_Q')$: the resulting environments
 $\rho_P'$ and $\rho_Q'$ agree on common identifiers, so their union makes
 sense.
 
-We show that, assuming $A$ is $T_1$-invariant:
+Let $A = \eval \rho~e_A$.  So $\eval (f(\rho))~e_A = f(A)$, by induction.
+Then
+\begin{eqnarray*}
+\eval \rho~ (P_1 \synPar{e_A} P_2) & = & 
+  (\eval \rho~ P_1) \parallel{A}^{e_A} (\eval \rho~ P_2) , \\
+\eval (f(\rho)) ~ (P_1 \synPar{e_A} P_2) & = & 
+  (\eval (f(\rho))~ P_1) \parallel{f(A)}^{e_A} (\eval (f(\rho))~ P_2).
+\end{eqnarray*}
 %
-\begin{eqnarray}
-\label{eqn:parallel-dist}
-f((P,\rho_P) \parallel[A] (Q,\rho_Q)) & = & 
-  f(P,\rho_P) \parallel[f(A)] f(Q,\rho_Q).
-\end{eqnarray}
+Recall that we assume that $e_A$ is invariant, and hence $A$ $T_1$-invariant.
+
+We can prove that $\eval \rho~ (P_1 \synPar{e_A} P_2) \bisim_f \eval (f(\rho))
+~ (P_1 \synPar{e_A} P_2)$.  The tricky case is as follows.
 %
-The tricky case is as follows.  Consider a transition of the right-hand side
-corresponding to a synchronisation on event~$e \in f(A)$.  This must
-correspond to transitions 
-\[
-(P,\rho_P) \trans{e_P} (P',\rho_P') \quad\mbox{and}\quad
-(Q,\rho_Q) \trans{e_Q} (Q',\rho_Q') \quad
-\mbox{with}\quad f(e_P) = f(e_Q) = e.
-\]
-The subsequent state is 
-\[
-f(P',\rho_P') \parallel[f(A)] f(Q',\rho_Q') = 
-  (P',f(\rho_P')) \parallel[f(A)] (Q',f(\rho_Q')).
-\]
-If $e_P \ne e_Q$, then consider the first field in which they differ; say $e_p
-= c.\vec{u}.v_P.\vec{w_P}$ and $e_Q = c.\vec{u}.v_Q.\vec{w_Q}$ with $v_P \ne
-v_Q$ but $f(v_P) = f(v_Q)$.
+Consider a transition, in the ALTS for $\eval (f(\rho)) ~ (P_1 \synPar{e_A}
+P_2)$ corresponding to a synchronisation:
+%
+\begin{eqnarray*}
+(Q_1 \synPar{e_A} Q_2, f(\rho_1 \union \rho_2)) & \trans{b}_{T_2} &
+  (Q_1' \synPar{e_A} Q_2', \rho_1' \union \rho_2')
+\end{eqnarray*}
+%
+with $b \in f(A)$, corresponding to transitions in the ALTSs for $\eval
+f(\rho)~ P_1$ and $\eval f(\rho)~ P_2$:
+%
+\begin{eqnarray*}
+(Q_1, f(\rho_1)) & \trans{b}_{T_2} & (Q_1', \rho_1') , \\
+(Q_2, f(\rho_2)) & \trans{b}_{T_2} & (Q_2', \rho_2').
+\end{eqnarray*}
+%
+By the inductive hypothesis, there are transitions in the ALTSs
+for $\eval \rho~ P_1$ and $\eval \rho~ P_2$:
+\begin{eqnarray*}
+(Q_1, \rho_1) & \trans{a_1}_{T_1} & (Q_1', \rho_1'') , 
+   \quad \mbox{with $f(a_1) = b$ and $f(\rho_1'') = \rho_1'$}, \\
+(Q_2, \rho_2) & \trans{a_2}_{T_1} & (Q_2', \rho_2''),
+   \quad \mbox{with $f(a_2) = b$ and $f(\rho_2'') = \rho_2'$}.
+\end{eqnarray*}
+%
+%% with $f(a_1) = f(a_2) = b$,\, $f(\rho_1'') = \rho_1'$ and $f(\rho_2'')
+%% = \rho_2'$. 
+%
+If $a_1 \ne a_2$, then consider the first field in which they differ; say $a_1
+= c.\vec{u}.v_1.\vec{w_1}$ and $a_2 = c.\vec{u}.v_2.\vec{w_2}$ with $v_1 \ne
+v_2$ but $f(v_1) = f(v_2)$.
 %
 Then by item~\ref{item:sync} of Definition~\ref{defn:data-independent}, one of
 the processes must be willing to accept an arbitrary value in this position;
-without loss of generality, suppose this is~$P$, so $P$ can also perform $e_P'
-= c.\vec{u}.v_Q.\vec{w_P}$.  If the transition binds $x$ to this field in
-$P$'s environment, then this corresponds to the transition
-$(P,\rho_P) \trans{e_P'} (P,\rho_P'')$ where $\rho_P''
-= \rho_P' \oplus \set{x \mapsto v_Q}$.  Note that $f(e_P') = e$ and
-$f(\rho_P'') = f(\rho_P')$.
+without loss of generality, suppose this is~$Q_1$, so $Q_1$ can also perform
+$a_1' = c.\vec{u}.v_2.\vec{w_1}$.  If the transition binds $x$ to this field
+in $Q_1$'s environment, then this corresponds to the transition
+$(Q_1,\rho_1) \trans{a_1'} (Q_1',\rho_1''')$ where $\rho_1'''
+= \rho_1'' \oplus \set{x \mapsto v_2}$.  Note that $f(a_1') = b$ and
+$f(\rho_1''') = f(\rho_1'') = \rho_1'$.
 %
 Continuing in this way, we obtain transitions
 \[
 \begin{array}{c}
-(P,\rho_P) \trans{e'} (P',\hat\rho_P) \quad\mbox{and}\quad
-(Q,\rho_Q) \trans{e'} (Q',\hat\rho_Q) \\
-\mbox{with}\quad f(e')  = e, \quad 
-f(\hat\rho_P) = f(\rho_P'), \quad f(\hat\rho_Q) = f(\rho_Q').
+(Q_1,\rho_1) \trans{a'}_{T_1} (Q_1',\hat\rho_1) \quad\mbox{and}\quad
+(Q_2,\rho_2) \trans{a'}_{T_1} (Q_2',\hat\rho_2) \\
+\mbox{with}\quad f(a')  = b, \quad 
+f(\hat\rho_1) = \rho_1', \quad f(\hat\rho_2) = \rho_2'.
 \end{array}
 \]
-Also, note that $f(e') = e \in f(A)$, so $e' \in A$, by
-Lemma~\ref{lem:T-invariant-inclusion}, since $A$ is $T_1$-invariant.
+Also, $f(a') = b \in f(A)$, and $A$ is $T_1$-invariant, so $a' \in A$.  
+Hence in the ALTS for $\eval \rho~ (P_1 \synPar{e_A} P_2)$, we have a
+transition synchronising on~$a'$: 
 %
-Hence, in the left-hand side of (\ref{eqn:parallel-dist}), the two
-components can synchronise on~$e'$, giving a transition on $f(e') = e$, and
-producing state 
-\[
-f( (P',\hat\rho_P) \parallel[A] (Q',\hat\rho_Q) ) .
-\]
-This matches the original transition of the right-hand side.
+\begin{eqnarray*}
+(Q_1 \synPar{e_A} Q_2, \rho_1 \union \rho_2) & \trans{a'}_{T_1} &
+  (Q_1' \synPar{e_A} Q_2', \hat\rho_1 \union \hat\rho_2),
+\end{eqnarray*}
+and $f(\hat\rho_1 \union \hat\rho_2) =  \rho_1' \union \rho_2'$, as required.
 
-Other cases ---that every synchronisation of the left-hand side is matched by
-a synchronisation of the right-hand side, and that non-synchronisation
-transitions match--- can be proved in a similar but more straightforward way.
+Other cases ---that every synchronisation of $\eval \rho~ (P_1 \synPar{e_A}
+P_2)$ is matched by a synchronisation of $\eval (f(\rho)) ~ (P_1 \synPar{e_A}
+P_2)$, and that non-synchronisation transitions match--- can be proved in a
+similar but more straightforward way.
 
-The proof then proceeds as for other binary operators.  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The cases of the alphabetised parallel ($\M{[} A\, \M{\|\|}\, B \M{]} $),
+%% \subsection{OLD}
+
+%% We show that, assuming $A$ is $T_1$-invariant:
+%% %
+%% \begin{eqnarray}
+%% \label{eqn:parallel-dist}
+%% f((P,\rho_P) \parallel{A} (Q,\rho_Q)) & = & 
+%%   f(P,\rho_P) \parallel{f(A)} f(Q,\rho_Q).
+%% \end{eqnarray}
+%% %
+%% The tricky case is as follows.  Consider a transition of the right-hand side
+%% corresponding to a synchronisation on event~$e \in f(A)$.  This must
+%% correspond to transitions 
+%% \[
+%% (P,\rho_P) \trans{e_P} (P',\rho_P') \quad\mbox{and}\quad
+%% (Q,\rho_Q) \trans{e_Q} (Q',\rho_Q') \quad
+%% \mbox{with}\quad f(e_P) = f(e_Q) = e.
+%% \]
+%% The subsequent state is 
+%% \[
+%% f(P',\rho_P') \parallel{f(A)} f(Q',\rho_Q') = 
+%%   (P',f(\rho_P')) \parallel{f(A)} (Q',f(\rho_Q')).
+%% \]
+%% If $e_P \ne e_Q$, then consider the first field in which they differ; say $e_p
+%% = c.\vec{u}.v_P.\vec{w_P}$ and $e_Q = c.\vec{u}.v_Q.\vec{w_Q}$ with $v_P \ne
+%% v_Q$ but $f(v_P) = f(v_Q)$.
+%% %
+%% Then by item~\ref{item:sync} of Definition~\ref{defn:data-independent}, one of
+%% the processes must be willing to accept an arbitrary value in this position;
+%% without loss of generality, suppose this is~$P$, so $P$ can also perform $e_P'
+%% = c.\vec{u}.v_Q.\vec{w_P}$.  If the transition binds $x$ to this field in
+%% $P$'s environment, then this corresponds to the transition
+%% $(P,\rho_P) \trans{e_P'} (P,\rho_P'')$ where $\rho_P''
+%% = \rho_P' \oplus \set{x \mapsto v_Q}$.  Note that $f(e_P') = e$ and
+%% $f(\rho_P'') = f(\rho_P')$.
+%% %
+%% Continuing in this way, we obtain transitions
+%% \[
+%% \begin{array}{c}
+%% (P,\rho_P) \trans{e'} (P',\hat\rho_P) \quad\mbox{and}\quad
+%% (Q,\rho_Q) \trans{e'} (Q',\hat\rho_Q) \\
+%% \mbox{with}\quad f(e')  = e, \quad 
+%% f(\hat\rho_P) = f(\rho_P'), \quad f(\hat\rho_Q) = f(\rho_Q').
+%% \end{array}
+%% \]
+%% Also, note that $f(e') = e \in f(A)$, so $e' \in A$, by
+%% Lemma~\ref{lem:T-invariant-inclusion}, since $A$ is $T_1$-invariant.
+%% %
+%% Hence, in the left-hand side of (\ref{eqn:parallel-dist}), the two
+%% components can synchronise on~$e'$, giving a transition on $f(e') = e$, and
+%% producing state 
+%% \[
+%% f( (P',\hat\rho_P) \parallel{A} (Q',\hat\rho_Q) ) .
+%% \]
+%% This matches the original transition of the right-hand side.
+
+%% Other cases ---that every synchronisation of the left-hand side is matched by
+%% a synchronisation of the right-hand side, and that non-synchronisation
+%% transitions match--- can be proved in a similar but more straightforward way.
+
+%% The proof then proceeds as for other binary operators.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The cases of the alphabetised parallel 
+($\M{[} A\, {\|\|}\, B \M{]} $),
 interleaving (\CSPM{\|\|\|}), synchronising external choice
 (\CSPM{[+}\,$A$\,\CSPM{+]}) and synchronising interrupt
 (\CSPM{/+}\,A\,\CSPM{+\\}) operators are similar; recall that it is assumed
@@ -209,38 +365,115 @@ enough to imply the requirements for use of those other operators.
 \label{sec:replicated}
 
 We now consider replicated operators.  We start with external choice.  Below
-we write $\Extchoice$ for a semantic operator: $\Extchoice S$ represents an
-external choice over the set of processes in~$S$, each of which is an LTS\@.
-We show
+we write $\Extchoice$ for a semantic operator that takes a set of ALTSs and
+builds their external choice.
+
+
+%% that takes a set $T$ of
+%% (process, environment) pairs, and builds the  ALTS corresponding to the
+%% external choice over processes $\eval \rho Q$ for $(Q,\rho) \in T$.
+
+%% Consider $P = \M{**[]} stmts \spot Q$.  Let $S = \evalStmtsSet \rho~stmts$.
+%% Then $\evalStmtsSet (f(\rho))~stmts = f(S)$ by clause \ref{item:evalStmts} of
+%% the inductive hypothesis.
+%% Hence we have
+%% %
+%% \begin{eqnarray*}
+%% \eval \rho~ P & = &  \Extchoice \set{(Q,\rho') \| \rho' \in S}, \\
+%% \eval (f(\rho))~ P & = &   \Extchoice \set{(Q,\rho'') \| \rho'' \in f(S)}. 
+%% \end{eqnarray*}
+
+%% We show that $\Extchoice T \bisim_f \Extchoice (f(T))$, which implies
+%% $\eval \rho~ P \bisim_f \eval (f(\rho))~ P$.
+%% %
+%% \begin{enumerate}
+%% \item
+%% Each initial visible transition of $\Extchoice T$ is of the form
+%% $(P,\rho) \trans{a}_{T_1} (Q',\rho'')$ such that $(Q,\rho') \trans{a}_{T_1}
+%% (Q',\rho'')$ for some $(Q,\rho') \in T$.  By induction, that is matched by a
+%% transition $(Q,f(\rho')) \trans{f(a)}_{T_2} (Q',f(\rho''))$.  But
+%% $f(\rho') \in f(S)$, so this produces a corresponding transition from
+%% $(P,f(\rho))$.
+
+%% \end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+Consider $P = \M{**[]} stmts \spot Q$.  Let $S = \evalStmtsSet \rho~stmts$.
+Then $\evalStmtsSet (f(\rho))~stmts = f(S)$ by clause \ref{item:evalStmts} of
+the inductive hypothesis.  Hence we have
 %
 \begin{eqnarray*}
-f(\Extchoice S) & = & \Extchoice \set{f(P) \| P \in S}.
+\eval \rho~ P & = & 
+  \Extchoice \set{\eval \rho' ~ Q \| \rho' \in S}, \\
+\eval (f(\rho))~ P & = & 
+  \Extchoice \set{\eval \rho'' ~ Q \| \rho'' \in f(S)} 
+   =  \Extchoice \set{\eval (f(\rho'))~ Q \| \rho' \in S} .
 \end{eqnarray*}
 %
-For every $P \in S$, and for every transition $P \trans{e} Q$, the initial
-state of each of the above processes has a transition labelled with $f(e)$ to
-$f(Q)$.
+We show $\eval \rho~ P \bisim_f \eval (f(\rho))~ P$.  By
+induction, $\eval \rho' ~ Q \bisim_f \eval (f(\rho'))~ Q$, for each~$\rho'$,
+so it is enough to consider transitions up to the resolution of the external
+choice. 
+%
+\begin{enumerate}
+\item
+Each initial visible transition of $\eval \rho~ P$ is of the form
+$(P,\rho) \trans{a}_{T_1} (Q',\rho'')$ such that $(Q,\rho') \trans{a}_{T_1}
+(Q',\rho'')$ for some $\rho' \in S$.  By induction, that is matched by a
+transition $(Q,f(\rho')) \trans{f(a)}_{T_2} (Q',f(\rho''))$.  But
+$f(\rho') \in f(S)$, so this produces a corresponding transition from
+$(P,f(\rho))$.
 
-We then have the following (the external choices in the first and last line
-are syntax; the other instances are semantic):
-\begin{calc}
-& f(\eval \rho~ (\M{**[]} stmts \spot P)) \\
-= & f(\Extchoice \set{\eval \rho'~ P \| \rho' \in \evalStmtsSet \rho~stmts}) \\
-= & \com{above result} \\
-  & \Extchoice \set{f(\eval \rho' ~P) \| \rho' \in \evalStmtsSet \rho~stmts} \\
-= & \com{inductive hypothesis for~$P$} \\
-  & \Extchoice \set{\eval (f(\rho'))~P \| 
-      \rho' \in \evalStmtsSet \rho~stmts} \\
-= & \com{letting $\rho'' = f(\rho')$} \\
-  & \Extchoice \set{\eval \rho''~P \| 
-      \rho'' \in f(\evalStmtsSet \rho~stmts)} \\
-= & \com{inductive hypothesis, clause \ref{item:evalStmts}} \\
-  & \Extchoice \set{\eval \rho''~P \| 
-      \rho'' \in \evalStmtsSet (f(\rho))~stmts} \\
-= & \eval (f(\rho))~ (\M{**[]} stmts \spot P).
-\end{calc}
+The case for an initial $\tau$-transition of $\eval \rho~ P$ is similar,
+except each subsequent state is an external choice where the component
+$(Q,\rho')$ is replaced by $(Q',\rho'')$.  The case for transitions from those
+subsequent states is similar.
 
-%%%%%
+\item
+Each initial visible transition of $\eval (f(\rho))~ P$ is of the form
+$(P,f(\rho)) \trans{b}_{T_2} (Q',\rho'')$ such that
+$(Q,f(\rho')) \trans{b}_{T_2} (Q',\rho'')$ for some $\rho' \in S$.  By
+induction, that is matched by a transition $(Q,\rho') \trans{a}_{T_1}
+(Q',\rho''')$ such that $f(a) = b$ and $f(\rho''') = \rho''$, which produces a
+corresponding transition from~$(P,\rho)$.
+
+Again, the case for an initial $\tau$-transition is similar. 
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% \subsection*{Ignore}
+
+%% We show
+%% %
+%% \begin{eqnarray*}
+%% f(\Extchoice S) & = & \Extchoice \set{f(P) \| P \in S}.
+%% \end{eqnarray*}
+%% %
+%% For every $P \in S$, and for every transition $P \trans{e} Q$, the initial
+%% state of each of the above processes has a transition labelled with $f(e)$ to
+%% $f(Q)$.
+
+%% We then have the following (the external choices in the first and last line
+%% are syntax; the other instances are semantic):
+%% \begin{calc}
+%% & f(\eval \rho~ (\M{**[]} stmts \spot P)) \\
+%% = & f(\Extchoice \set{\eval \rho'~ P \| \rho' \in \evalStmtsSet \rho~stmts}) \\
+%% = & \com{above result} \\
+%%   & \Extchoice \set{f(\eval \rho' ~P) \| \rho' \in \evalStmtsSet \rho~stmts} \\
+%% = & \com{inductive hypothesis for~$P$} \\
+%%   & \Extchoice \set{\eval (f(\rho'))~P \| 
+%%       \rho' \in \evalStmtsSet \rho~stmts} \\
+%% = & \com{letting $\rho'' = f(\rho')$} \\
+%%   & \Extchoice \set{\eval \rho''~P \| 
+%%       \rho'' \in f(\evalStmtsSet \rho~stmts)} \\
+%% = & \com{inductive hypothesis, clause \ref{item:evalStmts}} \\
+%%   & \Extchoice \set{\eval \rho''~P \| 
+%%       \rho'' \in \evalStmtsSet (f(\rho))~stmts} \\
+%% = & \eval (f(\rho))~ (\M{**[]} stmts \spot P).
+%% \end{calc}
 
 The case for a replicated nondeterministic choice is similar.  
 
@@ -251,62 +484,101 @@ Consider now a replicated interleaving $\M{**\|\|\|} ~ stmts ~ \M{@} ~ P$.
 % Recall that the indexing statements~$stmts$ are independent of~|T|.
 We write $\Interleave$ for a semantic interleaving operator, which takes a
 multiset\footnote{We write a multiset as ``$\mset{\ldots}$''.} of processes as
-an argument.  We have that
+an argument, and interleaves them.  Then
+\begin{eqnarray*}
+\eval \rho ~(\M{**\|\|\|} ~ stmts ~ \M{@} ~ P) & = & 
+  \Interleave \mset{ \eval \rho'~P \| \rho' \in \evalStmtsSet \rho~stmts }, \\
+\eval (f(\rho))~(\M{**\|\|\|} ~ stmts ~ \M{@} ~ P) & = & 
+  \Interleave \mset{ \eval \rho''~P \| 
+     \rho'' \in \evalStmtsSet (f(\rho))~stmts } \\
+& = & \Interleave \mset{ \eval \rho''~P \| 
+    \rho'' \in f(\evalStmtsSet \rho~stmts) }.
+\end{eqnarray*}
 %
-\begin{eqnarray}
-\label{eqn:replicated-interleave}
-f(\Interleave S) & = & \Interleave \mset{f(P) \| P \in S}.
-\end{eqnarray}
-%
-This follows from the corresponding equation $f(P \interleave Q) =
-f(P) \interleave f(Q)$ for binary interleaving, and the fact that the replicated
-interleaving can be rewritten using binary interleaving.  It is important here
-that we are using a \emph{multiset}, so the two sides
-of~(\ref{eqn:replicated-interleave}) have the same number of processes, even if
-$f$ unifies two elements of~$S$: this matches the semantics of~\CSPm, which
-produces a set of environments from $stmts$, and then from each such
-environment produces a process (possibly with repetitions).
+using clause~\ref{item:evalStmts} of the inductive hypothesis.
 
 Recall that the indexing statements~$stmts$ are independent of~|T|.  Suppose
 $\evalStmtsSet~\rho~stmts$ includes an environment $\rho \oplus \rho'$ where
-$\rho'$ captures the bindings in~$stmts$, and so is independent of~$f$; 
+$\rho'$ captures the bindings in~$stmts$, and so is independent of~|T|; 
 then $f(\rho \oplus \rho') = f(\rho) \oplus \rho'$.  
-%%  ; then $f(\evalStmts \rho~stmts)$ will produce a corresponding environment
-%%  $f(\rho) \oplus \rho'$; and vice versa.
 This means that the sets $\evalStmtsSet~\rho~stmts$ and
 $f(\evalStmtsSet \rho~stmts)$ have the same cardinality: the application
 of~$f$ does not unify two different bindings corresponding to $stmts$.
-
-We calculate as follows.
+Hence we also have
 %
-\begin{calc}
-& f(\eval \rho (\M{**\|\|\|} ~ stmts~ \M{@} ~ P)) \\
-= & f( \Interleave \mset{ \eval \rho' ~ P \|
-          \rho' \in \evalStmtsSet \rho~stmts} ) \\
-= & \com{equation (\ref{eqn:replicated-interleave})} \\
-& \Interleave \mset{ f(\eval \rho'~P) \| 
-     \rho' \in \evalStmtsSet \rho~stmts}  \\
-= & \com{inductive hypothesis} \\
-& \Interleave \mset{ \eval (f(\rho'))~P \| 
-    \rho' \in \evalStmtsSet \rho~stmts}  \\
-= & \com{letting $\rho'' = f(\rho')$; above observation about cardinality} \\
-& \Interleave \mset{ \eval \rho''~P \| 
-    \rho'' \in f(\evalStmtsSet \rho~stmts)}  \\
-= & \com{inductive hypothesis, clause~\ref{item:evalStmts}} \\
-& \Interleave \mset{ \eval \rho''~P \| 
-    \rho'' \in \evalStmtsSet (f(\rho))~stmts}  \\
-= & \eval (f(\rho))~(\M{**\|\|\|} ~ stmts~ \M{@}~ P).
-\end{calc}
+\begin{eqnarray*}
+\eval (f(\rho))~(\M{**\|\|\|} ~ stmts ~ \M{@} ~ P) & = & 
+   \Interleave \mset{ \eval (f(\rho'))~P \| \rho' \in \evalStmts \rho~stmts }.
+\end{eqnarray*}
+
+
+Now, $\eval \rho'~P \bisim_f \eval (f(\rho'))~P$ for each~$\rho'$, by
+induction.  
+Hence we have $\eval \rho ~(\M{**\|\|\|} ~ stmts ~ \M{@} ~
+P) \bisim_f \eval (f(\rho))~(\M{**\|\|\|} ~ stmts ~ \M{@} ~ P)$, using the
+fact that $f$-bisimulation is compositional with respect to binary
+interleaving, and the fact that a replicated interleaving can be rewritten
+using binary interleaving.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% multiset\footnote{We write a multiset as ``$\mset{\ldots}$''.} of processes as
+%% an argument.  We have that
+%% %
+%% \begin{eqnarray}
+%% \label{eqn:replicated-interleave}
+%% f(\Interleave S) & = & \Interleave \mset{f(P) \| P \in S}.
+%% \end{eqnarray}
+%% %
+%% This follows from the corresponding equation $f(P \interleave Q) =
+%% f(P) \interleave f(Q)$ for binary interleaving, and the fact that the replicated
+%% interleaving can be rewritten using binary interleaving.  It is important here
+%% that we are using a \emph{multiset}, so the two sides
+%% of~(\ref{eqn:replicated-interleave}) have the same number of processes, even if
+%% $f$ unifies two elements of~$S$: this matches the semantics of~\CSPm, which
+%% produces a set of environments from $stmts$, and then from each such
+%% environment produces a process (possibly with repetitions).
+
+%% Recall that the indexing statements~$stmts$ are independent of~|T|.  Suppose
+%% $\evalStmtsSet~\rho~stmts$ includes an environment $\rho \oplus \rho'$ where
+%% $\rho'$ captures the bindings in~$stmts$, and so is independent of~$f$; 
+%% then $f(\rho \oplus \rho') = f(\rho) \oplus \rho'$.  
+%% This means that the sets $\evalStmtsSet~\rho~stmts$ and
+%% $f(\evalStmtsSet \rho~stmts)$ have the same cardinality: the application
+%% of~$f$ does not unify two different bindings corresponding to $stmts$.
+
+%% We calculate as follows.
+%% %
+%% \begin{calc}
+%% & f(\eval \rho (\M{**\|\|\|} ~ stmts~ \M{@} ~ P)) \\
+%% = & f( \Interleave \mset{ \eval \rho' ~ P \|
+%%           \rho' \in \evalStmtsSet \rho~stmts} ) \\
+%% = & \com{equation (\ref{eqn:replicated-interleave})} \\
+%% & \Interleave \mset{ f(\eval \rho'~P) \| 
+%%      \rho' \in \evalStmtsSet \rho~stmts}  \\
+%% = & \com{inductive hypothesis} \\
+%% & \Interleave \mset{ \eval (f(\rho'))~P \| 
+%%     \rho' \in \evalStmtsSet \rho~stmts}  \\
+%% = & \com{letting $\rho'' = f(\rho')$; above observation about cardinality} \\
+%% & \Interleave \mset{ \eval \rho''~P \| 
+%%     \rho'' \in f(\evalStmtsSet \rho~stmts)}  \\
+%% = & \com{inductive hypothesis, clause~\ref{item:evalStmts}} \\
+%% & \Interleave \mset{ \eval \rho''~P \| 
+%%     \rho'' \in \evalStmtsSet (f(\rho))~stmts}  \\
+%% = & \eval (f(\rho))~(\M{**\|\|\|} ~ stmts~ \M{@}~ P).
+%% \end{calc}
 
 %%%%%%%%%%
 
 The cases for other replicated operators are very similar.  Recall that we
 assume that each of the alphabets on parallel operators is defined by an
-invariant expression, and so evaluates to a $T_1$-invariant set.  In each case,
-we use a result similar to equation~(\ref{eqn:replicated-interleave}) to
-distribute~$f$ through the corresponding semantic operator.  For replicated
-sequential composition and link parallel, the statements are evaluated using
-$\evalStmts$ to produce a sequence, rather than a set. 
+invariant expression, and so evaluates to a $T_1$-invariant set.  In each
+case, we can show that $f$-bisimulation is compositional with respect to the
+replicated operator because it is compositional with respect to the
+corresponding binary operator.  For replicated sequential composition and link
+parallel, the statements are evaluated using $\evalStmts$ to produce a
+sequence, rather than a set.
 
 % Alphabetised parallel, generalised parallel, link parallel, sequential
 % composition. 

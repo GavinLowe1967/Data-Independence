@@ -18,44 +18,183 @@ P[T] & \defs &  \eval (\bindDecls \rho^{T}~decls)~P.
 The following lemma relates the value of~$P$ in the two different scripts.
 %
 \begin{lemma}
-Let $f: T_1 \fun T_2$ be surjective.  Then $P[T_2] = f(P[T_1])$. 
+Let $f: T_1 \fun T_2$ be surjective.  Then $P[T_1] \bisim_f P[T_2]$. 
 \end{lemma}
 %
 \begin{proof}
+We have:
 \begin{calc}
-& P[T_2] \\
-= & \eval (\bindDecls \rho^{T_2}~decls)~P \\
-= & \com{Lemma~\ref{lem:distinguished-type-declaration}} \\
-  & \eval (\bindDecls (f(\rho^{T_1}))~decls) ~P \\
+& P[T_1] \\
+= & \eval (\bindDecls \rho^{T_1}~decls)) ~P \\
+\bisim_f & \com{clause~\ref{item:eval} of Proposition~\ref{prop:expressions}} \\
+& \eval (f(\bindDecls \rho^{T_1}~decls)) ~P \\
 = & \com{clause~\ref{item:bindDecls} of Proposition~\ref{prop:expressions}} \\
-  & \eval (f(\bindDecls \rho^{T_1}~decls)) ~P \\
-= & \com{clause~\ref{item:eval}  of Proposition~\ref{prop:expressions}} \\
-  & f( \eval (\bindDecls \rho^{T_1}~decls)) ~P \\
-= & f(P[T_1]) .
+  & \eval (\bindDecls (f(\rho^{T_1}))~decls) ~P \\
+= & \com{Lemma~\ref{lem:distinguished-type-declaration}} \\
+= & \eval (\bindDecls \rho^{T_2}~decls)~P \\
+= & P[T_2].
 \end{calc}
+%% & P[T_2] \\
+%% = & \eval (\bindDecls \rho^{T_2}~decls)~P \\
+%% = & \com{Lemma~\ref{lem:distinguished-type-declaration}} \\
+%%   & \eval (\bindDecls (f(\rho^{T_1}))~decls) ~P \\
+%% = & \com{clause~\ref{item:bindDecls} of Proposition~\ref{prop:expressions}} \\
+%%   & \eval (f(\bindDecls \rho^{T_1}~decls)) ~P \\
+%% = & \com{clause~\ref{item:eval}  of Proposition~\ref{prop:expressions}} \\
+%%   & f( \eval (\bindDecls \rho^{T_1}~decls)) ~P \\
+%% = & f(P[T_1]) .
+%% \end{calc}
 \end{proof}
 
-It immediately follows that for each transition of $P[T_1]$ using event~$a$,
-there is a corresponding transition of~$P[T_2]$ using event $f(a)$.  
+
+Consider an ALTS with transition relation $\trans{}$, and let $s = \trace{a_1,
+  \ldots, a_n}$ be a sequence of events from~$\Sigma \union \set{\tau,\tick}$.
+We write $(P,\rho) \transd{s} (P',\rho')$ to indicate that there is a sequence
+of transitions, labelled with $a_1, \ldots a_n$, leading from $(P,\rho)$
+to~$(P',\rho')$, i.e.~there exist states~$(P_0,\rho_0) =
+(P,\rho),\linebreak[1] (P_1,\rho_1),\linebreak[1] \ldots,\linebreak[1]
+(P_n,\rho_n) = (P',\rho')$ such that $(P_i,\rho_i) \trans{a_{i+1}}
+(P_{i+1},\rho_{i+1})$ for $i = 0,\ldots,n-1$.  Below we write
+$\transd{}_{T_1}$ and $\transd{}_{T_2}$ for this relation corresponding to
+ALTSs built using $T_1$ and~$T_2$, respectively.
+
+The following lemma is proved by a straightforward induction, using the
+definition of $f$-bisimulation.
 %
 \begin{lemma}
-If
-\[
-(P,\rho) \trans{a} (Q,\rho_2)  \quad \mbox{in $P[T_1]$}\,,
-\]
-then
-\[
-(P,f(\rho)) \trans{f(a)} (Q,f(\rho_2))  \quad \mbox{in $P[T_2]$}.
-\]
+Suppose $L_1 \sim_f L_2$.  Then:
+%
+\begin{enumerate}
+\item If $(P,\rho) \transd{s}_{T_1} (P',\rho')$ in~$L_1$, then $(P,f(\rho))
+  \transd{f(s)}_{T_2} (P',f(\rho'))$ in~$L_2$;  
+
+\item If $(P,f(\rho)) \transd{s'}_{T_2} (P',\rho')$ in~$L_2$, then $(P,\rho)
+  \transd{s}_{T_1} (P',\rho'')$ for some $s$ such that $f(s) = s'$, and
+  some~$\rho''$ such that $f(\rho'') = \rho'$.
+\end{enumerate}
 \end{lemma}
 
-The proof of the converse is made more difficult by the fact that applying~$f$
-to $\eval \rho~P$ can merge states.  A particular state $(Q,\rho_1)$ gets
-mapped to $(Q,f(\rho_1))$, but so does any other state $(Q,\rho_2)$ such that
-$f(\rho_2) = f(\rho_1)$.  The resulting state has transitions corresponding to
-the union of the transitions from $(Q,\rho_1)$ and $(Q,\rho_2)$ (remapped
-by~$f$).  We need to show that each transition of $(Q,f(\rho_1))$ does
-correspond to a transition of~$(Q,\rho_1)$. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% \subsection{Cut?}
+
+%% It immediately follows that for each transition of $P[T_1]$ using event~$a$,
+%% there is a corresponding transition of~$P[T_2]$ using event $f(a)$.  
+%% %
+%% \begin{lemma}
+%% If
+%% \[
+%% (P,\rho) \trans{a} (Q,\rho_2)  \quad \mbox{in $P[T_1]$}\,,
+%% \]
+%% then
+%% \[
+%% (P,f(\rho)) \trans{f(a)} (Q,f(\rho_2))  \quad \mbox{in $P[T_2]$}.
+%% \]
+%% \end{lemma}
+
+%% The proof of the converse is made more difficult by the fact that applying~$f$
+%% to $\eval \rho~P$ can merge states.  A particular state $(Q,\rho_1)$ gets
+%% mapped to $(Q,f(\rho_1))$, but so does any other state $(Q,\rho_2)$ such that
+%% $f(\rho_2) = f(\rho_1)$.  The resulting state has transitions corresponding to
+%% the union of the transitions from $(Q,\rho_1)$ and $(Q,\rho_2)$ (remapped
+%% by~$f$).  We need to show that each transition of $(Q,f(\rho_1))$ does
+%% correspond to a transition of~$(Q,\rho_1)$. 
+
+%% %% \begin{lemma}
+%% %% Suppose $(Q, \rho)$ is a state in $P[T_1]$, and suppose there is a transition
+%% %% \[
+%% %% (Q, f(\rho)) \trans{a} (Q',\rho_1)  \quad \mbox{in $P[T_2] = f(P[T_1])$.}
+%% %% \]
+%% %% Then there is a transition 
+%% %% \[
+%% %% (Q, \rho) \trans{a'} (Q', \rho_1') \quad \mbox{in $P[T_1]$}
+%% %% \]
+%% %% such that $f(a') = a$, and $f(\rho_1') = \rho_1$.
+%% %% \end{lemma}
+
+%% %% \begin{proof}
+%% %% The sub-ALTS rooted at $(Q,\rho)$ and $(Q, f(\rho))$ are equal to $\eval \rho~Q$
+%% %% and $\eval Q f(\rho)~Q = f(\eval \rho~Q)$, respectively.  
+
+%% %% , by
+%% %% Proposition~\ref{prop:expressions}.  
+
+%% %% \end{proof}
+
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% \subsection{Ignore?? }
+
+
+
+%% %
+%% The following sequence of lemmas proves the converse.
+%% %
+%% \begin{lemma}
+%% \label{lem:f-sim-expr}
+%% Suppose $f(\rho) = f(\rho')$.  Then for every expression~$e$,\,
+%% \[
+%% f(\eval \rho~e) =f(\eval \rho'~e).
+%% \]
+%% \end{lemma}
+%% %
+%% \begin{proof}
+%% We have
+%% \(
+%% f(\eval \rho~e) = \eval (f(\rho))~e = \eval (f(\rho'))~e = f(\eval \rho'~e)
+%% \),
+%% using Proposition~\ref{prop:expressions}.
+%% \end{proof}
+
+%% %%%%%%%%%%
+
+%% \begin{lemma}
+%% \label{lem:f-sim-proc}
+%% Consider two ALTS states $(Q,\rho)$ and $(Q,\rho')$ such that $f(\rho) =
+%% f(\rho')$.  Suppose there is a transition
+%% \[
+%% (Q,\rho) \trans{a} (Q',\rho_1),
+%% \]
+%% Then there is also a transition
+%% \[
+%% (Q,\rho') \trans{a'} (Q',\rho_1'),
+%% \]
+%% such that $f(a) = f(a')$ and $f(\rho_1) = f(\rho_1')$.
+%% \end{lemma}
+%% %
+%% \begin{proof}
+%% The ALTSs rooted at the two states are equal to $\eval \rho ~ Q$ and $\eval
+%% \rho'~ Q$, respectively.  By Lemma~\ref{lem:f-sim-expr}, $f(\eval \rho~ Q) =
+%% f(\eval \rho' ~Q)$.  Then \framebox{????}
+%% \end{proof}
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% %% Consider, the case of a process expression~$P$.  Recall that $\eval \rho~P$ is
+%% %% an ALTS with initial state~$(P,\rho)$; we write $ALTS_{P,\rho}$ for this
+%% %% ALTS\@.  The following lemma follows immediately from
+%% %% Lemma~\ref{lem:f-sim-expr}.
+%% %% %
+%% %% \begin{lemma}
+%% %% \label{lem:f-sim-proc}
+%% %% Suppose $f(\rho) = f(\rho')$.  Then $f(ALTS_{P,\rho}) = f(ALTS_{P,\rho'})$.
+%% %% In particular, for every transition 
+%% %% \[
+%% %% (P,\rho) \trans{a} (Q,\rho_2)  \quad \mbox{in $ALTS_{P,\rho}$}\,,
+%% %% \]
+%% %% there is a corresponding transition 
+%% %% \[
+%% %% (P,\rho') \trans{a'} (Q,\rho_2')  \quad \mbox{in $ALTS_{P,\rho'}$}
+%% %% \]
+%% %% such that $f(a) = f(a')$, and $f(\rho_2) = f(\rho_2')$, and vice versa.
+%% %% \end{lemma}
+
+
+%% %%%%%%%%%%
 
 %% \begin{lemma}
 %% Suppose $(Q, \rho)$ is a state in $P[T_1]$, and suppose there is a transition
@@ -69,148 +208,53 @@ correspond to a transition of~$(Q,\rho_1)$.
 %% such that $f(a') = a$, and $f(\rho_1') = \rho_1$.
 %% \end{lemma}
 
+%% \framebox{XXX}
+
+%% I don't think the above holds from what I've proved so far.  Consider a
+%% process~$Q$ equivalent to $\If x = y \Then a \then STOP \Else STOP$, and let
+%% $\rho = \set{x \mapsto A, y \mapsto B}$.  Then $(Q,\rho)$ does not have a
+%% transition on~$a$.  But if $f(A) = f(B) = C$, then $(Q,f(\rho))$ does have a
+%% transition on~$a$.  This doesn't contradict Proposition~\ref{prop:expressions}
+%% as written, because $f$ merges $(Q,\rho)$ with $(Q,\rho')$ where $\rho' =
+%% \set{x \mapsto A, y \mapsto B}$, which does have a transition on~$a$. 
+
+
 %% \begin{proof}
-%% The sub-ALTS rooted at $(Q,\rho)$ and $(Q, f(\rho))$ are equal to $\eval \rho~Q$
-%% and $\eval Q f(\rho)~Q = f(\eval \rho~Q)$, respectively.  
-
-%% , by
-%% Proposition~\ref{prop:expressions}.  
-
+%% The transition in $f(P[T_1])$ results from the application of~$f$ to a
+%% transition in $P[T_1]$; that transition must be of the form
+%% \[
+%% (Q, \rho') \trans{a''} (Q', \rho'') % \quad \mbox{in $ALTS_{P,\rho}$}
+%% \]
+%% such that $f(\rho') = f(\rho)$,\, $f(a'') = a$, and $f(\rho'') = \rho_1$.
+%% Then Lemma~\ref{lem:f-sim-proc} implies the existence of a transition
+%% \[
+%% (Q, \rho) \trans{a'} (Q', \rho_1') % \quad \mbox{in $ALTS_{P,\rho}$}
+%% \]
+%% such that $f(a') = f(a'') = a$, and $f(\rho_1') = f(\rho'') = \rho_1$, as
+%% required. 
 %% \end{proof}
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{Ignore?? }
 
 
-
-%
-The following sequence of lemmas proves the converse.
-%
-\begin{lemma}
-\label{lem:f-sim-expr}
-Suppose $f(\rho) = f(\rho')$.  Then for every expression~$e$,\,
-\[
-f(\eval \rho~e) =f(\eval \rho'~e).
-\]
-\end{lemma}
-%
-\begin{proof}
-We have
-\(
-f(\eval \rho~e) = \eval (f(\rho))~e = \eval (f(\rho'))~e = f(\eval \rho'~e)
-\),
-using Proposition~\ref{prop:expressions}.
-\end{proof}
-
-%%%%%%%%%%
-
-\begin{lemma}
-\label{lem:f-sim-proc}
-Consider two ALTS states $(Q,\rho)$ and $(Q,\rho')$ such that $f(\rho) =
-f(\rho')$.  Suppose there is a transition
-\[
-(Q,\rho) \trans{a} (Q',\rho_1),
-\]
-Then there is also a transition
-\[
-(Q,\rho') \trans{a'} (Q',\rho_1'),
-\]
-such that $f(a) = f(a')$ and $f(\rho_1) = f(\rho_1')$.
-\end{lemma}
-%
-\begin{proof}
-The ALTSs rooted at the two states are equal to $\eval \rho ~ Q$ and $\eval
-\rho'~ Q$, respectively.  By Lemma~\ref{lem:f-sim-expr}, $f(\eval \rho~ Q) =
-f(\eval \rho' ~Q)$.  Then \framebox{????}
-\end{proof}
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %% Suppose  there is a transition 
+%% %% \[
+%% %% (Q_1,\rho_1) \trans{a} (Q_2,\rho_2) \quad \mbox{in $f(ALTS_{P,\rho})$.}
+%% %% \]
+%% %% Then there is a transition
+%% %% \[
+%% %% (Q_1,\rho_1') \trans{a'} (Q_2,\rho_2') \quad \mbox{in $ALTS_{P,\rho}$}
+%% %% \]
+%% %% such that $f(\rho_1') = \rho_1$,\, $f(a') = a$, and $f(\rho_2') = \rho_2$.
+%% %% Suppose also $f(\rho_1'') = f(\rho_1') = \rho_1$.  Then
+%% %% there is a transition
+%% %% \[
+%% %% (Q_1,\rho_1'') \trans{a''} (Q_2,\rho_2'') \quad \mbox{in $ALTS_{P,\rho}$}
+%% %% \]
+%% %% such that $f(a'') = f(a') = a$ and $f(\rho_2'') = f(\rho_2') = \rho_2$.
 
-%% Consider, the case of a process expression~$P$.  Recall that $\eval \rho~P$ is
-%% an ALTS with initial state~$(P,\rho)$; we write $ALTS_{P,\rho}$ for this
-%% ALTS\@.  The following lemma follows immediately from
-%% Lemma~\ref{lem:f-sim-expr}.
-%% %
-%% \begin{lemma}
-%% \label{lem:f-sim-proc}
-%% Suppose $f(\rho) = f(\rho')$.  Then $f(ALTS_{P,\rho}) = f(ALTS_{P,\rho'})$.
-%% In particular, for every transition 
-%% \[
-%% (P,\rho) \trans{a} (Q,\rho_2)  \quad \mbox{in $ALTS_{P,\rho}$}\,,
-%% \]
-%% there is a corresponding transition 
-%% \[
-%% (P,\rho') \trans{a'} (Q,\rho_2')  \quad \mbox{in $ALTS_{P,\rho'}$}
-%% \]
-%% such that $f(a) = f(a')$, and $f(\rho_2) = f(\rho_2')$, and vice versa.
-%% \end{lemma}
-
-
-%%%%%%%%%%
-
-\begin{lemma}
-Suppose $(Q, \rho)$ is a state in $P[T_1]$, and suppose there is a transition
-\[
-(Q, f(\rho)) \trans{a} (Q',\rho_1)  \quad \mbox{in $P[T_2] = f(P[T_1])$.}
-\]
-Then there is a transition 
-\[
-(Q, \rho) \trans{a'} (Q', \rho_1') \quad \mbox{in $P[T_1]$}
-\]
-such that $f(a') = a$, and $f(\rho_1') = \rho_1$.
-\end{lemma}
-
-\framebox{XXX}
-
-I don't think the above holds from what I've proved so far.  Consider a
-process~$Q$ equivalent to $\If x = y \Then a \then STOP \Else STOP$, and let
-$\rho = \set{x \mapsto A, y \mapsto B}$.  Then $(Q,\rho)$ does not have a
-transition on~$a$.  But if $f(A) = f(B) = C$, then $(Q,f(\rho))$ does have a
-transition on~$a$.  This doesn't contradict Proposition~\ref{prop:expressions}
-as written, because $f$ merges $(Q,\rho)$ with $(Q,\rho')$ where $\rho' =
-\set{x \mapsto A, y \mapsto B}$, which does have a transition on~$a$. 
-
-
-\begin{proof}
-The transition in $f(P[T_1])$ results from the application of~$f$ to a
-transition in $P[T_1]$; that transition must be of the form
-\[
-(Q, \rho') \trans{a''} (Q', \rho'') % \quad \mbox{in $ALTS_{P,\rho}$}
-\]
-such that $f(\rho') = f(\rho)$,\, $f(a'') = a$, and $f(\rho'') = \rho_1$.
-Then Lemma~\ref{lem:f-sim-proc} implies the existence of a transition
-\[
-(Q, \rho) \trans{a'} (Q', \rho_1') % \quad \mbox{in $ALTS_{P,\rho}$}
-\]
-such that $f(a') = f(a'') = a$, and $f(\rho_1') = f(\rho'') = \rho_1$, as
-required. 
-\end{proof}
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%% Suppose  there is a transition 
-%% \[
-%% (Q_1,\rho_1) \trans{a} (Q_2,\rho_2) \quad \mbox{in $f(ALTS_{P,\rho})$.}
-%% \]
-%% Then there is a transition
-%% \[
-%% (Q_1,\rho_1') \trans{a'} (Q_2,\rho_2') \quad \mbox{in $ALTS_{P,\rho}$}
-%% \]
-%% such that $f(\rho_1') = \rho_1$,\, $f(a') = a$, and $f(\rho_2') = \rho_2$.
-%% Suppose also $f(\rho_1'') = f(\rho_1') = \rho_1$.  Then
-%% there is a transition
-%% \[
-%% (Q_1,\rho_1'') \trans{a''} (Q_2,\rho_2'') \quad \mbox{in $ALTS_{P,\rho}$}
-%% \]
-%% such that $f(a'') = f(a') = a$ and $f(\rho_2'') = f(\rho_2') = \rho_2$.
-
-Not apply induction.
+%% Not apply induction.
